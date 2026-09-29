@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -57,6 +58,50 @@ def pdf_complete(path: Path) -> bool:
             return b"%%EOF" in pdf.read()
     except OSError:
         return False
+
+
+def add_toc_page_numbers(pdf_path: Path, html_path: Path, output_path: Path) -> None:
+    """Use the printed PDF's link destinations to number every TOC entry."""
+    try:
+        import fitz
+    except ImportError as error:
+        raise RuntimeError("PyMuPDF não instalado; execute: python3 -m pip install pymupdf") from error
+
+    source = html_path.read_text(encoding="utf-8")
+    toc = re.search(r'<nav\b[^>]*\bid="sumario"[^>]*>(.*?)</nav>', source, re.DOTALL)
+    if toc is None:
+        raise RuntimeError("Sumário não encontrado no HTML")
+    targets = set(re.findall(r'<li(?:\s[^>]*)?><a href="#([^"]+)"', toc.group(1)))
+    if not targets:
+        raise RuntimeError("Nenhum tópico encontrado no sumário")
+
+    with fitz.open(pdf_path) as pdf:
+        destinations = pdf.resolve_names()
+        missing = targets - destinations.keys()
+        if missing:
+            raise RuntimeError(f"Destinos ausentes no PDF: {', '.join(sorted(missing)[:5])}")
+        first_content_page = min(destinations[target]["page"] for target in targets)
+        seen: set[str] = set()
+        for page_index in range(1, first_content_page):
+            page = pdf[page_index]
+            for link in page.get_links():
+                target = link.get("nameddest")
+                if target not in targets:
+                    continue
+                if target in seen:
+                    raise RuntimeError(f"Tópico duplicado no sumário: {target}")
+                seen.add(target)
+                number = str(destinations[target]["page"] + 1)
+                row = fitz.Rect(link["from"])
+                font_size = 7.6
+                x = row.x1 - 2 - fitz.get_text_length(number, fontname="cour", fontsize=font_size)
+                page.insert_text(
+                    (x, row.y0 + 10.5), number, fontname="cour",
+                    fontsize=font_size, color=(0.32, 0.38, 0.43),
+                )
+        if seen != targets:
+            raise RuntimeError(f"Tópicos sem linha no PDF: {', '.join(sorted(targets - seen)[:5])}")
+        pdf.save(output_path, garbage=3, deflate=True)
 
 
 def main() -> int:
@@ -129,7 +174,13 @@ def main() -> int:
             if details:
                 print(details[-2000:], file=sys.stderr)
             return 1
-        candidate.replace(destination)
+        numbered = work / "numbered.pdf"
+        try:
+            add_toc_page_numbers(candidate, source, numbered)
+        except RuntimeError as error:
+            print(f"Erro: {error}", file=sys.stderr)
+            return 1
+        numbered.replace(destination)
 
     print(f"PDF gerado: {destination}")
     return 0

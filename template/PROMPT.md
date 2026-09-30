@@ -20,7 +20,7 @@ Transforme o material Markdown em `<conteudo>` num e-book de estudo, em HTML e P
 - Preencher todos os marcadores `{{...}}` e apagar os moldes que não forem usados.
 - Repetir os blocos marcados com `REPETIR`.
 - Trocar as cores do bloco `TOKENS DO E-BOOK` **somente** se `<dados>` pedir outra cor de destaque. Mantenha o contraste AA em `--accent-ink`.
-- Trocar o texto do rodapé em `@page` (`{{RODAPE}}`). A autoria que vem depois dele (`| Erik Nathan (eriknathan.me · @erik.devops)`) é fixa e aparece em todas as páginas.
+- Trocar o texto do rodapé em `@page` (`{{RODAPE}}`). A autoria que vem depois dele (`| Erik Nathan (eriknathan.me)`) é fixa e aparece em todas as páginas.
 
 **Não pode:**
 - Alterar o resto do CSS, as fontes, os tamanhos, as regras de impressão ou a estrutura da capa e do sumário.

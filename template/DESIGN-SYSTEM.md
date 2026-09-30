@@ -99,7 +99,7 @@ Ocupa a primeira folha inteira, sem rodapé.
   TÍTULO-CURTO            ← mono gigante
   Título                  ← sans 600
   Subtítulo em --muted
-  Por Erik Nathan · eriknathan.me · Insta: @erik.devops
+  Por Erik Nathan · eriknathan.me
 
   ───────────────────────────────────────────────────────────
   RÓTULO DOS DESTAQUES
@@ -132,7 +132,7 @@ O número do `sec-label` é o mesmo do sumário, e o `id` da seção é o destin
 
 ### Rodapé do PDF
 
-- Esquerda: `{{RODAPE}}  |  Erik Nathan (eriknathan.me · @erik.devops)`, em mono 8pt `--muted`.
+- Esquerda: `{{RODAPE}}  |  Erik Nathan (eriknathan.me)`, em mono 8pt `--muted`.
 - Direita: número da página, em mono 9pt `--ink`.
 - Não aparece na capa. O texto do rodapé não é clicável no PDF.
 

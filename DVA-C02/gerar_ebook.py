@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Converte o material Markdown do SAA-C03 em um e-book HTML autônomo."""
+"""Converte o material Markdown do DVA-C02 em um e-book HTML autônomo."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from markdown_it import MarkdownIt
 
 
 ROOT = Path(__file__).resolve().parent
-SOURCE = ROOT / "material-original.md"
+SOURCE = ROOT / "material.md"
 OUTPUT = ROOT / "ebook.html"
 MARKDOWN = MarkdownIt("commonmark", {"html": True}).enable("table")
 
@@ -261,6 +261,8 @@ CSS = r"""
   .book-content ol{padding-left:1.5em}
   .book-content ol>li{padding-left:.25em}
   .book-content ol>li::marker{font-family:var(--mono);font-weight:700;color:var(--accent-ink)}
+  .book-content pre{margin:16px 0 22px;padding:13px 16px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:0 4px 4px 0;overflow-x:auto;font:.8rem/1.55 var(--mono);color:var(--ink)}
+  .book-content pre code{background:none;padding:0;font-size:inherit;overflow-wrap:normal}
   .back-link{font:.75rem var(--mono);display:inline-block;margin:10px 0 22px;text-decoration:none}
 
   .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:4px;margin:20px 0 24px}
@@ -302,7 +304,7 @@ CSS = r"""
   @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
   @page{size:A4;margin:19mm 17mm 21mm;
-    @bottom-left{content:'SAA-C03  /  GUIA DE REVISÃO  |  Erik Nathan (eriknathan.me)';font:8pt 'IBM Plex Mono',monospace;color:#52616d}
+    @bottom-left{content:'DVA-C02  /  GUIA DE REVISÃO  |  Erik Nathan (eriknathan.me)';font:8pt 'IBM Plex Mono',monospace;color:#52616d}
     @bottom-right{content:counter(page);font:9pt 'IBM Plex Mono',monospace;color:#1b2d3b}
   }
   @page:first{@bottom-left{content:none}@bottom-right{content:none}}
@@ -336,6 +338,7 @@ CSS = r"""
     .book-content ol>li::marker{color:var(--ink)}
     .book-content hr{display:none}
     .back-link{display:none}
+    .book-content pre{white-space:pre-wrap;overflow:visible;break-inside:avoid;font-size:7.6pt}
     .table-scroll{overflow:visible;border:0}
     table{min-width:0;font-size:7.4pt}
     thead{display:table-header-group}
@@ -358,8 +361,8 @@ def build_html(content: str, toc: str, flashcards: int) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Guia de revisão SAA-C03 com tópicos de arquitetura, tabelas de decisão e flashcards.">
-<title>SAA-C03 — Guia de revisão</title>
+<meta name="description" content="Guia de revisão DVA-C02 com Lambda, API Gateway, DynamoDB, segurança, CI/CD, observabilidade, tabelas de decisão e flashcards.">
+<title>DVA-C02 — Guia de revisão</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
@@ -369,21 +372,21 @@ def build_html(content: str, toc: str, flashcards: int) -> str:
 <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
 <article class="book">
   <header class="cover">
-    <div class="cover-top"><span>Guia de estudo</span><span>AWS Certified Solutions Architect – Associate</span></div>
+    <div class="cover-top"><span>Guia de estudo</span><span>AWS Certified Developer – Associate</span></div>
     <div class="cover-main">
-      <span class="cover-code">SAA-C03</span>
-      <span class="cover-exam">AWS Certified Solutions Architect – Associate</span>
+      <span class="cover-code">DVA-C02</span>
+      <span class="cover-exam">AWS Certified Developer – Associate</span>
       <h1>Guia de revisão</h1>
-      <p class="cover-subtitle">Computação, armazenamento, redes, segurança e decisões de arquitetura para a revisão da certificação.</p>
+      <p class="cover-subtitle">Lambda, APIs, DynamoDB, mensageria, segurança, CI/CD, observabilidade e desenvolvimento com IA para a revisão da certificação. Inclui a transição para o DVA-C03.</p>
       <p class="cover-note">Por Erik Nathan · <a href="https://eriknathan.me/">eriknathan.me</a></p>
     </div>
     <div class="cover-bottom">
-      <p class="cover-bottom-label">Domínios do exame · pesos apresentados no material</p>
+      <p class="cover-bottom-label">Domínios do exame · pesos oficiais</p>
       <div class="domain-grid">
-        <div class="domain"><strong>30%</strong><span>Design Secure Architectures</span></div>
-        <div class="domain"><strong>26%</strong><span>Design Resilient Architectures</span></div>
-        <div class="domain"><strong>24%</strong><span>Design High-Performing Architectures</span></div>
-        <div class="domain"><strong>20%</strong><span>Design Cost-Optimized Architectures</span></div>
+        <div class="domain"><strong>32%</strong><span>Development with AWS Services</span></div>
+        <div class="domain"><strong>26%</strong><span>Security</span></div>
+        <div class="domain"><strong>24%</strong><span>Deployment</span></div>
+        <div class="domain"><strong>18%</strong><span>Troubleshooting and Optimization</span></div>
       </div>
     </div>
   </header>
@@ -401,11 +404,11 @@ def build_html(content: str, toc: str, flashcards: int) -> str:
     <h2 id="sintese-title">Síntese de revisão</h2>
     <p>Este guia organiza a revisão pelos quatro domínios do exame e reúne formatos de consulta rápida e prática ativa.</p>
     <ul>
-      <li>Os pesos apresentados no material são 30% para segurança, 26% para resiliência, 24% para desempenho e 20% para custos.</li>
-      <li>As tabelas de decisão rápida ao fim de cada capítulo e os padrões recorrentes (seção 11) concentram comparações e pegadinhas dos simulados.</li>
-      <li>O mapa de domínios (seção 12) orienta prioridades; as tabelas de números em cada tópico reúnem valores sujeitos a atualização.</li>
-      <li>O autoteste, os cartões adicionais e as questões de múltipla resposta (seções 13 a 15) oferecem {flashcards} perguntas para revisão ativa.</li>
-      <li>O mapa da seção 15 relaciona as 14 tarefas publicadas no guia oficial às seções correspondentes.</li>
+      <li>Os pesos oficiais do DVA-C02 são 32% para desenvolvimento, 26% para segurança, 24% para implantação e 18% para troubleshooting e otimização. O DVA-C02 pode ser feito até 30/nov/2026; o DVA-C03 começa em 1º/dez/2026 (seção 14).</li>
+      <li>As tabelas de decisão rápida ao fim de cada capítulo e os padrões recorrentes (seção 15) concentram as palavras-chave, os pares que mais se confundem e as afirmações falsas clássicas.</li>
+      <li>As tabelas de números (Lambda, API Gateway, DynamoDB, mensageria) foram conferidas em setembro de 2026 e mostram os limites que mudaram entre 2024 e 2026.</li>
+      <li>O autoteste e as questões de múltipla resposta (seções 17 e 18) oferecem {flashcards} perguntas para revisão ativa.</li>
+      <li>O mapa da seção 18 relaciona as 13 tarefas publicadas no guia oficial às seções correspondentes.</li>
     </ul>
   </section>
 </article>

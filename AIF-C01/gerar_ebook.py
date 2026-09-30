@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Converte o material Markdown do SAA-C03 em um e-book HTML autônomo."""
+"""Converte o material Markdown do AIF-C01 em um e-book HTML autônomo."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from markdown_it import MarkdownIt
 
 
 ROOT = Path(__file__).resolve().parent
-SOURCE = ROOT / "material-original.md"
+SOURCE = ROOT / "material.md"
 OUTPUT = ROOT / "ebook.html"
 MARKDOWN = MarkdownIt("commonmark", {"html": True}).enable("table")
 
@@ -211,7 +211,7 @@ CSS = r"""
   code{font:.86em var(--mono);padding:.1em .25em;background:var(--surface);border-radius:3px;overflow-wrap:anywhere}
   strong{color:var(--ink)}
 
-  /* Capa: os quatro domínios são o motivo gráfico da página. */
+  /* Capa: os cinco domínios são o motivo gráfico da página. */
   .cover{min-height:770px;display:grid;grid-template-rows:auto 1fr auto;gap:30px;padding:40px 0 50px;border-top:10px solid var(--ink);position:relative}
   .cover:before{content:'';position:absolute;top:-10px;left:0;width:92px;height:10px;background:var(--accent)}
   .cover-top,.cover-bottom-label{font:700 .75rem/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
@@ -224,7 +224,7 @@ CSS = r"""
   .cover-note{font:.76rem/1.5 var(--mono);color:var(--teal);margin:0}
   .cover-bottom{border-top:1px solid var(--ink);padding-top:16px}
   .cover-bottom-label{margin:0 0 16px}
-  .domain-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+  .domain-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
   .domain{border-top:4px solid var(--accent);padding-top:8px;min-width:0}
   .domain strong{display:block;font:600 1.65rem/1 var(--mono);color:var(--ink);margin-bottom:7px}
   .domain span{display:block;font-size:.78rem;line-height:1.3;color:var(--muted)}
@@ -302,7 +302,7 @@ CSS = r"""
   @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
   @page{size:A4;margin:19mm 17mm 21mm;
-    @bottom-left{content:'SAA-C03  /  GUIA DE REVISÃO  |  Erik Nathan (eriknathan.me)';font:8pt 'IBM Plex Mono',monospace;color:#52616d}
+    @bottom-left{content:'AIF-C01  /  GUIA DE REVISÃO  |  Erik Nathan (eriknathan.me)';font:8pt 'IBM Plex Mono',monospace;color:#52616d}
     @bottom-right{content:counter(page);font:9pt 'IBM Plex Mono',monospace;color:#1b2d3b}
   }
   @page:first{@bottom-left{content:none}@bottom-right{content:none}}
@@ -358,8 +358,8 @@ def build_html(content: str, toc: str, flashcards: int) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Guia de revisão SAA-C03 com tópicos de arquitetura, tabelas de decisão e flashcards.">
-<title>SAA-C03 — Guia de revisão</title>
+<meta name="description" content="Guia de revisão AIF-C01 com fundamentos de IA, IA generativa, agentes, IA responsável, tabelas de decisão e flashcards.">
+<title>AIF-C01 — Guia de revisão</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
@@ -369,21 +369,22 @@ def build_html(content: str, toc: str, flashcards: int) -> str:
 <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
 <article class="book">
   <header class="cover">
-    <div class="cover-top"><span>Guia de estudo</span><span>AWS Certified Solutions Architect – Associate</span></div>
+    <div class="cover-top"><span>Guia de estudo</span><span>AWS Certified AI Practitioner</span></div>
     <div class="cover-main">
-      <span class="cover-code">SAA-C03</span>
-      <span class="cover-exam">AWS Certified Solutions Architect – Associate</span>
+      <span class="cover-code">AIF-C01</span>
+      <span class="cover-exam">AWS Certified AI Practitioner</span>
       <h1>Guia de revisão</h1>
-      <p class="cover-subtitle">Computação, armazenamento, redes, segurança e decisões de arquitetura para a revisão da certificação.</p>
+      <p class="cover-subtitle">Fundamentos de IA e ML, IA generativa, agentes, foundation models, IA responsável e segurança para a revisão da certificação.</p>
       <p class="cover-note">Por Erik Nathan · <a href="https://eriknathan.me/">eriknathan.me</a></p>
     </div>
     <div class="cover-bottom">
-      <p class="cover-bottom-label">Domínios do exame · pesos apresentados no material</p>
+      <p class="cover-bottom-label">Domínios do exame · pesos oficiais</p>
       <div class="domain-grid">
-        <div class="domain"><strong>30%</strong><span>Design Secure Architectures</span></div>
-        <div class="domain"><strong>26%</strong><span>Design Resilient Architectures</span></div>
-        <div class="domain"><strong>24%</strong><span>Design High-Performing Architectures</span></div>
-        <div class="domain"><strong>20%</strong><span>Design Cost-Optimized Architectures</span></div>
+        <div class="domain"><strong>20%</strong><span>Fundamentals of AI and ML</span></div>
+        <div class="domain"><strong>24%</strong><span>Fundamentals of GenAI</span></div>
+        <div class="domain"><strong>28%</strong><span>Applications of Foundation Models</span></div>
+        <div class="domain"><strong>14%</strong><span>Guidelines for Responsible AI</span></div>
+        <div class="domain"><strong>14%</strong><span>Security, Compliance, and Governance</span></div>
       </div>
     </div>
   </header>
@@ -401,10 +402,10 @@ def build_html(content: str, toc: str, flashcards: int) -> str:
     <h2 id="sintese-title">Síntese de revisão</h2>
     <p>Este guia organiza a revisão pelos quatro domínios do exame e reúne formatos de consulta rápida e prática ativa.</p>
     <ul>
-      <li>Os pesos apresentados no material são 30% para segurança, 26% para resiliência, 24% para desempenho e 20% para custos.</li>
-      <li>As tabelas de decisão rápida ao fim de cada capítulo e os padrões recorrentes (seção 11) concentram comparações e pegadinhas dos simulados.</li>
-      <li>O mapa de domínios (seção 12) orienta prioridades; as tabelas de números em cada tópico reúnem valores sujeitos a atualização.</li>
-      <li>O autoteste, os cartões adicionais e as questões de múltipla resposta (seções 13 a 15) oferecem {flashcards} perguntas para revisão ativa.</li>
+      <li>Os pesos oficiais são 20% para fundamentos de IA e ML, 24% para fundamentos de IA generativa, 28% para aplicações de foundation models, 14% para IA responsável e 14% para segurança, conformidade e governança.</li>
+      <li>As tabelas de decisão rápida ao fim de cada capítulo e os padrões recorrentes (seção 12) concentram as palavras-chave e os pares de conceitos e serviços que mais se confundem.</li>
+      <li>O mapa de domínios (seção 13) orienta prioridades; serviços, nomes e disponibilidade foram conferidos em setembro de 2026, após a revisão 1.1 do guia e as mudanças de julho de 2026.</li>
+      <li>O autoteste e as questões de múltipla resposta, ordenação e correspondência (seções 14 e 15) oferecem {flashcards} perguntas para revisão ativa.</li>
       <li>O mapa da seção 15 relaciona as 14 tarefas publicadas no guia oficial às seções correspondentes.</li>
     </ul>
   </section>

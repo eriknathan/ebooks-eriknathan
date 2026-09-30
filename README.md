@@ -10,6 +10,7 @@ Guias de revisão em HTML e PDF, todos com o mesmo padrão visual: capa, sumári
 | AWS Certified AI Practitioner (AIF-C01) | [`AIF-C01/`](AIF-C01/) | [`output/pdf/aif-c01-guia-de-revisao.pdf`](AIF-C01/output/pdf/aif-c01-guia-de-revisao.pdf) |
 | AWS Certified Developer – Associate (DVA-C02) | [`DVA-C02/`](DVA-C02/) | [`output/pdf/dva-c02-guia-de-revisao.pdf`](DVA-C02/output/pdf/dva-c02-guia-de-revisao.pdf) |
 | Docker — do contêiner à produção | [`Docker/`](Docker/) | [`output/pdf/docker-guia-de-estudo.pdf`](Docker/output/pdf/docker-guia-de-estudo.pdf) |
+| Kubernetes — do Pod à produção | [`Kubernetes/`](Kubernetes/) | [`output/pdf/kubernetes-guia-de-estudo.pdf`](Kubernetes/output/pdf/kubernetes-guia-de-estudo.pdf) |
 
 ## Estrutura
 

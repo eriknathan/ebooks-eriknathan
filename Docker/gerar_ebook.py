@@ -407,7 +407,7 @@ def build_html(content: str, toc: str, flashcards: int) -> str:
       <span class="cover-code">DOCKER</span>
       <span class="cover-exam">Engine · Compose · Swarm</span>
       <h1>Do contêiner à produção</h1>
-      <p class="cover-subtitle">Fundamentos, Dockerfile, BuildKit, redes, volumes, Compose, segurança, observabilidade, orquestração e CI/CD, com tabelas de decisão, pegadinhas e flashcards. Conferido com o Docker Engine 29 e o Compose 5.</p>
+      <p class="cover-subtitle">Fundamentos, Dockerfile, BuildKit, redes, volumes, Compose, segurança, observabilidade, orquestração e CI/CD, com preparação para o Docker Certified Associate (DCA), tabelas de decisão, pegadinhas e flashcards. Conferido com o Docker Engine 29 e o Compose 5.</p>
       <p class="cover-author"><strong>Erik Nathan</strong><a href="https://eriknathan.me/">eriknathan.me</a></p>
     </div>
     <div class="cover-bottom">
@@ -439,7 +439,8 @@ def build_html(content: str, toc: str, flashcards: int) -> str:
       <li>Imagens são camadas endereçadas por conteúdo: tags mudam, digests não. Ordem das instruções, multi-stage, build secrets e cache exportado definem imagens pequenas, rápidas de construir e sem segredos (capítulos 3 a 5).</li>
       <li>Redes definidas pelo usuário, portas publicadas só quando necessário, volumes para dados persistentes e Compose com healthchecks formam a base de qualquer aplicação multi-contêiner (capítulos 6 a 8).</li>
       <li>Segurança e operação dependem de menos privilégios, limites de recursos, logs com rotação e uma cadeia de suprimentos verificável; a imagem é construída uma vez e promovida pelo digest (capítulos 9 a 12).</li>
-      <li>As tabelas de decisão, as pegadinhas e a referência de comandos (capítulos 13 e 14) servem de revisão rápida; o autoteste (capítulo 15) oferece {flashcards} perguntas para revisão ativa. Versões e limites foram conferidos em setembro de 2026.</li>
+      <li>Para o Docker Certified Associate, o capítulo 13 liga cada objetivo do roteiro oficial ao ponto do guia que o cobre e explica os tópicos que só a prova ainda cobra: UCP e DTR (hoje MKE e MSR), Docker Content Trust, devicemapper e o Kubernetes básico.</li>
+      <li>As tabelas de decisão, as pegadinhas e a referência de comandos (capítulos 14 e 15) servem de revisão rápida; o autoteste (capítulo 16) oferece {flashcards} perguntas para revisão ativa. Versões e limites foram conferidos em setembro de 2026.</li>
     </ul>
   </section>
 </article>

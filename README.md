@@ -1,4 +1,4 @@
-# E-books de estudo AWS
+# E-books de estudo
 
 Guias de revisão em HTML e PDF, todos com o mesmo padrão visual: capa, sumário por capítulo, flashcards e versão A4 para impressão.
 
@@ -11,6 +11,7 @@ Guias de revisão em HTML e PDF, todos com o mesmo padrão visual: capa, sumári
 | AWS Certified Developer – Associate (DVA-C02) | [`DVA-C02/`](DVA-C02/) | [`output/pdf/dva-c02-guia-de-revisao.pdf`](DVA-C02/output/pdf/dva-c02-guia-de-revisao.pdf) |
 | Docker — do contêiner à produção | [`Docker/`](Docker/) | [`output/pdf/docker-guia-de-estudo.pdf`](Docker/output/pdf/docker-guia-de-estudo.pdf) |
 | Kubernetes — do Pod à produção | [`Kubernetes/`](Kubernetes/) | [`output/pdf/kubernetes-guia-de-estudo.pdf`](Kubernetes/output/pdf/kubernetes-guia-de-estudo.pdf) |
+| GH-200 — GitHub Actions Certification | [GH-200 - GitHub Actions Certification/](<GH-200 - GitHub Actions Certification/>) | [output/pdf/gh-200-guia-de-estudo.pdf](<GH-200 - GitHub Actions Certification/output/pdf/gh-200-guia-de-estudo.pdf>) |
 
 ## Estrutura
 
@@ -111,6 +112,8 @@ python3 gerar_pdf.py
 ```
 
 Os detalhes estão em [`CLF-C02/README.md`](CLF-C02/README.md), [`AIF-C01/README.md`](AIF-C01/README.md) e [`DVA-C02/README.md`](DVA-C02/README.md).
+
+O **GH-200** também usa `material.md` → `gerar_ebook.py` → `gerar_pdf.py`. Os requisitos e comandos estão no [README do GH-200](<GH-200 - GitHub Actions Certification/README.md>). Para gerar sua cópia na coleção: `python3 gerar-all-pdfs.py --apenas GH-200`.
 
 ## Criar um e-book novo
 

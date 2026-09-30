@@ -1,11 +1,12 @@
 ## Como usar este guia
 
 - Use os capítulos 1 a 12 para estudar o conteúdo. A ordem segue o caminho de quem usa Docker no dia a dia: fundamentos, ciclo de vida do contêiner, imagens, Dockerfile, build, rede, dados, Compose, segurança, observabilidade, orquestração e produção.
+- Vai prestar o **Docker Certified Associate (DCA)**? O capítulo 13 liga cada objetivo do roteiro oficial ao ponto do guia que o cobre e explica os tópicos legados que a prova ainda cobra (UCP, DTR, Docker Content Trust, devicemapper) e o Kubernetes pedido.
 - Use a tabela **Decisão rápida** ao final de cada capítulo como cheat sheet: cada uma reúne situações típicas, a abordagem recomendada e os erros mais comuns naquele tema.
 - Use as tabelas **Números de…** para revisar portas, códigos de saída, padrões de tempo e limites que aparecem em entrevistas, provas e incidentes.
-- Use as **Pegadinhas e padrões recorrentes** (capítulo 13) para revisar os erros de conceito mais frequentes, como "EXPOSE publica a porta" ou "`docker system prune` apaga volumes".
-- Use a **Referência rápida de comandos** (capítulo 14) como consulta de bancada.
-- Use o **Autoteste** (capítulo 15) para revisão ativa: cada flashcard esconde a resposta até você clicar.
+- Use as **Pegadinhas e padrões recorrentes** (capítulo 14) para revisar os erros de conceito mais frequentes, como "EXPOSE publica a porta" ou "`docker system prune` apaga volumes".
+- Use a **Referência rápida de comandos** (capítulo 15) como consulta de bancada.
+- Use o **Autoteste** (capítulo 16) para revisão ativa: cada flashcard esconde a resposta até você clicar.
 - Os blocos de código podem ser copiados e executados em um host com Docker Engine 29 ou Docker Desktop recente. Comandos que exigem Linux (namespaces, `iptables`, `/var/lib/docker`) estão indicados.
 
 ### Versões, números e atualizações
@@ -19,10 +20,10 @@ Os comportamentos e padrões deste guia foram conferidos na documentação ofici
 - ***O campo `version:` do `compose.yaml` é obsoleto**: o Compose sempre valida com o schema mais recente e emite um aviso se o campo existir.*
 - ***Compose v1** (`docker-compose`, em Python) chegou ao fim da vida em 2023. O comando atual é `docker compose` (com espaço), um plugin da CLI.*
 - ***Docker Hardened Images (DHI)**: desde 17/dez/2025, mais de mil imagens base mínimas e endurecidas são gratuitas e open source (Apache 2.0), com SBOM e provenance assinados.*
-- ***Docker Content Trust** (Notary v1) foi aposentado. Para assinar imagens, use Sigstore/cosign ou Notation (capítulo 9).*
+- ***Docker Content Trust** (Notary v1) foi aposentado. Para assinar imagens, use Sigstore/cosign ou Notation (capítulo 9). A prova do DCA ainda o cobra (capítulo 13).*
 - ***Kubernetes** não usa mais o Docker Engine como runtime desde a versão 1.24 (remoção do dockershim), mas executa normalmente as imagens criadas com Docker, porque elas seguem o padrão OCI.*
 
-Se você estuda por um livro ou curso mais antigo, a tabela **Informações desatualizadas em materiais antigos** (capítulo 13) lista o que mudou em instalação, storage drivers, Docker Machine, Compose, registries e Swarm.
+Se você estuda por um livro ou curso mais antigo, a tabela **Informações desatualizadas em materiais antigos** (capítulo 14) lista o que mudou em instalação, storage drivers, Docker Machine, Compose, registries e Swarm.
 
 ### Método para resolver problemas com Docker
 
@@ -41,7 +42,8 @@ Se você estuda por um livro ou curso mais antigo, a tabela **Informações desa
 | Rede, dados e Compose | 6, 7 e 8 | Drivers de rede, DNS interno, publicação de portas, volumes e bind mounts, aplicações multi-contêiner com Compose |
 | Segurança e operação | 9 e 10 | Superfície de ataque, capabilities, rootless, segredos, cadeia de suprimentos, limites, logs e troubleshooting |
 | Orquestração e produção | 11 e 12 | Swarm, equivalências com Kubernetes, pipeline de CI/CD e checklist de produção |
-| Revisão | 13, 14 e 15 | Pegadinhas, referência de comandos e flashcards |
+| Certificação | 13 | Roteiro do DCA, recursos legados cobrados na prova (UCP, DTR, DCT, devicemapper) e Kubernetes no nível da prova |
+| Revisão | 14, 15 e 16 | Pegadinhas, referência de comandos e flashcards |
 
 ---
 
@@ -780,6 +782,51 @@ curl http://localhost:5000/v2/_catalog        # lista os repositórios
 - Para uso sério, configure **TLS**, **autenticação** (htpasswd ou token), armazenamento persistente (volume ou S3/Azure/GCS) e **garbage collection** para liberar espaço de camadas sem referência.
 - Precisa de interface web, usuários e projetos, replicação, scan de vulnerabilidades e cache de proxy? Use o **Harbor** (CNCF) ou o registry gerenciado da sua nuvem (ECR, Artifact Registry, ACR, GHCR).
 
+#### Certificados de registry: `/etc/docker/certs.d`
+Quando o registry usa um certificado de uma **CA interna** (ou exige **certificado de cliente**, autenticação TLS mútua), o daemon precisa confiar nele. A alternativa correta a `insecure-registries` é colocar os arquivos em um diretório com o **nome exato do registry, incluindo a porta**:
+
+```text
+/etc/docker/certs.d/
+└── registry.exemplo.com:5000/
+    ├── ca.crt          # CA que assinou o certificado do registry
+    ├── client.cert     # certificado de cliente (TLS mútuo)
+    └── client.key      # chave do certificado de cliente
+```
+
+- O daemon trata arquivos **`.crt` como CA** e **`.cert` como certificado de cliente**. Trocar a extensão gera o erro `Missing key … for client certificate … CA certificates should use the extension .crt`.
+- O nome do diretório precisa bater com a referência usada no `pull`/`push` (`registry.exemplo.com:5000/app:1.0`). Sem porta na referência, o diretório não leva porta.
+- A configuração vale **por daemon**: cada nó que baixa do registry (todos os nós de um Swarm, por exemplo) precisa dos arquivos. No Docker Desktop, adicione a CA ao chaveiro do sistema operacional.
+- Alternativa para CA interna: instalar a CA no repositório de certificados do sistema (`update-ca-certificates`) e reiniciar o daemon.
+
+#### Apagar imagens de um registry
+`docker image rm` apaga só a cópia **local**. No registry, a remoção tem duas etapas: apagar o **manifest** pela API e depois rodar o **garbage collection**, que libera as camadas sem referência.
+
+```bash
+# 1. O registry precisa aceitar DELETE (desligado por padrão)
+docker run -d -p 5000:5000 --name registry \
+  -e REGISTRY_STORAGE_DELETE_ENABLED=true \
+  -v registry-dados:/var/lib/registry registry:3
+
+# 2. Descobrir o digest da tag (cabeçalho Docker-Content-Digest)
+curl -sI \
+  -H "Accept: application/vnd.oci.image.index.v1+json" \
+  -H "Accept: application/vnd.oci.image.manifest.v1+json" \
+  -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
+  http://localhost:5000/v2/apache/manifests/1.0 | grep -i docker-content-digest
+
+# 3. Apagar o manifest pelo digest (não pela tag)
+curl -X DELETE http://localhost:5000/v2/apache/manifests/sha256:…
+
+# 4. Liberar as camadas, com o registry parado ou em modo somente leitura
+docker exec registry registry garbage-collect --dry-run /etc/distribution/config.yml
+docker exec registry registry garbage-collect --delete-untagged /etc/distribution/config.yml
+```
+
+- O `DELETE` é feito **pelo digest**. Apagar o manifest remove todas as tags que apontam para ele.
+- O garbage collection é do tipo **stop-the-world**: um push durante a coleta pode perder camadas e corromper a imagem. Rode com o registry parado ou com `storage.maintenance.readonly` ligado.
+- No `registry:3`, a configuração fica em `/etc/distribution/config.yml`; no `registry:2`, ficava em `/etc/docker/registry/config.yml`.
+- Registries corporativos (Harbor, MSR, ECR, Artifact Registry) fazem o mesmo pela interface, com **políticas de retenção** (apagar tags antigas automaticamente) e garbage collection agendado.
+
 ### Gerenciar imagens
 
 #### Comandos essenciais
@@ -798,6 +845,59 @@ curl http://localhost:5000/v2/_catalog        # lista os repositórios
 | `docker manifest inspect <ref>` | Alternativa mais antiga ao `imagetools inspect` |
 
 - **Imagem dangling**: aparece como `<none>:<none>` quando uma tag é movida para um build novo e a imagem antiga fica sem nome. É removida por `docker image prune`.
+
+#### Filtros e formatação: `--filter` e `--format`
+Os comandos de listagem aceitam **filtros** (`--filter chave=valor`, repetível) e **formatação** com templates Go (`--format`). É assim que se responde a perguntas como "quais imagens foram criadas depois de X" ou "qual é o usuário padrão desta imagem".
+
+| Filtro de `docker image ls` | Seleciona |
+|---|---|
+| `dangling=true` | Imagens sem tag (`<none>:<none>`) |
+| `reference='nginx:1.*'` | Imagens cujo nome e tag casam com o padrão |
+| `before=app:1.4` / `since=app:1.4` | Criadas antes / depois de outra imagem |
+| `label=org.opencontainers.image.vendor=Acme` | Com o rótulo (e o valor) indicado |
+
+| Filtro de `docker ps` | Seleciona |
+|---|---|
+| `status=exited` (ou `running`, `paused`, `created`) | Contêineres no estado indicado |
+| `ancestor=nginx` | Criados a partir da imagem (ou de descendentes dela) |
+| `label=env=prod`, `name=api`, `network=app`, `volume=dados` | Por rótulo, nome, rede ou volume |
+| `health=unhealthy`, `exited=137` | Por estado do healthcheck ou código de saída |
+
+```bash
+# Tabela personalizada (\t separa as colunas)
+docker image ls --format 'table {{.Repository}}\t{{.Tag}}\t{{.Size}}'
+docker ps -a --filter status=exited --format '{{.Names}} {{.Status}}'
+
+# Um objeto inteiro em JSON (bom para jq)
+docker image ls --format json
+
+# Campos de inspect
+docker image inspect -f '{{.Os}}/{{.Architecture}}' nginx:1.29
+docker image inspect -f '{{.Config.User}} {{json .Config.ExposedPorts}}' nginx:1.29
+docker image inspect -f '{{json .RootFS.Layers}}' nginx:1.29     # digests das camadas
+docker inspect -f '{{.State.Status}} {{.State.ExitCode}}' api
+docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' api
+
+# Remoção combinada com filtro
+docker image prune -a --filter "until=168h"          # sem uso e com mais de 7 dias
+docker rmi $(docker image ls -q --filter dangling=true)
+```
+
+- `-q` devolve só os IDs, para usar em outros comandos. `--no-trunc` mostra IDs e comandos completos.
+- **Funções úteis nos templates**: `json` (serializa um campo), `range` (percorre listas e mapas), `index` (acessa uma chave com caracteres especiais: `{{index .Config.Labels "org.opencontainers.image.source"}}`), `upper`, `lower`, `join`.
+- `docker inspect` devolve uma **lista JSON**; o `-f` é aplicado a cada objeto. Ele funciona em contêineres, imagens, redes, volumes, nós, serviços, tarefas, secrets e configs; use `--type` quando um nome existe em mais de um tipo de objeto.
+
+#### Imagem com uma só camada
+Às vezes se pede uma imagem com **uma única camada** (distribuição simples, sem histórico). As formas e o que cada uma perde:
+
+| Técnica | Como | O que acontece |
+|---|---|---|
+| `export` + `import` | `docker export c1 \| docker import - app:flat` | Achata o sistema de arquivos de um **contêiner**. Perde histórico, `CMD`, `ENTRYPOINT`, `ENV`, `EXPOSE` (recoloque com `--change 'CMD ["app"]'`) |
+| Multi-stage com `FROM scratch` | Último estágio: `FROM scratch` + `COPY --from=build / /` | Uma camada com o conteúdo do estágio anterior; os metadados são definidos no próprio Dockerfile |
+| `docker build --squash` | Flag experimental do **builder clássico** | Não existe no BuildKit, o builder padrão. Aparece em materiais antigos |
+
+- **Aplicar um arquivo para criar uma imagem**: `docker build -f caminho/Dockerfile.prod .` usa um Dockerfile com outro nome ou em outro lugar; `docker build - < Dockerfile` lê o Dockerfile do STDIN, sem contexto.
+- **Ver as camadas**: `docker image history` (instrução e tamanho de cada camada) e `docker image inspect -f '{{json .RootFS.Layers}}'` (digests).
 
 #### Criar uma imagem com `docker commit` (e por que evitar)
 Há duas formas de criar uma imagem: **declarativa**, com um Dockerfile (capítulo 4), e **imperativa**, alterando um contêiner à mão e salvando o resultado.
@@ -1279,6 +1379,46 @@ target "worker" {
 
 > **Ideia central**: coloque os contêineres que conversam entre si em uma **rede bridge definida pelo usuário**. Nela, eles se encontram **pelo nome** (DNS embutido) e ficam isolados de outras redes. **Publique portas** (`-p`) só para o que precisa ser acessado de fora do host.
 
+### Modelo de rede do Docker
+
+#### Container Network Model (CNM)
+A rede do Docker segue o **Container Network Model (CNM)**, implementado pela biblioteca **libnetwork** (hoje parte do repositório do Moby). O CNM define três objetos e dois tipos de driver:
+
+| Objeto do CNM | O que é | No Linux |
+|---|---|---|
+| **Sandbox** | A configuração de rede isolada de um contêiner: interfaces, rotas, DNS | Um **namespace de rede** |
+| **Endpoint** | A ligação de um sandbox a uma rede. Um contêiner em duas redes tem dois endpoints | Um **par veth** (uma ponta no contêiner, outra na bridge) |
+| **Network** | Um grupo de endpoints que se comunicam diretamente | Uma bridge Linux, uma VXLAN (overlay) etc. |
+
+| Tipo de driver | Função | Exemplos |
+|---|---|---|
+| **Driver de rede** | Cria a rede e liga os endpoints a ela | Nativos: `bridge`, `host`, `none`, `overlay`, `macvlan`, `ipvlan`. Remotos: plugins de terceiros |
+| **Driver de IPAM** | Gerencia os endereços: sub-redes, gateways e IPs dos endpoints | `default` (embutido) ou plugin de IPAM (`--ipam-driver`) |
+
+- **Como o Engine usa o CNM**: `docker network create` pede ao driver de rede para criar a rede e ao driver de IPAM uma sub-rede; `docker run --network` cria o sandbox, pede um endpoint e um IP e liga os dois.
+- **Escopo**: redes `local` (bridge, host, macvlan) valem em um host; redes `swarm` (overlay) valem no cluster inteiro. A coluna `SCOPE` de `docker network ls` mostra qual.
+- **Kubernetes não usa o CNM**: usa o **CNI** (Container Network Interface), com plugins como Calico e Cilium. O modelo de rede do Kubernetes está resumido no capítulo 13.
+
+#### Criar e inspecionar redes
+
+```bash
+# Bridge para um time de desenvolvimento, com faixa própria
+docker network create --driver bridge \
+  --subnet 172.30.0.0/24 --gateway 172.30.0.1 --ip-range 172.30.0.128/25 \
+  --label equipe=dev dev-net
+
+docker network ls --filter driver=bridge
+docker network inspect dev-net -f '{{json .IPAM.Config}}'
+docker run -d --name api --network dev-net --ip 172.30.0.200 app:1.0
+docker network connect --alias cache backend api     # segunda rede, com alias
+docker network disconnect backend api
+docker network rm dev-net                            # falha se houver contêineres ligados
+docker network prune                                 # remove redes sem contêineres
+```
+
+- `--subnet`, `--gateway` e `--ip-range` configuram o **IPAM** da rede; sem elas, a sub-rede sai de `default-address-pools`. `--ip` fixo só funciona em redes com `--subnet` declarada.
+- `docker network inspect` mostra o driver, o escopo, o IPAM, as opções e os **contêineres conectados com IP e MAC**.
+
 ### Drivers de rede
 
 #### Visão geral
@@ -1380,6 +1520,20 @@ tabela filter
 - **Portas necessárias entre os nós do Swarm**: **2377/tcp** (gerenciamento do cluster), **7946/tcp e udp** (descoberta e gossip entre nós) e **4789/udp** (dados da overlay, VXLAN).
 - **macvlan**: por padrão, o **host não consegue falar** com os próprios contêineres macvlan (limitação do kernel); é preciso criar uma interface macvlan auxiliar no host. Muitas redes Wi-Fi e provedores de nuvem não aceitam vários MACs por interface.
 
+#### Integração com sistemas legados
+Aplicações em contêiner quase sempre precisam falar com sistemas que **não** estão em contêineres: bancos em servidores físicos, mainframes, serviços em VMs, APIs de parceiros.
+
+| Necessidade | Solução |
+|---|---|
+| O contêiner acessa um sistema legado | Nada especial: o tráfego de saída sai pelo IP do host (NAT). Use o **DNS** da empresa (`dns` no `daemon.json` ou `--dns`) e, se preciso, `--add-host legado.local:10.0.5.20` |
+| O sistema legado precisa chegar ao contêiner | **Publicar a porta** (`-p` ou `--publish` no Swarm) e apontar o legado para o host, um load balancer ou o routing mesh |
+| O legado espera um IP na rede física (firewall por IP, licença por MAC, multicast) | **macvlan** ou **ipvlan**: o contêiner ganha IP próprio na LAN |
+| Serviço Swarm e contêineres avulsos precisam se falar | Rede overlay com **`--attachable`** |
+| O legado só aceita um IP de origem fixo | Sair por um host ou gateway de saída conhecido; em nuvem, NAT gateway com IP fixo |
+
+- Nomes externos são resolvidos pelo DNS embutido (`127.0.0.11`), que encaminha para os servidores configurados. Em redes corporativas com DNS próprio, configurar `dns` e `dns-search` no daemon evita falhas de resolução.
+- Conflitos de sub-rede com a rede corporativa (os `172.17.0.0/16` e `172.18.0.0/16` do Docker contra faixas internas) quebram o acesso ao legado; ajuste `bip` e `default-address-pools`.
+
 #### Números de rede
 
 | Item | Valor |
@@ -1447,6 +1601,40 @@ O **storage driver** define como o Engine monta as camadas e grava na camada do 
 
 - **Trocar o storage driver** (ou o image store) torna **inacessíveis** as imagens, os contêineres e os volumes anônimos criados com o anterior: eles ficam no disco, mas o daemon não os enxerga. Faça backup, exporte o que precisa (`docker save`, backup de volumes) e recrie depois da troca.
 - `docker info --format '{{.Driver}}'` mostra o driver em uso.
+
+#### Driver por sistema operacional
+
+| Sistema | Driver ou snapshotter | Observação |
+|---|---|---|
+| Ubuntu, Debian, Fedora, RHEL, SLES atuais | containerd `overlayfs` (instalações novas do Engine 29) ou **`overlay2`** | O sistema de arquivos de `/var/lib/docker` deve ser **ext4** ou **xfs com `ftype=1`** (suporte a `d_type`) |
+| RHEL e CentOS 7 (histórico) | `devicemapper` em `direct-lvm` | Era o padrão antes do `overlay2` ser suportado no kernel da Red Hat |
+| SLES antigo com raiz em Btrfs | `btrfs` | Só quando `/var/lib/docker` está em Btrfs |
+| Ubuntu antigo (histórico) | `aufs` | Removido no Engine 24 |
+| **Windows** (contêineres Windows) | **`windowsfilter`** | Único driver dos contêineres Windows; isolamento `process` (Windows Server) ou `hyperv` |
+| Docker Desktop (macOS, Windows com WSL 2) | `overlay2` ou containerd, **dentro da VM Linux** | O host não vê os arquivos diretamente |
+
+#### Onde as camadas ficam no disco
+Com o storage driver **`overlay2`** (image store clássico), tudo fica sob o `data-root` (padrão `/var/lib/docker`):
+
+| Caminho | Conteúdo |
+|---|---|
+| `/var/lib/docker/overlay2/<id>/diff` | Os arquivos de **uma camada** (de imagem ou a camada gravável de um contêiner) |
+| `/var/lib/docker/overlay2/<id>/lower` | Lista das camadas inferiores (links curtos em `overlay2/l/`) |
+| `/var/lib/docker/overlay2/<id>/merged` | A **visão unificada** montada para o contêiner em execução |
+| `/var/lib/docker/overlay2/<id>/work` | Diretório de trabalho interno do OverlayFS |
+| `/var/lib/docker/image/overlay2/` | Metadados das imagens (config, cadeia de camadas) |
+| `/var/lib/docker/containers/<id>/` | Config do contêiner, `hostname`, `resolv.conf` e os logs do `json-file` |
+| `/var/lib/docker/volumes/<nome>/_data` | Dados dos volumes nomeados |
+
+```bash
+docker inspect -f '{{json .GraphDriver.Data}}' api | jq
+# LowerDir (camadas da imagem), UpperDir (camada gravável), MergedDir, WorkDir
+docker image inspect -f '{{json .RootFS.Layers}}' nginx:1.29
+```
+
+- **Camadas de imagem são somente leitura** e compartilhadas por todos os contêineres da mesma imagem; cada contêiner tem só a **sua** camada gravável (`UpperDir`). Uma escrita em arquivo da imagem copia o arquivo para cima (copy-on-write) e o OverlayFS mostra a versão nova.
+- Com o **containerd image store** (padrão em instalações novas do Engine 29), o conteúdo das imagens fica em `/var/lib/containerd` (`io.containerd.content.v1.content` para os blobs e `io.containerd.snapshotter.v1.overlayfs` para as camadas descompactadas). A lógica de camadas é a mesma.
+- **Nunca edite ou apague arquivos dentro de `/var/lib/docker`** à mão; use `docker image prune`, `docker system prune` e afins.
 
 #### Tipos de montagem
 
@@ -1530,6 +1718,18 @@ docker run --rm -v dados-pg-restaurado:/destino -v "$(pwd)":/backup alpine \
 - Copiar `/var/lib/docker/volumes` inteiro em rotinas de backup do host funciona só com os contêineres **parados** (ou com snapshot do sistema de arquivos). Com aplicações gravando, a cópia pode ficar inconsistente.
 - **Drivers de volume**: o driver `local` aceita opções de montagem, inclusive **NFS** e CIFS (`docker volume create --driver local --opt type=nfs --opt o=addr=10.0.0.5,rw --opt device=:/export nfs-dados`). Plugins de terceiros integram storage de nuvem ou distribuído.
 - **Volume compartilhado entre contêineres**: vários contêineres podem montar o mesmo volume, mas o Docker **não coordena** escrita concorrente; isso é responsabilidade da aplicação.
+
+#### Blocos, arquivos e objetos
+Os drivers de volume e os registries se apoiam em três tipos de armazenamento:
+
+| Tipo | Como é acessado | Pontos fortes | Uso típico com contêineres |
+|---|---|---|---|
+| **Blocos** | Dispositivo com blocos endereçáveis, formatado com um sistema de arquivos e montado em **um** nó por vez (EBS, discos gerenciados, iSCSI, SAN) | Baixa latência, alto IOPS, escrita no meio do arquivo | **Bancos de dados** e qualquer volume com muitas escritas pequenas |
+| **Arquivos** | Sistema de arquivos compartilhado pela rede (NFS, SMB/CIFS, EFS, Azure Files) | Vários nós montam ao mesmo tempo | Dados compartilhados entre réplicas, conteúdo estático, uploads |
+| **Objetos** | API HTTP (`PUT`/`GET` de objetos inteiros com metadados: S3, Azure Blob, GCS, MinIO) | Escala praticamente sem limite, durável, barato, acessível de qualquer nó | Armazenamento de **registries** (camadas de imagem), backups, artefatos, mídia |
+
+- **Qual preferir**: para o **armazenamento de um registry** (Distribution, Harbor, MSR), **objetos** é o preferido quando disponível: várias réplicas do registry leem e gravam o mesmo bucket, sem sistema de arquivos compartilhado. Para um **banco de dados**, **blocos**.
+- Armazenamento de objetos **não é montado como volume** comum: a aplicação usa a API (ou um driver/ferramenta que a traduz, com desempenho e semântica limitados).
 
 #### Comandos de volumes
 
@@ -1975,6 +2175,28 @@ docker run --log-driver local --log-opt max-size=10m --log-opt max-file=3 app
 | Build não reflete a alteração | Cache de `RUN` com comando idêntico ou arquivo ignorado pelo `.dockerignore` | `--no-cache` pontual, revisar a ordem e o `.dockerignore` |
 | Bind mounts lentos no macOS/Windows | Sincronização de arquivos entre o host e a VM | `develop.watch`, synchronized file shares, código dentro do WSL 2 |
 
+#### Problemas de instalação e do daemon
+Quando o daemon não sobe, a mensagem útil está no **log do serviço**, não na CLI. Sequência:
+
+1. `systemctl status docker` mostra se o serviço falhou e as últimas linhas do log.
+2. `journalctl -u docker --no-pager -n 100` (ou `-f`) mostra o erro completo.
+3. `sudo dockerd --validate --config-file /etc/docker/daemon.json` valida a configuração sem subir o daemon.
+4. Para ver a inicialização em detalhe: pare o serviço e rode `sudo dockerd --debug` em primeiro plano.
+
+| Mensagem ou sintoma | Causa provável | Correção |
+|---|---|---|
+| `unable to configure the Docker daemon with file /etc/docker/daemon.json: … invalid character` | JSON inválido (vírgula sobrando, aspas) | Corrigir o arquivo; `dockerd --validate` ou `jq . daemon.json` |
+| `the following directives are specified both as a flag and in the configuration file: hosts` | Mesma opção no `daemon.json` e na unit do systemd (`-H fd://`) | Tirar de um dos lugares; override com `systemctl edit docker` |
+| `error initializing graphdriver` / `driver not supported` | Storage driver pedido não existe (ex.: `devicemapper` no Engine 25+) ou o sistema de arquivos não o suporta | Remover `storage-driver` ou escolher `overlay2`; conferir ext4 ou xfs com `ftype=1` |
+| `Error initializing network controller` / erro de `iptables` | Módulos do kernel ausentes, conflito com nftables ou firewall | Carregar `br_netfilter`/`overlay`, conferir o backend de firewall, `journalctl` |
+| `Conflicts: docker.io` / erro de pacote na instalação | Pacotes da distribuição (`docker.io`, `podman-docker`, `containerd`) conflitam com os oficiais | Remover os pacotes não oficiais antes de instalar |
+| `docker: 'compose' is not a docker command` | Plugin não instalado | Instalar `docker-compose-plugin` (e `docker-buildx-plugin`) |
+| `client version 1.43 is too old. Minimum supported API version is 1.44` | CLI antiga (Docker 24 ou anterior) contra o Engine 29 | Atualizar a CLI |
+| Daemon sobe, mas `docker run` falha com erro de cgroup | cgroup v1 ou driver de cgroup divergente (`cgroupfs` vs. `systemd`) | `docker info` para ver `Cgroup Driver`/`Cgroup Version`; usar cgroup v2 com `systemd` |
+
+- **Iniciar no boot**: `sudo systemctl enable --now docker containerd`. `systemctl is-enabled docker` confere.
+- **Atualizar o Engine**: pelo gerenciador de pacotes (`apt install docker-ce=<versão> docker-ce-cli=<versão> containerd.io`). Com `live-restore`, os contêineres continuam rodando durante o restart do daemon (fora do Swarm). Em um Swarm, atualize um nó por vez (capítulo 11).
+
 #### Números de operação
 
 | Item | Valor |
@@ -2100,6 +2322,157 @@ docker service logs -f web
 - **Secrets e configs do Swarm**: guardados **cifrados no log do Raft**, entregues só aos serviços autorizados e montados em **tmpfs** em `/run/secrets/<nome>`. São imutáveis: para rotacionar, crie um novo segredo e atualize o serviço.
 - **Autolock** (`docker swarm update --autolock=true`): as chaves do Raft passam a ser protegidas por uma chave que precisa ser informada (`docker swarm unlock`) quando um manager reinicia.
 - **Healthcheck no Swarm**: tarefas `unhealthy` são **substituídas** automaticamente.
+
+#### Publicação de portas: modo `ingress` vs. modo `host`
+A forma longa do `--publish` deixa explícito o modo:
+
+```bash
+# ingress (padrão): routing mesh, porta aberta em TODOS os nós
+docker service create --name web --replicas 3 \
+  --publish published=8080,target=80 nginx:1.29
+
+# host: porta aberta só nos nós que rodam uma tarefa, sem routing mesh
+docker service create --name coletor --mode global \
+  --publish published=514,target=514,protocol=udp,mode=host coletor:1.0
+
+docker service update --publish-add published=8443,target=443 web
+docker service update --publish-rm 8080 web
+```
+
+| Aspecto | `mode=ingress` (padrão) | `mode=host` |
+|---|---|---|
+| Onde a porta abre | Em **todos os nós** do cluster | Só no nó onde a tarefa roda |
+| Balanceamento | Pelo routing mesh (IPVS), entre todas as tarefas | Nenhum: o cliente fala com a tarefa daquele nó |
+| IP de origem do cliente | Perdido (a aplicação vê um IP da rede `ingress`) | **Preservado** |
+| Limite de tarefas por nó | Nenhum | **Uma** tarefa por nó para cada porta publicada; uma segunda réplica no mesmo nó fica `Pending` |
+| Uso típico | Serviços web atrás de um load balancer externo que aponta para todos os nós | Serviços `global`, coletores UDP, quando o IP do cliente importa |
+
+- **Descobrir onde o serviço está acessível**: `docker service inspect --format '{{json .Endpoint.Ports}}' web` mostra `PublishedPort`, `TargetPort` e `PublishMode`. Para um contêiner avulso, `docker port <c>` e `docker inspect -f '{{json .NetworkSettings.Ports}}' <c>`.
+
+#### Templates em `docker service create`
+Algumas flags aceitam **templates Go** que são resolvidos **por tarefa**. As flags suportadas são **`--hostname`, `--mount` e `--env`**.
+
+| Placeholder | Valor |
+|---|---|
+| `{{.Service.ID}}`, `{{.Service.Name}}`, `{{.Service.Labels}}` | ID, nome e rótulos do serviço |
+| `{{.Node.ID}}`, `{{.Node.Hostname}}` | ID e hostname do nó onde a tarefa roda |
+| `{{.Task.ID}}`, `{{.Task.Name}}`, `{{.Task.Slot}}` | ID, nome e número da réplica (slot) da tarefa |
+
+```bash
+docker service create --name api --replicas 3 \
+  --hostname '{{.Node.Hostname}}-{{.Service.Name}}' \
+  --env TASK_SLOT='{{.Task.Slot}}' \
+  --mount 'type=volume,src=dados-{{.Task.Slot}},dst=/data' \
+  app:1.0
+
+docker inspect -f '{{.Config.Hostname}}' $(docker ps -q -f name=api)   # confere o resultado
+```
+
+- Use aspas simples para o shell não interpretar as chaves. O `{{.Task.Slot}}` dá a cada réplica um volume próprio (`dados-1`, `dados-2`, `dados-3`).
+
+#### Modos de serviço e limites de posicionamento
+
+| Modo (`--mode`) | Comportamento |
+|---|---|
+| `replicated` (padrão) | Mantém `--replicas N` tarefas rodando |
+| `global` | Uma tarefa em cada nó elegível, inclusive nos que entrarem depois |
+| `replicated-job` | Roda até completar; `--replicas` define quantas execuções concorrentes e `--max-concurrent` o paralelismo |
+| `global-job` | Roda até completar, uma vez em cada nó (ex.: limpeza de disco em todos os nós) |
+
+- **`--replicas-max-per-node 1`**: no máximo uma réplica por nó (tarefas excedentes ficam `Pending`).
+- **Constraints** (`--constraint`) aceitam `node.id`, `node.hostname`, `node.role`, `node.platform.os`, `node.platform.arch`, `node.labels.<chave>` e `engine.labels.<chave>`, com `==` e `!=`. Vários constraints são combinados com **E**.
+- **Rótulos de nó** (`docker node update --label-add`) são definidos pelo administrador no cluster; **rótulos do Engine** (`labels` no `daemon.json`) são definidos em cada host. Para posicionamento, prefira os de nó: um nó comprometido pode alterar os próprios rótulos do Engine.
+- **Rebalancear** depois que um nó volta: o Swarm **não** move tarefas sozinho; `docker service update --force web` redistribui (reiniciando as tarefas).
+
+#### Serviço que não sobe: diagnóstico
+
+```bash
+docker service ls                                  # REPLICAS 0/3?
+docker service ps web --no-trunc                   # ERROR com a mensagem completa
+docker service ps web --filter desired-state=running
+docker service inspect --pretty web                # constraints, portas, recursos
+docker service logs web                            # saída da aplicação
+docker node ls                                     # nós Ready e Active?
+docker inspect <id-da-tarefa>                      # Status.Err e Status.State
+```
+
+| Estado ou erro em `docker service ps` | Causa provável | O que fazer |
+|---|---|---|
+| `Pending` com `no suitable node (scheduling constraints not satisfied …)` | Constraint que nenhum nó atende (rótulo inexistente, papel errado) | Conferir `docker node inspect` e os rótulos |
+| `Pending` com `insufficient resources on N nodes` | `--reserve-memory`/`--reserve-cpu` maior que o livre nos nós | Reduzir a reserva ou adicionar nós |
+| `Pending` com porta em uso | `mode=host` com mais réplicas que nós | Usar `ingress`, `global` ou `--replicas-max-per-node 1` |
+| `Rejected` com `No such image` | Imagem inexistente, só local ou em registry privado sem credencial | Enviar a um registry; criar ou atualizar com **`--with-registry-auth`** |
+| `Failed` com código de saída, reiniciando em loop | A aplicação falha ao iniciar | `docker service logs`, conferir env, secrets e comando |
+| `Rejected` com secret, config ou rede inexistente | Referência a um objeto que não existe | Criar o objeto antes do serviço |
+| Todas as tarefas em um só nó | Os outros nós estão em `drain` ou `pause` | `docker node update --availability active` |
+
+- Nós `Down` em `docker node ls` não recebem tarefas; confira a rede entre os nós (portas 2377, 7946 e 4789) e o daemon do nó.
+
+### Segurança, backup e manutenção do Swarm
+
+#### Segurança padrão do Swarm
+O Swarm vem seguro por padrão, sem configuração extra:
+
+| Mecanismo | Como funciona |
+|---|---|
+| **CA embutida** | O primeiro manager cria uma **CA raiz** e emite um certificado para cada nó que entra. A identidade e o papel do nó (manager ou worker) estão no certificado |
+| **TLS mútuo (mTLS)** | Toda comunicação entre os nós é **autenticada, autorizada e cifrada** com os certificados de ambos os lados |
+| **Rotação automática** | Cada nó renova o próprio certificado a cada **3 meses (90 dias)** por padrão. Ajuste: `docker swarm update --cert-expiry 720h` |
+| **Tokens de entrada** | `SWMTKN-1-<digest da CA raiz>-<segredo>`: o nó que entra confere a CA pelo digest, e o segredo define o papel. Há um token para workers e outro para managers |
+| **Raft cifrado** | O log do Raft (estado do cluster, secrets, configs) é **cifrado em repouso** nos managers |
+| **Autolock** | Protege as chaves de criptografia do Raft com uma chave que precisa ser informada após o restart de um manager |
+| **Secrets** | Entregues só aos nós que executam tarefas autorizadas a usá-los, em tmpfs |
+| **Tráfego da overlay** | Controle (gerenciamento e gossip) **cifrado**; dados dos contêineres **não cifrados** por padrão (`--opt encrypted` liga IPsec) |
+
+```bash
+docker swarm ca --rotate                         # nova CA raiz; os nós recebem certificados novos
+docker swarm ca --rotate --external-ca protocol=cfssl,url=https://ca.exemplo.com
+docker swarm init --external-ca protocol=cfssl,url=https://ca.exemplo.com   # CA própria desde o início
+docker swarm join-token --rotate manager         # invalida o token antigo de manager
+docker swarm update --autolock=true              # mostra a chave de desbloqueio
+docker swarm unlock-key                          # mostra a chave atual (em um manager desbloqueado)
+docker swarm unlock-key --rotate
+```
+
+- **Rotação da CA**: o Docker cria um certificado intermediário com assinatura cruzada entre a CA antiga e a nova, e os nós renovam os certificados sem perder a comunicação. Depois da rotação, **os tokens de entrada antigos deixam de valer** (eles contêm o digest da CA).
+- **Token vazado**: `docker swarm join-token --rotate` resolve para quem ainda não entrou; nós que já entraram com o token precisam ser removidos com `docker node rm`.
+- **Workers** não guardam o estado do cluster nem aceitam comandos de administração.
+
+#### Backup e restauração do Swarm
+O estado do cluster (Raft, serviços, secrets, configs, chaves de criptografia) fica em **`/var/lib/docker/swarm/`** em cada manager.
+
+```bash
+# Backup, em um manager que não seja o único (o cluster continua com quórum)
+docker swarm unlock-key -q > unlock-key.txt      # se o autolock estiver ligado
+sudo systemctl stop docker
+sudo tar czf swarm-backup-$(date +%F).tgz -C /var/lib/docker swarm
+sudo systemctl start docker
+
+# Restauração em um host novo (mesma versão do Engine)
+sudo systemctl stop docker
+sudo rm -rf /var/lib/docker/swarm
+sudo tar xzf swarm-backup-2026-09-30.tgz -C /var/lib/docker
+sudo systemctl start docker
+docker swarm unlock                              # se havia autolock
+docker swarm init --force-new-cluster            # novo cluster de um manager com o estado restaurado
+docker node promote …                            # voltar a ter 3 ou 5 managers
+```
+
+- **Pare o Docker antes de copiar**: com o daemon rodando, o Raft pode mudar durante a cópia. Por isso o backup é feito em um manager **não essencial ao quórum**.
+- O backup **não inclui** dados dos volumes nem as imagens; faça backup dos volumes separadamente e mantenha as imagens em um registry.
+- As chaves de criptografia e de desbloqueio **continuam as mesmas** do cluster original: guarde a chave de desbloqueio junto (e separada) do backup.
+- `--force-new-cluster` também é o caminho quando o cluster **perde o quórum**: o manager mantém serviços, tarefas e workers, e os managers antigos precisam entrar de novo.
+- Use um **IP fixo** no `--advertise-addr` dos managers: um IP que muda no reboot deixa o cluster instável.
+
+#### Atualizar o Engine e fazer manutenção nos nós
+1. `docker node update --availability drain <nó>`: as tarefas vão para outros nós.
+2. Atualize o Engine pelo gerenciador de pacotes e reinicie o daemon.
+3. `docker node update --availability active <nó>`, e confirme em `docker node ls` que ele voltou como `Ready`.
+4. Repita **um nó por vez**. Managers primeiro, **um de cada vez**, esperando cada um voltar como `Reachable`, para nunca perder o quórum.
+
+- Versões diferentes do Engine convivem no cluster durante a atualização, mas não por muito tempo.
+- `live-restore` **não funciona** em nós do Swarm: reiniciar o daemon reinicia as tarefas daquele nó.
+- **Promover um worker a manager** exige atenção: mais managers aumentam a tolerância, mas cada um participa do consenso. Workers dedicados rodam as aplicações; em clusters maiores, managers com `drain` só cuidam do cluster.
 
 ### Secrets e configs do Swarm
 
@@ -2392,7 +2765,432 @@ jobs:
 
 ---
 
-## 13. Pegadinhas e Padrões Recorrentes
+## 13. Preparação para o DCA (Docker Certified Associate)
+
+> **Ideia central**: o DCA cobra o Docker que está nos capítulos 1 a 12 **e** alguns assuntos que já saíram da prática: os produtos do antigo **Docker Enterprise** (UCP e DTR, hoje **MKE** e **MSR**, da Mirantis), o **Docker Content Trust** e o **devicemapper**. Este capítulo liga cada objetivo do roteiro oficial ao ponto do guia que o cobre, explica os tópicos legados no nível da prova e resume o Kubernetes que a prova pede.
+
+### A prova
+
+#### Formato
+
+| Item | Valor (conferido em set/2026) |
+|---|---|
+| Quem aplica | **Mirantis**, que comprou o Docker Enterprise em 2019 |
+| Questões | **55**: 13 de múltipla escolha tradicional e **42 no formato DOMC** |
+| Duração | **90 minutos** |
+| Preço | US$ 199 (ou € 200) |
+| Aplicação | Online, com fiscal remoto, no seu computador Windows ou Mac; em inglês |
+| Nota de aprovação | **Não divulgada** (pode mudar sem aviso) |
+| Validade | **2 anos** |
+| Experiência recomendada | 6 a 12 meses de uso de Docker |
+| Roteiro oficial | *Docker Certification Study Guide*, versão 1.5 |
+
+| Domínio | Peso |
+|---|---|
+| 1. Orquestração | **25%** |
+| 2. Criação, gerenciamento e registry de imagens | **20%** |
+| 3. Instalação e configuração | **15%** |
+| 4. Redes | **15%** |
+| 5. Segurança | **15%** |
+| 6. Armazenamento e volumes | **10%** |
+
+#### Como funciona o DOMC
+No **Discrete Option Multiple Choice**, as alternativas aparecem **uma de cada vez** e você responde **SIM** ou **NÃO** para cada uma, sem poder voltar. A questão termina quando você acerta o que ela pede ou erra uma alternativa; você não sabe quantas alternativas ainda viriam.
+
+- **Leia o enunciado inteiro** antes da primeira alternativa: ele não vai mudar, e a pergunta costuma ter um detalhe decisivo ("em um Swarm", "sem downtime", "com o menor privilégio").
+- **Julgue cada alternativa sozinha**, como verdadeira ou falsa para aquele enunciado. Não espere uma "melhor" que talvez nunca apareça.
+- Alternativas **quase certas** são o ponto fraco do formato: um comando com a flag errada (`docker service scale web 5` no lugar de `web=5`) ou um valor trocado (porta 2376 vs. 2377) é **NÃO**.
+- Conheça **sintaxes exatas**: a prova testa flags, nomes de campos de `inspect` e a ordem dos argumentos.
+
+### Roteiro oficial e onde estudar
+
+#### Domínio 1 — Orquestração (25%)
+
+| Objetivo | Onde está |
+|---|---|
+| Montar um Swarm com managers e workers | Cap. 11, "Criar e administrar o cluster" |
+| Transformar instruções de um contêiner em serviço | Cap. 11, "Serviços, atualizações e stacks" |
+| Importância do quórum | Cap. 11, "Quórum de managers" |
+| Diferença entre contêiner e serviço | Cap. 11, "Serviços, atualizações e stacks" |
+| Interpretar a saída de `docker inspect` | Cap. 3, "Filtros e formatação" |
+| Converter uma aplicação em stack (`docker stack deploy`) e alterar um stack em execução | Cap. 11, "`docker stack` na prática" |
+| Aumentar réplicas, adicionar redes, publicar portas, montar volumes | Cap. 11, "Serviços, atualizações e stacks" e "Publicação de portas" |
+| Serviços replicated e global | Cap. 11, "Modos de serviço e limites de posicionamento" |
+| Rótulos de nó para posicionar tarefas | Cap. 11, "Modos de serviço e limites de posicionamento" |
+| Templates com `docker service create` | Cap. 11, "Templates em `docker service create`" |
+| Diagnosticar um serviço que não sobe | Cap. 11, "Serviço que não sobe: diagnóstico" |
+| Como uma aplicação em contêiner fala com sistemas legados | Cap. 6, "Integração com sistemas legados" |
+| Kubernetes: Pods e Deployments; ConfigMaps e Secrets | Este capítulo, "Kubernetes no nível do DCA" |
+
+#### Domínio 2 — Imagens e registry (20%)
+
+| Objetivo | Onde está |
+|---|---|
+| Uso do Dockerfile e opções (`ADD`, `COPY`, `VOLUME`, `EXPOSE`, `ENTRYPOINT`) | Cap. 4, "Instruções" |
+| Partes principais de um Dockerfile e imagem eficiente | Cap. 4, "Boas práticas" e "Multi-stage builds" |
+| Gerenciar imagens (`ls`, `rm`, `prune`, `rmi`) | Cap. 3, "Comandos essenciais" |
+| Inspecionar imagens com filtros e formatação | Cap. 3, "Filtros e formatação" |
+| Criar tags | Cap. 3, "Enviar imagens ao Docker Hub" e "Estratégia de tags" |
+| Aplicar um arquivo para criar uma imagem; ver camadas; imagem com uma camada | Cap. 3, "Imagem com uma só camada" |
+| Implantar e configurar um registry; login; busca; push; pull | Cap. 3, "Registry próprio", "Credenciais da CLI" e "Enviar imagens ao Docker Hub" |
+| Assinar uma imagem | Este capítulo, "Docker Content Trust" |
+| Apagar imagens de um registry | Cap. 3, "Apagar imagens de um registry" |
+
+#### Domínio 3 — Instalação e configuração (15%)
+
+| Objetivo | Onde está |
+|---|---|
+| Requisitos de dimensionamento | Cap. 1, "Requisitos"; este capítulo, "Arquitetura, requisitos e alta disponibilidade" |
+| Repositório, storage driver e instalação em várias plataformas | Cap. 1, "Formas de instalar" e "Instalação pelo repositório oficial"; cap. 7, "Driver por sistema operacional" |
+| Drivers de log (splunk, journald etc.) | Cap. 10, "Drivers de log" |
+| Montar o Swarm, configurar managers, adicionar nós e agendar backups | Cap. 11, "Criar e administrar o cluster" e "Backup e restauração do Swarm" |
+| Criar e gerenciar usuários e times | Este capítulo, "Usuários, times e RBAC" |
+| Iniciar o daemon no boot | Cap. 1, "Pós-instalação no Linux"; cap. 10, "Problemas de instalação e do daemon" |
+| Autenticação por certificado entre daemon e registry | Cap. 3, "Certificados de registry" |
+| Namespaces, cgroups e certificados | Cap. 1, "Os três pilares do kernel"; cap. 1, "O daemon e suas opções" |
+| Diagnosticar erros de instalação | Cap. 10, "Problemas de instalação e do daemon" |
+| Instalar Engine, UCP e DTR em alta disponibilidade; backups do UCP e do DTR | Este capítulo, "Docker Enterprise: UCP e DTR" |
+
+#### Domínio 4 — Redes (15%)
+
+| Objetivo | Onde está |
+|---|---|
+| Container Network Model, drivers de rede e de IPAM | Cap. 6, "Container Network Model (CNM)" |
+| Drivers nativos e casos de uso | Cap. 6, "Drivers de rede" |
+| Tráfego entre Engine, registry e controladores do UCP | Este capítulo, "Portas e tipos de tráfego" |
+| Criar uma rede bridge para desenvolvedores | Cap. 6, "Criar e inspecionar redes" |
+| Publicar uma porta; descobrir IP e porta de acesso | Cap. 6, "Publicação de portas"; cap. 11, "Publicação de portas: modo `ingress` vs. modo `host`" |
+| Modos de publicação `host` e `ingress` | Cap. 11, "Publicação de portas: modo `ingress` vs. modo `host`" |
+| Usar DNS externo | Cap. 1, "O arquivo `daemon.json`"; cap. 6, "Opções de rede do `docker run`" |
+| Balanceamento HTTP/HTTPS (L7) | Este capítulo, "Roteamento L7 (Interlock)" |
+| Serviço em rede overlay | Cap. 6, "Overlay e redes de camada 2"; cap. 11 |
+| Diagnosticar conectividade com logs do contêiner e do Engine | Cap. 6, "Diagnóstico de rede"; cap. 10 |
+| Kubernetes: Services ClusterIP e NodePort; modelo de rede | Este capítulo, "Kubernetes no nível do DCA" |
+
+#### Domínio 5 — Segurança (15%)
+
+| Objetivo | Onde está |
+|---|---|
+| Tarefas de administração de segurança; segurança padrão do Engine | Cap. 9, "Proteger o host e o daemon" e "Endurecer o contêiner em execução" |
+| Segurança padrão do Swarm; mTLS | Cap. 11, "Segurança padrão do Swarm" |
+| Assinatura de imagens; habilitar o Docker Content Trust | Este capítulo, "Docker Content Trust" |
+| Scan de segurança de imagens | Cap. 9, "Cadeia de suprimentos"; este capítulo, "DTR: scan, assinatura, promoção e limpeza" |
+| Papéis de identidade; RBAC no UCP; integração com LDAP/AD | Este capítulo, "Usuários, times e RBAC" e "LDAP/AD, client bundles e certificados" |
+| Managers e workers do UCP | Este capítulo, "Arquitetura, requisitos e alta disponibilidade" |
+| Certificados externos no UCP e no DTR; client bundles | Este capítulo, "LDAP/AD, client bundles e certificados" |
+
+#### Domínio 6 — Armazenamento e volumes (10%)
+
+| Objetivo | Onde está |
+|---|---|
+| Driver correto para cada sistema operacional | Cap. 7, "Driver por sistema operacional" |
+| Configurar o devicemapper | Este capítulo, "devicemapper: `loop-lvm` e `direct-lvm`" |
+| Armazenamento de objetos vs. de blocos | Cap. 7, "Blocos, arquivos e objetos" |
+| Camadas de uma aplicação e onde ficam no disco | Cap. 3, "Camadas, manifest e digest"; cap. 7, "Onde as camadas ficam no disco" |
+| Volumes para persistência | Cap. 7, "Tipos de montagem" e "Características dos volumes" |
+| Limpar imagens não usadas no host e no DTR | Cap. 2, "Limpeza"; este capítulo, "DTR: scan, assinatura, promoção e limpeza" |
+| Armazenamento entre nós do cluster | Cap. 7, "Backup, restauração e drivers"; cap. 11, "Serviços, atualizações e stacks" |
+| Kubernetes: PersistentVolumes, CSI, StorageClass e PVC | Este capítulo, "Kubernetes no nível do DCA" |
+
+### Recursos legados que a prova ainda cobra
+
+#### Docker Content Trust
+O **Docker Content Trust (DCT)** assina e verifica **tags** de imagem usando o **Notary** (implementação do framework TUF, The Update Framework). Ele foi aposentado e não deve ser adotado em projetos novos (use **cosign** ou **Notation**, capítulo 9), mas é o que a prova pergunta sobre "assinar uma imagem".
+
+```bash
+# Liga o DCT no CLIENTE (variável de ambiente, vale para a sessão)
+export DOCKER_CONTENT_TRUST=1
+docker push registry.exemplo.com/app:1.0     # assina a tag ao enviar
+docker pull registry.exemplo.com/app:1.0     # só aceita a tag se estiver assinada
+docker pull --disable-content-trust registry.exemplo.com/app:dev   # exceção pontual
+
+# Gestão de chaves e signatários
+docker trust key generate alice               # gera alice.pub e a chave privada
+docker trust signer add --key alice.pub alice registry.exemplo.com/app
+docker trust sign registry.exemplo.com/app:1.0
+docker trust inspect --pretty registry.exemplo.com/app:1.0
+docker trust revoke registry.exemplo.com/app:1.0
+docker trust signer remove alice registry.exemplo.com/app
+```
+
+| Chave | Papel | Onde fica |
+|---|---|---|
+| **Root** (offline) | Raiz de confiança de todos os repositórios do usuário; cria as chaves de repositório | `~/.docker/trust/private`; guarde **offline** e com backup |
+| **Repositório** (targets) | Assina as tags de **um** repositório | `~/.docker/trust/private` |
+| **Delegação** | Chave de um signatário (pessoa ou pipeline) autorizado no repositório | Com o signatário |
+| **Snapshot** e **timestamp** | Garantem a consistência e o frescor dos metadados | Gerenciadas pelo servidor Notary (timestamp sempre; snapshot opcional) |
+
+- Com `DOCKER_CONTENT_TRUST=1`, `pull`, `run`, `create` e `build` (no `FROM`) **recusam tags sem assinatura**; `push` assina. A verificação é feita pelo **cliente**: o Engine comunitário não tem uma opção de daemon para exigir assinaturas. Essa exigência no nível do cluster era um recurso do **UCP** ("executar só imagens assinadas por times definidos").
+- A assinatura é da **tag**; um pull pelo digest (`@sha256:`) já é verificável por si.
+- Senhas das chaves em automação: `DOCKER_CONTENT_TRUST_ROOT_PASSPHRASE` e `DOCKER_CONTENT_TRUST_REPOSITORY_PASSPHRASE`. Servidor Notary: `DOCKER_CONTENT_TRUST_SERVER`.
+- **Perdeu a chave root**: não há recuperação; é preciso rotacionar as chaves (`notary key rotate`) e reassinar.
+
+#### devicemapper: `loop-lvm` e `direct-lvm`
+O **devicemapper** faz copy-on-write em nível de **bloco**, com thin provisioning do LVM. Foi o driver padrão do RHEL e do CentOS até o `overlay2` ser suportado lá, e foi **removido no Engine 25**. A prova cobra os dois modos:
+
+| Modo | Como funciona | Uso |
+|---|---|---|
+| **`loop-lvm`** | Padrão quando se escolhe o devicemapper sem mais nada: dois **arquivos esparsos** (`data` e `metadata`) em `/var/lib/docker/devicemapper` montados como dispositivos de loopback | **Só testes**: desempenho ruim. O `docker info` avisa `Data loop file` e `usage of loopback devices is strongly discouraged for production use` |
+| **`direct-lvm`** | Um **dispositivo de bloco dedicado** vira um thin pool do LVM | **Produção** |
+
+```json
+{
+  "storage-driver": "devicemapper",
+  "storage-opts": [
+    "dm.directlvm_device=/dev/xvdf",
+    "dm.thinp_percent=95",
+    "dm.thinp_metapercent=1",
+    "dm.thinp_autoextend_threshold=80",
+    "dm.thinp_autoextend_percent=20",
+    "dm.directlvm_device_force=false"
+  ]
+}
+```
+
+- Com `dm.directlvm_device`, o próprio Docker cria o physical volume, o volume group `docker` e o thin pool no disco indicado (o disco é **apagado**). A alternativa manual era criar o thin pool com `pvcreate`, `vgcreate`, `lvcreate` e `lvconvert` e apontar `dm.thinpooldev=/dev/mapper/docker-thinpool`.
+- `dm.thinp_autoextend_*` configura a extensão automática do pool pelo LVM (a 80% de uso, cresce 20%). `dm.basesize` definia o tamanho máximo do sistema de arquivos de cada contêiner (padrão 10 GB). `dm.use_deferred_removal` e `dm.use_deferred_deletion` evitavam erros de "device busy".
+- Mudar para `devicemapper` (ou sair dele) torna invisíveis as imagens e os contêineres existentes (capítulo 7).
+
+### Docker Enterprise: UCP e DTR (hoje MKE e MSR)
+
+#### O que eram e o que são hoje
+
+| Produto do Docker Enterprise (até 2019) | Nome atual (Mirantis) | Papel |
+|---|---|---|
+| Docker Engine - Enterprise | **Mirantis Container Runtime (MCR)** | Engine com suporte comercial e recursos como FIPS |
+| **Universal Control Plane (UCP)** | **Mirantis Kubernetes Engine (MKE)** | Interface web e API para gerenciar um cluster **Swarm e Kubernetes**, com usuários, times, RBAC e LDAP |
+| **Docker Trusted Registry (DTR)** | **Mirantis Secure Registry (MSR)** | Registry privado com scan de vulnerabilidades, assinatura, promoção de imagens e espelhamento |
+
+- A Mirantis comprou o Docker Enterprise em **novembro de 2019**; a Docker Inc. ficou com o Docker Desktop, o Docker Hub e as ferramentas de desenvolvedor.
+- O **MKE 3** manteve a arquitetura do UCP, com Swarm e Kubernetes lado a lado. O **MKE 4** passou a ser baseado no **k0s** e **não suporta Swarm**; quem usa Swarm continua no MKE 3.
+- A prova segue a arquitetura do UCP 3 e do DTR 2, descrita a seguir.
+
+#### Arquitetura, requisitos e alta disponibilidade
+- O UCP é instalado **sobre um Swarm**, como contêineres: `docker container run --rm -it --name ucp -v /var/run/docker.sock:/var/run/docker.sock docker/ucp install --host-address <ip> --interactive`. Nós que entram no Swarm depois passam a ser gerenciados automaticamente.
+
+| Papel | O que roda | Observações |
+|---|---|---|
+| **Manager do UCP** (manager do Swarm) | Controlador do UCP (interface web e API), autenticação, armazenamento de chave-valor (etcd), banco de autenticação (RethinkDB), control plane do Kubernetes, CA do cluster | Para HA: **3, 5 ou 7** managers atrás de um **load balancer TCP** na porta 443 (**sem terminar o TLS**, em modo passthrough). Por padrão, **usuários comuns não podem agendar cargas nos managers** |
+| **Worker do UCP** | Agente do UCP (`ucp-agent`, serviço global), proxy do Engine, kubelet e as **aplicações** | O **DTR** é instalado em **workers**, nunca em managers |
+| **Réplica do DTR** | Registry, API, interface, banco de metadados (RethinkDB), jobs de scan e GC | Para HA: **3, 5 ou 7 réplicas** em workers diferentes, com **armazenamento compartilhado** (NFS ou, preferencialmente, objetos) e um load balancer à frente |
+
+| Requisitos da época (UCP 3.x) | Mínimo | Recomendado para produção |
+|---|---|---|
+| Manager | **8 GB de RAM**, 2 vCPUs | **16 GB de RAM**, 4 vCPUs, 25 a 100 GB de disco livre |
+| Worker | **4 GB de RAM** | Conforme a carga das aplicações |
+| Nó com DTR | 16 GB de RAM, 2 vCPUs | 16 GB de RAM, 4 vCPUs, 25 a 100 GB de disco livre |
+
+- Relógios sincronizados (NTP), IP fixo e hostnames resolvíveis em todos os nós; managers espalhados por zonas de falha.
+
+#### Portas e tipos de tráfego
+
+| Tráfego | De → para | Porta e protocolo |
+|---|---|---|
+| Interface web, API do UCP e CLI com client bundle | Usuários → managers | **443/tcp** (HTTPS) |
+| API do Kubernetes (`kubectl`) | Usuários → managers | **6443/tcp** |
+| Controle do UCP sobre cada Engine | Managers → proxy do Engine em todos os nós | **12376/tcp** (TLS mútuo) |
+| Componentes internos do UCP (etcd, CA, autenticação, métricas) | Entre managers e nós | Faixa **12379–12388/tcp** |
+| Gerenciamento do Swarm, gossip e overlay | Entre nós | **2377/tcp**, **7946/tcp e udp**, **4789/udp** |
+| Rede de Pods do Kubernetes (Calico) | Entre nós | **179/tcp** (BGP) e o encapsulamento do Calico |
+| Pull e push de imagens | Engines e usuários → DTR | **443/tcp** (HTTPS, com o certificado confiado em `certs.d`) |
+| Login no DTR | DTR → UCP | O DTR usa o **UCP como provedor de identidade** (single sign-on) |
+| Replicação entre réplicas do DTR | Réplica ↔ réplica | Rede overlay própria do DTR |
+
+- Toda comunicação de controle é **TLS mútuo**, com certificados das CAs internas do UCP. O tráfego das aplicações segue a rede escolhida (overlay, com ou sem `encrypted`).
+
+#### Usuários, times e RBAC
+
+| Conceito | O que é |
+|---|---|
+| **Usuário** | Conta individual (local ou sincronizada do LDAP/AD). Pode ser **administrador** (acesso total) ou comum |
+| **Organização** | Agrupa **times** |
+| **Time** | Grupo de usuários dentro de uma organização; pode ter a lista de membros sincronizada de um grupo do LDAP |
+| **Service account** | Identidade de aplicações no Kubernetes |
+| **Sujeito** (*subject*) | Quem recebe a permissão: usuário, time, organização ou service account |
+| **Papel** (*role*) | Conjunto de operações permitidas |
+| **Conjunto de recursos** | **Coleção** (Swarm: hierarquia como `/Shared/Private/<usuário>`, contendo serviços, nós, redes, volumes, secrets) ou **namespace** (Kubernetes) |
+| **Grant** | A regra de acesso: **sujeito + papel + conjunto de recursos** |
+
+| Papel padrão | Permite |
+|---|---|
+| **None** | Nada |
+| **View Only** | Ver recursos, sem alterar |
+| **Restricted Control** | Criar e alterar recursos, **sem** operações que afetam o nó: nada de `--privileged`, bind mount do host, `exec` ou capabilities extras |
+| **Scheduler** | Ver nós e **agendar** cargas neles (dado em coleções de nós) |
+| **Full Control** | Tudo nos recursos do grant, inclusive operações privilegiadas |
+
+- Além dos papéis padrão, é possível criar **papéis personalizados** escolhendo operações.
+- Cada usuário novo recebe uma coleção privada (`/Shared/Private/<usuário>`); as coleções `/System` (componentes do UCP) e `/Shared` (nós compartilhados) já vêm criadas.
+- O DTR usa os mesmos usuários, organizações e times do UCP; as permissões de repositório (leitura, leitura e escrita, admin) são dadas a times.
+
+#### LDAP/AD, client bundles e certificados
+- **LDAP ou Active Directory**: configurado em *Admin Settings → Authentication & Authorization*, com a URL do servidor, um usuário de leitura (reader DN e senha), a base de busca, o filtro e o atributo de nome de usuário. O UCP **sincroniza** os usuários periodicamente (intervalo configurável) e pode sincronizar a lista de membros de cada time a partir de um grupo do diretório. Use `ldaps://` ou StartTLS.
+- **Client bundle**: arquivo zip gerado pelo usuário em *My Profile → Client Bundles* (ou pela API). Contém um **certificado de cliente** com a identidade do usuário (`cert.pem`, `key.pem`, `ca.pem`), um `kube.yml` e os scripts `env.sh`, `env.ps1` e `env.cmd`.
+
+```bash
+unzip ucp-bundle-alice.zip -d bundle && cd bundle
+eval "$(<env.sh)"      # define DOCKER_HOST, DOCKER_TLS_VERIFY, DOCKER_CERT_PATH e KUBECONFIG
+docker node ls          # o comando vai para o UCP, que aplica o RBAC de alice
+kubectl get pods
+```
+
+- Os comandos feitos com o bundle passam pelo UCP e respeitam os **grants do usuário**; um bundle pode ser **revogado** na interface. Trate-o como uma senha.
+- **Certificados externos** (de uma CA da empresa, para os navegadores confiarem): no UCP, em *Admin Settings → Certificates* (CA, certificado e chave) ou na instalação com `--external-server-cert`, colocando os arquivos no volume `ucp-controller-server-certs`. No DTR, com `--dtr-ca`, `--dtr-cert` e `--dtr-key` no `install` ou `reconfigure`, ou na interface. Os Engines que baixam do DTR precisam confiar na CA (`/etc/docker/certs.d/<dtr>/ca.crt`, capítulo 3).
+
+#### Roteamento L7 (Interlock)
+O **Interlock** (sucessor do *HTTP Routing Mesh*, HRM, do UCP 2) é o balanceador **HTTP/HTTPS de camada 7** do UCP para serviços Swarm. É ligado em *Admin Settings → Layer 7 Routing* e roda três serviços: `ucp-interlock` (lê a API do Swarm), `ucp-interlock-extension` (gera a configuração) e `ucp-interlock-proxy` (NGINX que recebe o tráfego, por padrão nas portas 8080 e 8443).
+
+```bash
+docker service create --name app --network app-net \
+  --label com.docker.lb.hosts=app.exemplo.com \
+  --label com.docker.lb.port=8080 \
+  --label com.docker.lb.network=app-net \
+  minha-org/app:1.0
+```
+
+- O roteamento é feito pelo **cabeçalho `Host`** (virtual hosts), com rótulos do serviço. Outros rótulos: `com.docker.lb.ssl_cert`/`ssl_key` (TLS no proxy), `com.docker.lb.sticky_session_cookie`, `com.docker.lb.redirects`, `com.docker.lb.context_root`.
+- **Routing mesh (L4)** vs. **Interlock (L7)**: o routing mesh encaminha **portas TCP/UDP** para qualquer tarefa; o Interlock entende **HTTP**, roteia por nome de host e caminho e termina TLS. Para Kubernetes, o equivalente é Ingress ou Gateway API.
+- Hoje, fora do MKE, o mesmo papel é feito por **Traefik**, Caddy ou NGINX configurados por rótulos de serviço.
+
+#### DTR: scan, assinatura, promoção e limpeza
+- **Scan de vulnerabilidades**: o DTR compara os componentes de cada camada com um **banco de CVEs** (atualizado online ou importado offline) e pode escanear **a cada push** ou manualmente. O resultado aparece por tag, com severidade por camada e componente.
+- **Assinatura**: o DTR tem um servidor **Notary** embutido; com `DOCKER_CONTENT_TRUST=1`, o push para o DTR assina a tag. A interface mostra quais tags estão assinadas, e o UCP pode exigir assinatura de times específicos para rodar imagens.
+- **Tags imutáveis**: uma opção por repositório impede sobrescrever uma tag existente.
+- **Políticas de promoção**: copiam uma imagem para outro repositório quando atende a critérios (por exemplo, "sem vulnerabilidades críticas" ou "tag casa com `release-*`"). **Espelhamento** (*mirroring*) envia ou puxa imagens entre registries, e o **cache** atende sites remotos.
+- **Limpeza no DTR**: apagar tags (interface ou API), configurar **políticas de pruning de tags** (por idade, quantidade ou padrão) e agendar o **garbage collection**, que remove camadas sem referência do armazenamento. Apagar uma tag **não** libera espaço até o garbage collection rodar.
+- **Armazenamento**: sistema de arquivos local, NFS ou **objetos** (S3, Azure Blob, Google Cloud Storage, Swift). Com várias réplicas, o armazenamento precisa ser **compartilhado**, e objetos é o preferido.
+
+#### Backup e restauração do Docker Enterprise
+A ordem é sempre a mesma, tanto no backup quanto na restauração: **Swarm → UCP → DTR**.
+
+| Componente | Como | O que o backup contém |
+|---|---|---|
+| **Swarm** | Cópia de `/var/lib/docker/swarm` com o Docker parado (capítulo 11) | Estado do cluster, serviços, secrets |
+| **UCP** | `docker container run --rm --log-driver none --name ucp -v /var/run/docker.sock:/var/run/docker.sock docker/ucp backup --id <id-do-ucp> --passphrase "…" > ucp-backup.tar`, em **um** manager | Configuração do UCP, usuários, times, grants, coleções, certificados. **Não** inclui o estado do Swarm nem as cargas |
+| **DTR** | `docker run --rm docker/dtr backup --ucp-url … --existing-replica-id <id> > dtr-metadata.tar` | **Só metadados**: configurações, repositórios, permissões, assinaturas. **Não inclui as imagens**: faça backup do armazenamento (bucket, NFS) à parte |
+
+- O UCP também faz backup pela interface ou API, e o backup pode ser **agendado**. Durante o backup, os componentes do UCP **naquele manager** param por alguns instantes; os outros managers continuam atendendo.
+- A restauração do UCP (`docker/ucp restore < ucp-backup.tar`) é feita em um Swarm onde o UCP **não** está instalado, com a **mesma versão** do backup.
+
+### Kubernetes no nível do DCA
+
+#### Objetos cobrados
+A prova pede o Kubernetes **conceitual**: saber qual objeto usar e ler um manifest. O e-book de Kubernetes desta coleção aprofunda cada tema.
+
+| Objeto | Para que serve | Equivalente no Swarm |
+|---|---|---|
+| **Pod** | Menor unidade: um ou mais contêineres que compartilham rede (mesmo IP) e volumes | Tarefa |
+| **Deployment** | Mantém N réplicas de um Pod (por meio de um ReplicaSet) e faz rolling update e rollback | Serviço replicated |
+| **ConfigMap** | Configuração não sensível, injetada como variáveis de ambiente ou arquivos | `docker config` |
+| **Secret** | Dados sensíveis, injetados como variáveis ou arquivos. Por padrão só **codificados em base64** no etcd; a cifra em repouso precisa ser configurada | `docker secret` |
+| **Service `ClusterIP`** (padrão) | IP virtual **interno** e nome DNS estável que balanceiam entre os Pods selecionados por rótulos | VIP do serviço |
+| **Service `NodePort`** | Tudo do ClusterIP **mais** uma porta (faixa **30000–32767**) aberta em **todos os nós** | Routing mesh (`ingress`) |
+| **PersistentVolume (PV)** | Um pedaço de armazenamento do cluster, criado pelo administrador ou dinamicamente | Volume com driver |
+| **PersistentVolumeClaim (PVC)** | O **pedido** de armazenamento feito pela aplicação (tamanho e modo de acesso) | `--mount type=volume` |
+| **StorageClass** | Define o **provisionador** (driver CSI) e os parâmetros para criar PVs sob demanda | Driver de volume e opções |
+
+#### Um exemplo completo
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: web-config }
+data:
+  APP_MODE: producao
+---
+apiVersion: v1
+kind: Secret
+metadata: { name: web-secret }
+type: Opaque
+stringData:                     # o Kubernetes converte para base64 em data
+  DB_PASSWORD: troque-me
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: web-dados }
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: standard    # a StorageClass aciona o driver CSI
+  resources: { requests: { storage: 1Gi } }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: web }
+spec:
+  replicas: 3
+  selector: { matchLabels: { app: web } }
+  template:
+    metadata: { labels: { app: web } }
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.28
+          ports: [{ containerPort: 80 }]
+          envFrom:
+            - configMapRef: { name: web-config }
+          env:
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: web-secret, key: DB_PASSWORD } }
+          volumeMounts: [{ name: dados, mountPath: /usr/share/nginx/html }]
+      volumes:
+        - name: dados
+          persistentVolumeClaim: { claimName: web-dados }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: web }
+spec:
+  type: NodePort                # sem "type", seria ClusterIP
+  selector: { app: web }
+  ports: [{ port: 80, targetPort: 80, nodePort: 30080 }]
+```
+
+```bash
+kubectl apply -f web.yaml
+kubectl get deploy,pods,svc,pvc
+kubectl scale deployment web --replicas 5
+kubectl set image deployment/web web=nginx:1.29 && kubectl rollout status deployment/web
+kubectl rollout undo deployment/web
+```
+
+- O PVC com `ReadWriteOnce` é montado por **um nó** de cada vez: réplicas em nós diferentes não conseguem montar o mesmo volume. Para várias réplicas com dados próprios, use StatefulSet; para compartilhar, um volume `ReadWriteMany` (NFS, sistemas de arquivos em rede).
+
+#### Modelo de rede e armazenamento
+
+- **Modelo de rede do Kubernetes**: cada Pod tem **um IP próprio**; todos os Pods se comunicam com todos os outros **sem NAT**, em qualquer nó; os contêineres de um Pod compartilham o IP e se falam por `localhost`. A implementação é feita por um plugin **CNI** (Calico, Cilium, Flannel), não pelo CNM do Docker. O `kube-proxy` (ou o próprio CNI) implementa os IPs virtuais dos Services, e o DNS do cluster resolve `web.<namespace>.svc.cluster.local`.
+- **Isolamento**: por padrão, qualquer Pod fala com qualquer Pod; **NetworkPolicies** restringem o tráfego (se o CNI as suportar).
+- **Relação CSI → StorageClass → PVC → PV → volume**: o administrador instala um **driver CSI** (Container Storage Interface, o padrão para plugins de armazenamento) e cria uma **StorageClass** que o referencia. A aplicação cria um **PVC** citando a StorageClass; o driver **provisiona dinamicamente** um **PV** e o liga ao PVC; o Pod declara um **volume** do tipo `persistentVolumeClaim` e o monta no contêiner.
+- **Provisionamento estático**: o administrador cria PVs à mão, e o PVC é ligado a um PV compatível (tamanho, modo de acesso, StorageClass).
+- **`reclaimPolicy`** da StorageClass ou do PV: `Delete` (padrão no provisionamento dinâmico, apaga o disco junto com o PVC) ou `Retain` (mantém o disco para recuperação manual).
+- **Modos de acesso**: `ReadWriteOnce` (um nó), `ReadOnlyMany`, `ReadWriteMany` (vários nós) e `ReadWriteOncePod` (um único Pod).
+
+### Decisão rápida — DCA
+
+| Pergunta típica | Resposta | Alternativa que parece certa, mas não é |
+|---|---|---|
+| Como assinar uma imagem ao enviá-la? | `export DOCKER_CONTENT_TRUST=1` e `docker push` | `docker sign` (não existe) |
+| Onde colocar a CA de um registry privado? | `/etc/docker/certs.d/<host:porta>/ca.crt` | `insecure-registries` (desliga a verificação) |
+| Qual driver de armazenamento para contêineres Windows? | `windowsfilter` | `overlay2` |
+| devicemapper em produção? | `direct-lvm` com dispositivo de bloco dedicado | `loop-lvm` (padrão, só para testes) |
+| Armazenamento preferido para um registry em HA? | Objetos (S3, Azure Blob, GCS) | Volume local em cada réplica |
+| Backup do Swarm? | `/var/lib/docker/swarm` com o Docker parado em um manager | Copiar com o daemon rodando |
+| Ordem de backup e restauração do Docker Enterprise? | Swarm → UCP → DTR | Qualquer ordem |
+| O backup do DTR inclui as imagens? | Não, só metadados | Sim |
+| Porta aberta em todos os nós do Swarm? | `mode=ingress` (padrão) | `mode=host` |
+| Preservar o IP do cliente em um serviço Swarm? | `mode=host` | `ingress` |
+| Hostname diferente por tarefa? | `--hostname '{{.Node.Hostname}}-{{.Task.Slot}}'` | `--env HOSTNAME=…` fixo |
+| Serviço com tarefas em `Pending`? | `docker service ps --no-trunc`: constraint, recursos ou porta | Remover e recriar o serviço |
+| Imagem privada não encontrada pelos workers? | `--with-registry-auth` | Fazer `docker login` só no manager |
+| Validade padrão do certificado de um nó do Swarm? | 90 dias, renovado automaticamente | 1 ano |
+| Usar os comandos do UCP com as permissões do usuário? | Client bundle (`eval "$(<env.sh)"`) | Acesso direto ao `docker.sock` dos managers |
+| Balancear HTTP por nome de host no UCP? | Interlock com `com.docker.lb.hosts` | Routing mesh (é L4) |
+| Kubernetes: acesso interno estável a um conjunto de Pods? | Service `ClusterIP` | IP de um Pod |
+| Kubernetes: acesso de fora por uma porta em todos os nós? | Service `NodePort` (30000–32767) | `ClusterIP` |
+| Kubernetes: quem cria o PV dinamicamente? | O driver CSI indicado pela StorageClass, a partir de um PVC | O Pod |
+
+---
+
+## 14. Pegadinhas e Padrões Recorrentes
 
 > **Como usar**: revise esta seção na véspera de uma entrevista, prova ou revisão de arquitetura. Cada linha é um erro de conceito que aparece com frequência em código real, em fóruns e em questões de certificação.
 
@@ -2454,7 +3252,7 @@ Livros, cursos e posts de 2015 a 2020 continuam circulando. Ao estudar por eles,
 | `MAINTAINER` no Dockerfile | `LABEL org.opencontainers.image.authors=…` |
 | Imagens `centos:7`, `debian:8`, `mysql:5.7`, `postgres:9.4`, `mongo:3.2`, `alpine:3.1` | Todas fora de suporte. Use versões mantidas e fixe a tag (e o digest) |
 | `KernelMemory` / `--kernel-memory` | Descontinuado; sem efeito com cgroup v2 |
-| Docker Content Trust (`DOCKER_CONTENT_TRUST=1`) | Aposentado. Use cosign ou Notation |
+| Docker Content Trust (`DOCKER_CONTENT_TRUST=1`) | Aposentado. Use cosign ou Notation (a prova do DCA ainda cobra: capítulo 13) |
 | Swarm com 2 managers | 3 (ou 5) managers; 2 não toleram nenhuma falha |
 | "Volume de um serviço Swarm é compartilhado entre os nós" | Com o driver `local`, cada nó tem o seu volume; compartilhar exige driver de rede |
 | Dois bancos de dados usando o mesmo volume de dados | Nunca: corrompe os dados. Um volume por instância e replicação do banco |
@@ -2507,7 +3305,7 @@ Livros, cursos e posts de 2015 a 2020 continuam circulando. Ao estudar por eles,
 
 ---
 
-## 14. Referência Rápida de Comandos
+## 15. Referência Rápida de Comandos
 
 > **Como usar**: consulta de bancada. Os comandos seguem a forma agrupada (`docker container …`, `docker image …`); as formas curtas (`docker ps`, `docker rmi`) continuam válidas.
 
@@ -2543,6 +3341,9 @@ Livros, cursos e posts de 2015 a 2020 continuam circulando. Ao estudar por eles,
 | `docker push ghcr.io/org/app:1.0` | Envio ao registry |
 | `docker save -o app.tar org/app:1.0` / `docker load -i app.tar` | Transporte sem registry |
 | `docker scout quickview org/app:1.0` | Resumo de vulnerabilidades |
+| `docker image ls --filter dangling=true --format '{{.ID}}'` | Filtra e formata a listagem |
+| `docker image inspect -f '{{json .RootFS.Layers}}' org/app:1.0` | Digests das camadas |
+| `DOCKER_CONTENT_TRUST=1 docker push …` / `docker trust inspect --pretty …` | Assina e confere com o DCT (legado, cobrado no DCA) |
 
 ### Redes e volumes
 
@@ -2550,6 +3351,7 @@ Livros, cursos e posts de 2015 a 2020 continuam circulando. Ao estudar por eles,
 |---|---|
 | `docker network create app` | Rede bridge definida pelo usuário |
 | `docker network create --internal dados` | Rede sem saída externa |
+| `docker network create --subnet 172.30.0.0/24 --gateway 172.30.0.1 dev` | Bridge com sub-rede e gateway próprios |
 | `docker network connect app contêiner` | Conecta um contêiner em execução |
 | `docker network inspect app` | Contêineres e IPs da rede |
 | `docker volume create dados` | Cria um volume nomeado |
@@ -2583,10 +3385,15 @@ Livros, cursos e posts de 2015 a 2020 continuam circulando. Ao estudar por eles,
 | `docker node ls` / `docker node update --availability drain <nó>` | Nós e manutenção |
 | `docker stack deploy -c compose.yaml loja` | Implanta uma stack |
 | `docker service ls` / `ps` / `logs` / `rollback` | Operação de serviços |
+| `docker service ps --no-trunc web` | Erro completo de tarefas que não sobem |
+| `docker service create --publish published=8080,target=80,mode=host …` | Porta só nos nós das tarefas |
+| `docker service create --hostname '{{.Node.Hostname}}' …` | Template por tarefa |
+| `docker service update --force web` | Redistribui as tarefas |
+| `docker swarm ca --rotate` / `docker swarm update --cert-expiry 720h` | Troca a CA / validade dos certificados |
 
 ---
 
-## 15. Autoteste — Flashcards de Revisão
+## 16. Autoteste — Flashcards de Revisão
 
 Cada card abaixo esconde a resposta: clique para expandir só depois de tentar responder mentalmente. O objetivo é forçar a lembrança ativa, não a releitura. Uma rodada de 20 cards por dia cobre todo o banco em menos de uma semana.
 
@@ -2915,3 +3722,89 @@ Cada card abaixo esconde a resposta: clique para expandir só depois de tentar r
 
 > [!question]- Por que node-exporter e cAdvisor rodam em modo `global`?
 > Porque precisam coletar métricas de **todos os nós**, inclusive dos que entrarem depois; o modo `global` garante uma tarefa por nó.
+
+### Certificação DCA
+
+> [!question]- Como é o formato da prova do DCA?
+> **55 questões em 90 minutos**: 13 de múltipla escolha tradicional e 42 **DOMC**, em que as alternativas aparecem uma de cada vez e você responde sim ou não, sem voltar. A nota de aprovação não é divulgada.
+
+> [!question]- Quais são os domínios do DCA e seus pesos?
+> Orquestração **25%**, imagens e registry **20%**, instalação e configuração **15%**, redes **15%**, segurança **15%**, armazenamento e volumes **10%**.
+
+> [!question]- Quais são os três objetos do Container Network Model?
+> **Sandbox** (a pilha de rede isolada do contêiner, um namespace de rede), **endpoint** (a ligação do sandbox a uma rede, um par veth) e **network** (o grupo de endpoints que se comunicam). Os drivers são de dois tipos: de **rede** e de **IPAM**.
+
+> [!question]- Qual é a diferença entre publicar uma porta de serviço em modo `ingress` e em modo `host`?
+> `ingress` (padrão) abre a porta em **todos os nós** e balanceia pelo routing mesh, perdendo o IP do cliente. `host` abre a porta **só no nó da tarefa**, preserva o IP do cliente e permite uma tarefa por nó para aquela porta.
+
+> [!question]- Quais flags do `docker service create` aceitam templates, e com quais placeholders?
+> `--hostname`, `--mount` e `--env`. Placeholders: `.Service.ID/Name/Labels`, `.Node.ID/Hostname` e `.Task.ID/Name/Slot`.
+
+> [!question]- Uma tarefa fica em `Pending` com `no suitable node`. O que investigar?
+> Os **constraints** do serviço (rótulo ou papel que nenhum nó tem), as **reservas** de CPU e memória, portas em `mode=host` e a disponibilidade dos nós (`drain`, `Down`). `docker service ps --no-trunc` mostra a mensagem completa.
+
+> [!question]- Os workers não conseguem baixar a imagem privada de um serviço. Qual é a correção?
+> Criar ou atualizar o serviço com **`--with-registry-auth`**, que repassa as credenciais do cliente aos nós.
+
+> [!question]- Como o Swarm protege a comunicação entre os nós?
+> Com **TLS mútuo**, usando certificados emitidos pela **CA embutida** no primeiro manager e renovados automaticamente a cada **90 dias** (`--cert-expiry`). `docker swarm ca --rotate` troca a CA raiz.
+
+> [!question]- O que o token de entrada do Swarm contém?
+> O **digest do certificado da CA raiz** e um **segredo** aleatório. O digest permite ao nó conferir que está entrando no cluster certo; o segredo define o papel (worker ou manager).
+
+> [!question]- Como fazer backup do estado de um Swarm?
+> Em um manager que não seja essencial ao quórum: guardar a chave de desbloqueio (se houver autolock), **parar o Docker**, copiar **`/var/lib/docker/swarm`** e iniciar o Docker de novo. Na restauração, usar `docker swarm init --force-new-cluster`.
+
+> [!question]- Como fazer o Engine confiar em um registry com certificado de uma CA interna?
+> Colocar a CA em **`/etc/docker/certs.d/<host:porta>/ca.crt`**. Para TLS mútuo, acrescentar `client.cert` e `client.key` no mesmo diretório.
+
+> [!question]- Por que o certificado de cliente do registry precisa ter a extensão `.cert`, e não `.crt`?
+> Porque o daemon trata arquivos **`.crt` como CAs** e **`.cert` como certificados de cliente**.
+
+> [!question]- Como apagar uma imagem de um registry Distribution e liberar espaço?
+> Com `delete` habilitado no registry, apagar o **manifest pelo digest** pela API (`DELETE /v2/<nome>/manifests/<digest>`) e depois rodar **`registry garbage-collect`** com o registry parado ou somente leitura.
+
+> [!question]- Como ligar o Docker Content Trust e assinar uma imagem?
+> `export DOCKER_CONTENT_TRUST=1` e `docker push` (ou `docker trust sign <imagem:tag>`). Com a variável ligada, `pull` e `run` recusam tags sem assinatura. O DCT foi aposentado; hoje se usa cosign ou Notation.
+
+> [!question]- Qual chave do Docker Content Trust deve ficar offline?
+> A **chave root**, que cria as chaves de repositório. Sem ela não há recuperação; as chaves de repositório assinam as tags e as de delegação identificam os signatários.
+
+> [!question]- Qual é a diferença entre `loop-lvm` e `direct-lvm` no devicemapper?
+> `loop-lvm` (padrão) usa **arquivos esparsos** como dispositivos de loopback e serve só para testes. `direct-lvm` usa um **dispositivo de bloco dedicado** com thin pool do LVM e é o modo de produção (`dm.directlvm_device`). O devicemapper foi removido no Engine 25.
+
+> [!question]- Qual storage driver os contêineres Windows usam?
+> **`windowsfilter`**.
+
+> [!question]- Armazenamento de objetos ou de blocos para um registry com várias réplicas?
+> **Objetos** (S3, Azure Blob, GCS): todas as réplicas leem e gravam o mesmo bucket, com escala e durabilidade. Blocos servem melhor a bancos de dados em um nó.
+
+> [!question]- Onde ficam as camadas de uma imagem com o driver `overlay2`?
+> Em `/var/lib/docker/overlay2/<id>/diff`, uma pasta por camada. O contêiner tem `LowerDir` (camadas da imagem), `UpperDir` (camada gravável) e `MergedDir` (visão unificada), vistos em `docker inspect -f '{{json .GraphDriver.Data}}'`.
+
+> [!question]- O que são UCP e DTR, e como se chamam hoje?
+> **Universal Control Plane** (gerenciamento web e API de clusters Swarm e Kubernetes, com RBAC e LDAP) e **Docker Trusted Registry** (registry privado com scan e assinatura). Hoje são o **Mirantis Kubernetes Engine (MKE)** e o **Mirantis Secure Registry (MSR)**.
+
+> [!question]- O que forma um grant no RBAC do UCP?
+> **Sujeito** (usuário, time, organização ou service account) + **papel** (None, View Only, Restricted Control, Scheduler, Full Control ou personalizado) + **conjunto de recursos** (coleção no Swarm ou namespace no Kubernetes).
+
+> [!question]- O que é um client bundle do UCP?
+> Um zip com o **certificado de cliente do usuário** e scripts (`env.sh`) que apontam `DOCKER_HOST`, `DOCKER_TLS_VERIFY`, `DOCKER_CERT_PATH` e `KUBECONFIG` para o UCP. Os comandos passam pelo UCP e respeitam o RBAC do usuário.
+
+> [!question]- Qual é a ordem de backup e restauração do Docker Enterprise, e o que o backup do DTR não inclui?
+> **Swarm → UCP → DTR**. O backup do DTR tem só **metadados**: as imagens ficam no armazenamento, que precisa de backup próprio.
+
+> [!question]- Qual é a diferença entre o routing mesh e o Interlock?
+> O routing mesh é **L4**: encaminha portas TCP/UDP para qualquer tarefa. O Interlock é **L7**: roteia HTTP/HTTPS por nome de host (`com.docker.lb.hosts`) e termina TLS.
+
+> [!question]- Qual é a diferença entre um Service `ClusterIP` e um `NodePort` no Kubernetes?
+> `ClusterIP` (padrão) dá um IP virtual e um nome DNS **internos** ao cluster. `NodePort` acrescenta uma porta na faixa **30000–32767** aberta em **todos os nós**, para acesso de fora.
+
+> [!question]- Como ConfigMaps e Secrets chegam a um Pod?
+> Como **variáveis de ambiente** (`envFrom`, `valueFrom`) ou como **arquivos** em um volume. Secrets são só codificados em base64 por padrão; cifrá-los em repouso exige configuração.
+
+> [!question]- Qual é a relação entre CSI, StorageClass, PVC e PV?
+> O **driver CSI** implementa o armazenamento; a **StorageClass** aponta para ele e define parâmetros; a aplicação cria um **PVC** citando a StorageClass; o driver provisiona um **PV** e o liga ao PVC, que o Pod monta como volume.
+
+> [!question]- Qual é o modelo de rede do Kubernetes?
+> Cada Pod tem um **IP próprio**, e todos os Pods se falam **sem NAT**, em qualquer nó. Contêineres do mesmo Pod usam `localhost`. Quem implementa é um plugin **CNI** (não o CNM do Docker).

@@ -6,6 +6,7 @@
 - Use o **Mapa de Domínios** (seção 13) para priorizar a revisão conforme o peso de cada domínio na nota final.
 - Use o **Autoteste** (seção 14) para revisão ativa: cada flashcard esconde a resposta até você clicar, forçando recall em vez de releitura passiva.
 - Use o **Mapa de cobertura e questões de múltipla resposta** (seção 15) para conferir as 14 tarefas oficiais e praticar os formatos de questão do exame, inclusive **ordenação** e **correspondência**.
+- Use o **Complemento de consulta dos seis simulados** (seção 16) para detalhes de serviços, algoritmos e controles que as questões cobram além do resumo dos capítulos 1 a 11. A seção 17 aponta ressalvas em respostas dos simulados.
 - O AI Practitioner cobra **conceitos e escolha de serviço**, não programação nem matemática. Para cada tema, saiba responder: **o que é**, **quando usar**, **quanto custa em relação às alternativas** e **qual risco traz**.
 
 ### Números, preços e atualizações
@@ -267,6 +268,7 @@ Esses serviços ainda aparecem em simulados e explicam conceitos cobrados na pro
 
 - **Hiperparâmetro vs. parâmetro**: **parâmetros** (pesos) são aprendidos no treinamento; **hiperparâmetros** são escolhidos **antes** do treinamento (ex.: número de épocas, taxa de aprendizado).
 - **Divisão dos dados**: **treino** ensina o modelo, **validação** ajusta hiperparâmetros e **teste** mede o desempenho final em dados nunca vistos.
+- O conjunto de **validação pode ser dispensado** em alguns fluxos (por exemplo, quando se usa validação cruzada no conjunto de treino), mas mantenha um conjunto de **teste independente** para estimar a generalização sem contaminar a avaliação final.
 
 #### Serviços e recursos por etapa
 
@@ -561,7 +563,7 @@ Plataforma agêntica para **construir, implantar e operar agentes com segurança
 
 #### O que é e o que oferece
 - Serviço **totalmente gerenciado e serverless** que dá acesso, por **uma única API**, a foundation models de vários provedores: **Amazon Nova**, Anthropic (Claude), Meta (Llama), Mistral, Cohere, AI21, Stability AI, DeepSeek, OpenAI (modelos open-weight) e outros.
-- **Privacidade**: seus prompts e dados **não são usados para treinar os modelos base** nem compartilhados com os provedores dos modelos. Os dados ficam na Região escolhida, criptografados em trânsito e em repouso (com chaves do KMS), e o acesso pode ser privado via **AWS PrivateLink**.
+- **Privacidade**: seus prompts e dados **não são usados para treinar os modelos base** nem compartilhados com os provedores dos modelos. Para manter o **processamento na Região escolhida**, use inferência *in-Region*; perfis *cross-Region* podem rotear para outras Regiões (seção 16). Dados e comunicações usam controles de criptografia aplicáveis, e o acesso ao serviço pode ser privado via **AWS PrivateLink**. Verifique as opções de retenção do modelo e da API usada.
 
 | Recurso do Bedrock | Para que serve |
 |---|---|
@@ -1748,3 +1750,307 @@ O AIF-C01 tem quatro formatos: **múltipla escolha**, **múltipla resposta** (ma
 
 > [!question]- 12. CORRESPONDÊNCIA — Associe cada escopo da Generative AI Security Scoping Matrix ao exemplo: (a) escopo 1; (b) escopo 3; (c) escopo 4; (d) escopo 5. Exemplos: treinar um FM do zero; funcionário usando chatbot público; aplicação sobre FM via Bedrock; FM ajustado com dados da empresa.
 > (a) **Chatbot público**; (b) **aplicação sobre FM via Bedrock**; (c) **FM ajustado com dados da empresa**; (d) **treinar um FM do zero**. Revise a seção 11.
+
+---
+
+## 16. Complemento de consulta dos seis simulados
+
+Este complemento cobre detalhes que aparecem nas **390 questões dos simulados 01 a 06** e estavam ausentes ou breves demais nos capítulos anteriores. Use a busca do Obsidian pelo nome do serviço, conceito ou sigla. Para questões de prova, considere o serviço **nomeado no enunciado**; a situação atual de serviços em manutenção está resumida no início do guia.
+
+### Algoritmos, arquiteturas e treinamento
+
+| Termo | Como reconhecer e distinguir |
+|---|---|
+| **K-Means** | Clustering **não supervisionado**: agrupa observações sem rótulos em *k* grupos, usando centros (centroides). Não classifica uma nova observação por rótulos previamente conhecidos. |
+| **K-Nearest Neighbors (KNN)** | Método **supervisionado**: usa os rótulos ou valores dos *k* exemplos de treino mais próximos para **classificar ou fazer regressão** sobre um novo exemplo. O “K” dos dois algoritmos tem papéis diferentes. |
+| **Árvore de decisão** | Modelo supervisionado de classificação ou regressão que divide exemplos segundo atributos; é relativamente interpretável. |
+| **Rede neural / CNN / ResNet** | Redes neurais aprendem representações a partir dos dados. CNNs extraem padrões espaciais de imagens; **ResNet** é uma arquitetura de CNN pré-treinável, que pode ser ajustada para outra tarefa de visão. |
+| **BERT** | Transformer **bidirecional** do tipo encoder: usa contexto dos dois lados de um token; treinamento com palavras mascaradas. Escolha para compreensão/representação contextual e prever uma palavra mascarada. **BERTScore** usa representações contextuais para comparar o significado de textos. |
+| **GPT / ChatGPT** | Família de Transformers geradores de texto; aprende a prever o próximo token. Serve para redigir, resumir, traduzir, responder perguntas ou gerar SQL a partir de linguagem natural. **Self-attention** relaciona tokens da sequência e gera representações dependentes do contexto. |
+| **GAN** | Modelo generativo com **gerador**, que cria exemplos sintéticos, e **discriminador**, que tenta identificar se cada exemplo é real ou gerado. O objetivo principal é gerar novos dados semelhantes aos reais; o discriminador não é um classificador geral de categorias. |
+| **VAE** | *Variational Autoencoder*: encoder representa a entrada em uma **distribuição no espaço latente**; o decoder amostra dessa distribuição e reconstrói ou gera exemplos. **GAN = competição gerador/discriminador; VAE = distribuição latente/encoder-decoder.** |
+| **Difusão** | Processo direto adiciona ruído progressivamente aos dados no treino; o processo reverso aprende a removê-lo. Na geração, parte-se de ruído e chega-se a uma amostra nova, como uma imagem. |
+| **Discriminativo × generativo** | Modelo discriminativo prevê rótulo ou valor de dados existentes (KNN, árvore, classificador). Modelo generativo produz novos dados a partir de padrões aprendidos (GAN, VAE, difusão, LLM). |
+| **Aprendizado semissupervisionado** | Combina **poucos dados rotulados e muitos não rotulados**. Análise de sentimento ou detecção de fraude *podem* usar essa abordagem, mas a tarefa em si não determina o tipo de aprendizado: depende dos dados e do método de treino. |
+| **Regularização** | Penaliza a complexidade do modelo na função de perda, por exemplo com L1 ou L2; é uma forma direta de reduzir overfitting. **Early stopping** interrompe o treino quando a validação piora; validação cruzada **estima** generalização; mais dados podem ajudar, mas não acrescentam uma penalidade à função de perda. |
+
+**Aprendizado por reforço (RL)**: o agente observa o ambiente, escolhe ações, recebe recompensas ou penalidades e ajusta sua **política** para maximizar a recompensa acumulada. Uma função de recompensa pode penalizar colisões mais fortemente para ensinar um robô a evitá-las. Feedback em tempo real permite reagir a mudanças; aprendizagem contínua em produção exige um mecanismo efetivo de atualização, não ocorre automaticamente em qualquer agente. **RLHF** usa preferências humanas para ajustar um modelo; **Amazon A2I** encaminha previsões a pessoas para revisão. Treinar com rótulos de saída conhecidos é aprendizado supervisionado; descobrir grupos sem rótulos é não supervisionado.
+
+### Métricas, explicações e ferramentas do SageMaker
+
+| Pergunta do simulado | Resposta consultável |
+|---|---|
+| **Quão rápida é uma previsão individual?** | **Latência/tempo de resposta**, por exemplo tempo médio de resposta. Para experiência em tempo real, avalie também percentis altos (p95/p99), pois a média pode esconder atrasos. **Vazão/throughput** é o volume de requisições processadas por unidade de tempo. |
+| **Quantas classificações acertou e errou por classe?** | **Matriz de confusão**: verdadeiros/falsos positivos e verdadeiros/falsos negativos. Dela vêm acurácia, precisão, recall e F1. |
+| **Por que esta previsão específica ocorreu?** | **Shapley values/SHAP** atribuem a cada feature uma contribuição para uma previsão individual (**explicação local**). |
+| **Como uma feature afeta o modelo em geral?** | **Partial Dependence Plot (PDP)** mostra o efeito médio de variar uma feature nas previsões (**visão global**). |
+| **Desempenho no treino excelente, em dados novos ruim?** | **Overfitting / variância alta**. Se ruim até no treino, **underfitting / viés alto**. Para corrigir overfitting, considere regularização, menos complexidade, mais dados e early stopping. |
+| **Avaliar um FM de classificação de imagens?** | Use **dataset de teste/benchmark** com rótulos de referência e métricas adequadas. Para resumos, **ROUGE** ajuda, mas **avaliação humana** capta fidelidade, utilidade e fluidez que uma métrica de sobreposição pode perder. |
+
+| Ferramenta | Resposta específica dos simulados |
+|---|---|
+| **SageMaker Data Wrangler** | Importa, explora, limpa, transforma e prepara dados em interface visual; cria divisões de treino/validação/teste e permite balancear classes por *oversampling*, *undersampling* ou SMOTE. Não é o serviço de monitoramento do modelo em produção nem o repositório de features. [Transformações](https://docs.aws.amazon.com/sagemaker/latest/dg/data-wrangler-transform.html). |
+| **SageMaker Feature Store** | Repositório para criar, armazenar e reutilizar **definições consistentes de features** no treino e na inferência; oferece acesso online de baixa latência e armazenamento offline para análise/treino, conforme configuração. Reduz *training-serving skew*. |
+| **SageMaker Ground Truth / Ground Truth Plus** | Criam datasets **rotulados**; Ground Truth permite força de trabalho privada e revisão humana. Ground Truth Plus fornece serviço gerenciado de rotulagem. |
+| **SageMaker Clarify** | Detecta viés nos dados/modelos e explica previsões; veja também SHAP. |
+| **SageMaker Model Monitor** | Monitora qualidade e *drift* de dados/modelos após implantação. |
+| **SageMaker Model Cards** | Documenta um **modelo da organização**: uso pretendido, risco, treinamento, avaliação, limitações e detalhes para produção. |
+| **SageMaker Model Dashboard** | Visão central dos modelos implantados, com informações de endpoints, Model Cards, Model Monitor e outros indicadores de governança. [Dashboard](https://docs.aws.amazon.com/sagemaker/latest/dg/model-dashboard.html). |
+| **SageMaker Role Manager** | Ajuda a definir papéis e permissões de menor privilégio para atividades do SageMaker; não substitui IAM. |
+| **MLflow com SageMaker** | Rastreamento e comparação de **experimentos de ML**, parâmetros, métricas e artefatos. |
+| **SageMaker Canvas / JumpStart** | Canvas: criar modelos em interface visual **sem código**. JumpStart: catálogo de modelos pré-treinados, FMs, notebooks e soluções para implantar/customizar com poucos cliques. |
+
+### Serviços de IA prontos: escolha pelo tipo de entrada e saída
+
+| Serviço e recurso | Use quando a pergunta pedir… |
+|---|---|
+| **Amazon Comprehend — sentimento** | Tom positivo, negativo, neutro ou misto de um texto. |
+| **Comprehend — entidades** | Pessoas, organizações, datas e locais identificáveis. |
+| **Comprehend — frases-chave** | Expressões nominais centrais, como “atraso na entrega”, para entender assuntos recorrentes. É diferente de **modelagem de tópicos**, usada para descobrir temas em uma coleção de documentos. |
+| **Comprehend — PII e classificação customizada** | Detectar/redigir dados pessoais; ou treinar categorias próprias com exemplos rotulados. |
+| **Comprehend — tempo real × lote** | API síncrona para texto recebido agora; **job assíncrono em lote** para milhares de documentos já no S3, com resultados gravados no S3. |
+| **Comprehend Medical** | Extrair entidades clínicas (condições, medicamentos, tratamentos), detectar **PHI** e relacionar conceitos a códigos médicos. Para **sentimento geral ou tópicos**, use Comprehend comum ou outra solução apropriada. |
+| **Amazon Textract** | Ler documentos digitalizados: OCR de texto impresso/manuscrito, **tabelas** e **pares chave-valor** de formulários/faturas (ex.: “Número da fatura” → “123”). |
+| **Amazon Rekognition** | Analisar fotos/vídeos: objetos, cenas/rótulos, texto em imagens, conteúdo impróprio, celebridades, rostos e vivacidade. **IndexFaces** guarda características faciais em coleção para busca posterior com **SearchFacesByImage**; comparação facial verifica similaridade. Não traduz idiomas. |
+| **Amazon Polly** | Sintetizar fala a partir de texto. **SSML** controla pronúncia, pausas, velocidade e entonação. Guarde arquivos de áudio gerados no **Amazon S3**; **CloudFront** pode distribuí-los globalmente usando o S3 como origem. |
+| **Amazon Transcribe** | Converter fala em texto; depois use Comprehend para sentimento/entidades do transcrito, se necessário. |
+| **Amazon Translate — Custom Terminology** | Preservar traduções escolhidas para marca, produto e termos de domínio. Tradução de idiomas não é função do Rekognition nem do Textract. |
+| **Amazon Forecast** | Caso histórico de previsão de séries temporais, como demanda/estoque. Confira o aviso de disponibilidade para novos clientes no início do guia. |
+| **Amazon Cognito** | Autenticação de usuários finais de aplicações e bots, por exemplo com Amazon Lex. |
+| **AWS Lambda e eventos do S3** | Uma notificação de novo objeto no S3 pode chamar Lambda; a função chama Rekognition ou outro serviço para processar a imagem. Lambda orquestra, não armazena arquivos permanentemente. |
+
+#### Amazon Lex: contexto de conversa
+
+**Intenção (*intent*)** é o objetivo do usuário; **enunciados de exemplo** ajudam o Lex a reconhecê-lo; **slots** são dados necessários (data, horário, destino). Quando um slot está ausente ou ambíguo, o bot pode fazer uma **pergunta de acompanhamento** (*elicit slot*) em vez de reiniciar. **Atributos de sessão** guardam informações específicas da aplicação entre turnos; o estado da sessão também mantém valores de slots. Uma função Lambda pode validar um slot e solicitar nova informação sem encerrar o diálogo. Para auditar interações, configure logs de conversa no CloudWatch Logs com atenção a dados sensíveis. [Sessões e slots](https://docs.aws.amazon.com/lexv2/latest/dg/managing-sessions.html), [atributos de sessão](https://docs.aws.amazon.com/lexv2/latest/dg/context-mgmt-session-attribs.html).
+
+#### Amazon Personalize: personalização durante a navegação
+
+| Recurso | Diferença prática |
+|---|---|
+| **Recomendações em tempo real** | Sugerem itens para um usuário com baixa latência e podem incorporar interações recentes conforme o caso de uso/receita. **Inferência em lote** produz recomendações programadas e não responde imediatamente a cada clique. |
+| **Personalized ranking** | **Reordena uma lista de itens fornecida pela aplicação** de acordo com a preferência de cada usuário; não é o mesmo que gerar do zero uma lista de itens candidatos. |
+| **Event tracker / PutEvents** | Registra cliques, visualizações e compras para alimentar a personalização. **Data connectors/Data Wrangler** importam e preparam dados, mas não geram as recomendações. |
+| **Exploration weight** | Em receitas que o permitem, equilibra explorar itens novos/com poucas interações e recomendar itens já conhecidos. Nem todas as receitas expõem esse ajuste; User-Personalization-v2 administra exploração automaticamente. |
+
+Fontes: [recomendações em tempo real](https://docs.aws.amazon.com/personalize/latest/dg/recommendations.html), [ranking personalizado](https://docs.aws.amazon.com/personalize/latest/dg/rankings.html), [eventos e exploração](https://docs.aws.amazon.com/personalize/latest/dg/use-case-recipe-features.html).
+
+### Busca corporativa, Amazon Q e BI
+
+| Produto/recurso citado nos simulados | Resposta prática |
+|---|---|
+| **Amazon Kendra** | Busca corporativa gerenciada em PDFs, Word, sites e repositórios conectados; usa NLP e relevância **semântica/contextual** para responder a consultas em linguagem natural mesmo sem palavras idênticas. Indexa e classifica documentos; não é OCR (Textract) nem análise de sentimento (Comprehend). Veja o aviso de manutenção no início. |
+| **Kendra e relevância** | Busca semântica é uma capacidade nativa do índice, e a relevância pode ser ajustada. Guardar tudo em um bucket ou aumentar capacidade não cria compreensão semântica. **Não há um botão genérico documentado chamado “habilitar aprimoramentos de PLN”**; veja ressalva do simulado 06 na seção 17. |
+| **Amazon Q Business** | Assistente corporativo que combina **LLM + RAG** sobre fontes conectadas; responde, resume, gera conteúdo e pode realizar ações via plugins em ferramentas externas. Conectores trazem dados; RAG recupera conteúdo para fundamentar respostas; plugins **executam ações**. Sua interface de chat é uma camada de acesso, não o mecanismo do RAG. |
+| **Q Business e permissões** | Integra identidade corporativa (por exemplo, IAM Identity Center/IdP). Conectores indexam **permissões dos documentos** e mapeiam usuários/grupos; resultados e respostas são filtrados para o usuário não ver documentos sem autorização. É preciso **sincronizar** conteúdo e alterações de permissões. Os dados são protegidos com criptografia; administradores podem configurar controle de tópicos e uso de conhecimento geral ou só empresarial. |
+| **Amazon Q Apps** | Recurso do Q Business para criar aplicações generativas simples a partir de linguagem natural; não é o FM subjacente. |
+| **Amazon Q Developer** | Assistência a desenvolvimento, código, testes, atualização de aplicações e perguntas sobre recursos/custos da conta AWS. Nos simulados, **Bedrock** é a camada de FMs por trás de produtos Amazon Q; isso não significa que o cliente configure diretamente quotas/capacidade interna do Q no Bedrock. Para novos clientes, consulte a transição para **Kiro** no início. |
+| **Amazon Q in Connect** | Assistência em tempo real a agentes humanos de atendimento, por exemplo sugestões durante chamadas. **Duração média da chamada/atendimento** pode medir o impacto na eficiência, junto com qualidade e satisfação do cliente. |
+| **Amazon Q in QuickSight / Amazon QuickSight / Amazon Quick Sight** | Linguagem natural para perguntas e criação/exploração de análises e dashboards de BI; distinto de Q Business (conhecimento corporativo geral) e Q Developer (desenvolvimento). Consulte a transição para Amazon Quick no início. |
+
+Fontes: [Kendra](https://docs.aws.amazon.com/kendra/latest/dg/), [conectores e permissões do Q Business](https://docs.aws.amazon.com/amazonq/latest/qbusiness-ug/connector-concepts.html), [mapeamento de identidades](https://docs.aws.amazon.com/amazonq/latest/qbusiness-ug/principal-mapping.html).
+
+### IA responsável, governança e segurança específicas
+
+| Conceito | Distinção cobrada |
+|---|---|
+| **Equidade/fairness** | Mitigar resultados discriminatórios entre grupos. Verifique métricas por subgrupo; corrija amostragem, rótulos, treinamento e limiares conforme o contexto. Dados representativos e aumento de exemplos de grupos sub-representados podem ajudar, mas não garantem equidade. |
+| **Tipos de viés** | **Amostragem**: dataset não representa a população. **Humano**: escolhas subjetivas de features ou rótulos. **Algorítmico**: o sistema produz tratamento desigual, mesmo para casos comparáveis. Um exemplo pode envolver mais de um tipo; investigue a causa. |
+| **Robustez** | Manter desempenho em condições novas, ruído e casos raros. Avaliar grupos separadamente revela tanto problemas de equidade quanto de robustez. |
+| **Transparência × explicabilidade × responsabilização** | Transparência divulga dados, usos, limites e processos apropriados; explicabilidade fornece razões compreensíveis para uma decisão; responsabilização define **quem responde** pelos resultados. Transparência apoia confiança e auditoria, mas divulgar detalhes excessivos pode expor segredos comerciais ou dados sensíveis. |
+| **Controlabilidade × complexidade** | Mais complexidade pode dificultar impor e verificar limites sobre o comportamento; compare com o trade-off **interpretabilidade × desempenho**. Nenhum deles é o trade-off estatístico **viés × variância**, que trata de underfitting/overfitting. |
+| **AWS AI Service Cards × Model Cards** | **AI Service Cards** descrevem uso pretendido, limitações e considerações de responsabilidade de **serviços de IA da AWS**. **SageMaker Model Cards** documentam modelos administrados pelo cliente. |
+| **Tríade CIA** | **Confidencialidade** impede leitura indevida; **integridade** detecta/impede alteração indevida; **disponibilidade** garante acesso quando necessário. Controle de acesso = autenticação e autorização. Criptografia em repouso protege confidencialidade; **TLS e criptografia autenticada** também podem proteger integridade. Hash, assinatura, checksum e versionamento ajudam a verificar alterações. |
+| **Residência × retenção × registro** | Residência = **onde** dados são processados/armazenados; retenção = **por quanto tempo** permanecem; logging = **quais eventos** de acesso/alteração são registrados. |
+| **Detecção de ameaças × vulnerabilidades** | **Amazon GuardDuty** procura atividades suspeitas e possíveis ataques em sinais operacionais. **Amazon Inspector** avalia continuamente vulnerabilidades e exposições em recursos compatíveis, para corrigir pontos fracos. **AWS Security Hub** reúne descobertas de segurança e visão da postura da conta. |
+| **Generative AI Security Scoping Matrix** | Os escopos 1–5 identificam **quanto do stack de IA a organização controla** (seção 11). Dentro do planejamento de segurança, **gerenciamento de riscos** identifica ameaças e recomenda mitigação; governança/conformidade define políticas e evidências; jurídico/privacidade trata obrigações legais; resiliência trata continuidade e disponibilidade. |
+
+#### IAM Identity Center, CloudTrail e Região
+
+- **Auditores externos em várias contas:** IAM Identity Center pode federar um **provedor de identidade externo**, usar **permission sets** de somente leitura e menor privilégio, atribuí-los às contas do **AWS Organizations** e definir uma **sessão de 8 horas**. O CloudTrail registra atividade. **Expiração da sessão não revoga a atribuição**: se o acesso deve terminar definitivamente após oito horas, remova/desative a atribuição ou automatize uma concessão com prazo. **SCPs** limitam permissões máximas, mas não concedem acesso. [Duração de sessão](https://docs.aws.amazon.com/singlesignon/latest/userguide/howtosessionduration.html).
+- **CloudTrail sem trilha configurada:** o *Event history* oferece **90 dias de eventos de gerenciamento por Região**. Para preservar além desse período, configure uma trilha ou *event data store*; eventos de dados exigem configuração própria. **CloudTrail** registra APIs/ações; **CloudWatch** coleta métricas, logs operacionais, alarmes e dashboards; **AWS Config** registra mudanças de configuração; **Audit Manager** reúne evidências; **Artifact** fornece relatórios e acordos da AWS. [Event history](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/view-cloudtrail-events.html).
+- **S3 privado:** um **VPC endpoint do S3** conecta recursos da VPC ao S3 sem exigir rota pela internet pública. **AWS PrivateLink** com endpoint de interface é a resposta para acesso privado a serviços compatíveis, como o Bedrock; são configurações diferentes.
+- **Residência no Bedrock:** **inferência in-Region** processa dentro da Região escolhida. Um perfil de inferência **cross-Region geográfico** pode rotear dentro de uma geografia; o **global** pode processar em qualquer Região comercial suportada. Escolha o modo de acordo com o limite legal e verifique as políticas de retenção do modelo/API. A frase “tudo fica sempre na Região de origem” só vale com a configuração apropriada. [Disponibilidade regional](https://docs.aws.amazon.com/bedrock/latest/userguide/models-region-compatibility.html), [cross-Region](https://docs.aws.amazon.com/bedrock/latest/userguide/cross-region-inference.html).
+
+#### Guardrails, procedência e custos
+
+- **Amazon Bedrock Guardrails** filtra conteúdo nocivo, ataques de prompt, tópicos negados, palavras e PII; pode conferir fundamentação contextual. **Detecção de marca d’água** é outro recurso: ajuda a verificar a procedência de imagens geradas por **Titan Image Generator G1** e, na documentação atual, **Nova Canvas**. Uma marca d’água não filtra a conversa, e Guardrails não prova que uma imagem veio de um modelo. A detecção pode falhar em imagens modificadas. [Guardrails](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html), [marca d’água](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-image-models.html).
+- **Segurança do prompt:** higienizar entrada, separar dados de instruções, limitar permissões de ferramentas, usar Guardrails, testar ataques e validar saída são **camadas complementares**. Uma instrução “ignore conteúdo malicioso” isolada não garante defesa contra prompt injection. **Poisoning** contamina dados de treino/base; **prompt leaking** expõe instruções ou informações da sessão; **hijacking** desvia a tarefa; **jailbreaking** contorna restrições.
+- **Custo e produtividade:** um FM já pré-treinado e acessado por API pode evitar treinamento e operação de infraestrutura; automação reduz trabalho repetitivo e erros quando bem avaliada. Compare **custo por token/invocação**, latência, volume, qualidade e supervisão necessária. Otimização do modelo também inclui destilação, modelo menor, cache e processamento em lote; automação de processos é um benefício da aplicação, não a definição técnica de otimização de FM.
+
+---
+
+## 17. Ressalvas importantes nos gabaritos dos simulados
+
+O objetivo do guia é permitir **entender e resolver** as questões, inclusive quando o gabarito usa uma simplificação ou descreve uma capacidade de forma imprecisa. Nestes casos, memorize a distinção técnica abaixo e leia a alternativa dentro das opções oferecidas pelo simulado.
+
+| Questão | Ressalva para consulta |
+|---|---|
+| **01.29** | **Comprehend Medical** extrai entidades e PHI clínicas, mas não oferece análise geral de sentimento nem modelagem de tópicos como capacidades próprias. A alternativa reúne funções que exigiriam outros recursos. [Funções documentadas](https://docs.aws.amazon.com/comprehend-medical/latest/dev/comprehendmedical-howitworks.html). |
+| **02.12** | “Análise de sentimento” e “identificação de fraude” são **tarefas**, que podem ser treinadas de forma supervisionada ou semissupervisionada; elas não são, por si, exemplos exclusivos de aprendizado semissupervisionado. |
+| **04.29** | Temperatura baixa e top-p 0,9 **atuam juntos** na distribuição de amostragem; temperatura não “sobrepõe” ou desliga top-p. A combinação tende a produzir saídas mais focadas, mas ambos os ajustes importam. |
+| **06.09** | Sessão de 8 horas no IAM Identity Center faz as **credenciais da sessão expirarem**; não remove automaticamente o direito de o auditor entrar de novo. Para acesso concedido só por oito horas, é preciso revogar ou automatizar a expiração da atribuição. |
+| **06.16** | A resposta “dados permanecem na Região da chamada” exige **inferência in-Region**. Perfis cross-Region podem processar em outra Região; ver seção 16. |
+| **06.43** | Criptografia protege principalmente **confidencialidade**. Integridade depende de mecanismos adequados, como **TLS/criptografia autenticada**, hash ou assinatura; criptografia genérica isolada não prova que dados não foram alterados. |
+| **06.62** | A busca semântica/PLN é **nativa do Kendra**. A documentação descreve ajustes de relevância, mas não um botão genérico de índice chamado “habilitar aprimoramentos de PLN”. Entre as alternativas do simulado, a intenção da resposta é “usar a capacidade semântica”, não uma etapa literal de configuração. [Kendra](https://docs.aws.amazon.com/kendra/latest/dg/). |
+
+**Cobertura:** os capítulos 1 a 11 e este complemento cobrem os conceitos necessários para as **65 questões de cada um dos seis simulados**; as ressalvas acima registram onde o texto do gabarito não deve ser tomado como definição técnica literal. Os serviços AWS mudam, então use os avisos de manutenção e os links oficiais para decisões fora da prova.
+
+---
+
+## 18. Complemento final — termos, algoritmos e serviços citados nas alternativas
+
+Esta seção fecha as lacunas encontradas em uma **auditoria termo a termo** das 390 questões dos simulados 01 a 06 contra o texto do guia. São conceitos que aparecem **principalmente como alternativas incorretas** — você não precisa dominá-los, mas precisa saber por que estão errados. Sem isso, não dá para eliminar distratores com segurança.
+
+### Algoritmos clássicos e técnicas estatísticas
+
+| Termo | O que é e por que aparece como distrator |
+|---|---|
+| **SVM (Support Vector Machine)** | Algoritmo **supervisionado** de classificação/regressão: encontra o hiperplano que melhor separa classes em dados rotulados. É **discriminativo** — nunca gera dados novos. Distrator típico em questões de dados sintéticos (resposta certa: GAN). |
+| **Regressão logística** | Supervisionada, prevê **probabilidade de uma classe** (saída entre 0 e 1) — apesar do nome, é classificação, não regressão de valor contínuo. Distrator quando o cenário pede valor numérico (regressão linear) ou agrupamento (clustering). |
+| **PCA (Análise de Componentes Principais)** | **Redução de dimensionalidade**: projeta os dados em menos dimensões preservando a maior variância. Usada em compressão e visualização. Não entende contexto de linguagem — distrator em questões de embeddings. |
+| **SVD (Decomposição em Valores Singulares)** | Fatoração de matrizes usada em compressão, redução de ruído e métodos antigos de análise de texto (LSA). Mesmo papel de distrator que o PCA. |
+| **Matriz de correlação** | Mede a relação estatística entre **variáveis contínuas** — ferramenta de análise exploratória e de multicolinearidade. Distrator da **matriz de confusão**, que é a ferramenta de avaliação de classificação. |
+| **R² (coeficiente de determinação)** | Métrica de **regressão**: proporção da variância explicada pelo modelo. Como MAE, MSE e RMSE, não se aplica a saídas categóricas. |
+| **Validação cruzada (k-fold)** | Divide os dados em *k* partes e treina/avalia *k* vezes para **estimar** a generalização. Estima, não corrige overfitting — quem corrige é regularização, menos complexidade, mais dados e early stopping. |
+| **Transfer learning** | Reaproveita um modelo treinado em uma tarefa para outra **relacionada**; normalmente uma adaptação única, não um ciclo contínuo. |
+| **Treinamento incremental (*incremental learning*)** | Atualiza o modelo com **novos lotes de dados** ao longo do tempo, preservando o que já aprendeu (evita esquecimento catastrófico). Distrator do **aprendizado por reforço** quando o cenário pede melhoria contínua a partir de **feedback/recompensa em tempo real**. |
+
+> **Regra de eliminação:** se a pergunta é "gerar dados novos", só modelos **generativos** servem (GAN, VAE, difusão, LLM). SVM, CNN, KNN, árvore e regressão logística são **discriminativos**.
+
+### Hiperparâmetros de treinamento
+
+Aparecem em questões do tipo "o modelo está com overfitting, o que ajustar?".
+
+| Hiperparâmetro | Efeito |
+|---|---|
+| **Taxa de aprendizado (*learning rate*)** | Tamanho do passo de atualização dos pesos. Muito alta → treino instável; muito baixa → treino lento e pode estagnar. |
+| **Épocas (*epochs*)** | Quantas passagens completas pelo dataset de treino. Épocas demais → overfitting; de menos → underfitting. |
+| **Tamanho do lote (*batch size*)** | Quantos exemplos por atualização de pesos. Afeta memória, velocidade e estabilidade do treino. |
+| **Dropout** | Desliga aleatoriamente uma fração dos neurônios a cada passo de treino, forçando a rede a não depender de poucas conexões. É uma técnica de **regularização** para reduzir overfitting. |
+| **Regularização L1 / L2** | Penaliza a complexidade do modelo na função de perda. L1 tende a zerar pesos (seleção de features); L2 encolhe pesos. |
+| **Early stopping** | Interrompe o treino quando a métrica de validação para de melhorar. |
+
+**Parâmetros × hiperparâmetros:** *parâmetros* (pesos e vieses) são **aprendidos** pelo modelo durante o treino; *hiperparâmetros* são **definidos por você antes** do treino e controlam como ele acontece.
+
+### Embeddings estáticos × contextuais
+
+| Modelo | Comportamento |
+|---|---|
+| **Word2Vec / GloVe** | Embeddings **estáticos**: cada palavra recebe **um único vetor**, independentemente da frase. Não distingue "banco" (instituição) de "banco" (assento). |
+| **BERT** | Embeddings **dinâmicos/contextuais**: lê a frase nos dois sentidos (bidirecional) e gera um vetor diferente para a mesma palavra conforme o contexto. Resposta certa sempre que o cenário pedir **desambiguação de sentido**. |
+| **Embeddings multimodais** (ex.: Titan Multimodal Embeddings) | Colocam **texto e imagem no mesmo espaço vetorial**, permitindo comparar diretamente uma consulta textual com uma imagem. Escolha econômica para **busca e correspondência**; um modelo **generativo** multimodal custa mais e só se justifica quando o objetivo é **criar** conteúdo novo. |
+
+### Visão computacional: taxonomia das tarefas
+
+Distinção cobrada com frequência — o enunciado descreve a tarefa e você escolhe o nome:
+
+| Tarefa | O que entrega |
+|---|---|
+| **Classificação de imagem** | Um **rótulo para a imagem inteira** ("isto é um gato"). |
+| **Detecção de objetos** | Identifica **e localiza** objetos, com caixas delimitadoras e, em geral, contagem ("3 capacetes nestas posições"). É a resposta quando o cenário pede **onde** ou **quantos**. |
+| **Segmentação (semântica/instância)** | Classifica **pixel a pixel**, delimitando o contorno exato do objeto. |
+| **Reconhecimento/comparação facial** | Compara um rosto com uma referência ou coleção para **verificar identidade**. |
+| **Detecção de vivacidade (*face liveness*)** | Confirma que há uma **pessoa real** diante da câmera, bloqueando foto, vídeo ou máscara. Pareie sempre com comparação facial em cenários antifraude. |
+
+**Recursos do Amazon Rekognition citados:** rótulos/cenas, detecção de objetos, texto em imagem, conteúdo impróprio, celebridades, **EPI (PPE)**, faces, *liveness*, **IndexFaces/SearchFacesByImage** (coleções) e **Custom Labels** — este último treina um detector **para objetos próprios da empresa** (uma peça específica, um logotipo) a partir de poucas imagens rotuladas, quando os rótulos prontos não bastam.
+
+> **Distrator recorrente:** detecção de **EPI** e de **conteúdo impróprio** não verificam identidade nem detectam fraude — em cenário de verificação de identidade, são opções erradas.
+
+### Áudio e fala
+
+| Recurso | Função |
+|---|---|
+| **Amazon Polly — SSML** | Tags no texto de entrada (`<prosody>`, `<break>`, `<say-as>`) que controlam **velocidade, tom, volume, pausas e ênfase**. É a resposta quando o cenário pede ajuste **dinâmico** de como a fala soa. |
+| **Polly — Lexicons** | Dicionários de **pronúncia personalizada** para siglas, nomes de marca e termos de domínio. Só pronúncia — não controla ritmo nem emoção. |
+| **Polly — Speech Marks** | Metadados em **JSON com a temporização** de palavras, frases e visemas. Servem para sincronizar legendas e animação labial; não alteram o áudio. |
+| **Polly — motores de voz (NTTS e outros)** | Determinam a **naturalidade** da voz gerada. Melhoram a qualidade, mas não expõem controles de velocidade/tom — esses continuam vindo do SSML. |
+| **WaveNet** | Modelo generativo de **forma de onda de áudio** (origem DeepMind, não é serviço AWS). Distrator em questões de dados sintéticos tabulares: é generativo, porém **restrito a áudio**. |
+
+### Catálogo de modelos e modelos pequenos
+
+- **Famílias de FMs citadas nos simulados:** **Amazon Titan / Nova**, **Anthropic Claude**, **Meta Llama**, **Mistral**, **Cohere**, **AI21 (Jurassic/Jamba)** e **Stability AI (Stable Diffusion)**. O ponto cobrado é o de sempre: o **Bedrock dá acesso a modelos de vários provedores por uma única API**, e a escolha se faz por custo, modalidade, latência, janela de contexto e suporte a customização.
+- **Stable Diffusion** é um modelo de **difusão** para geração de imagens — gera removendo ruído passo a passo, **não** por self-attention de Transformer. Aparece para testar se você associa o mecanismo certo à arquitetura certa.
+- **SLM (*Small Language Model*)**: modelo de linguagem compacto, com menos parâmetros. Resposta correta quando o cenário exige **inferência local, em dispositivo de borda, com recursos limitados e baixa latência sem depender de rede**. Um LLM grande em nuvem falha nesse requisito por latência e conectividade; um SLM roda no próprio dispositivo com qualidade suficiente para a tarefa.
+
+### Nomes alternativos dos parâmetros de inferência
+
+Os simulados usam rótulos diferentes dos da seção 7. Equivalências:
+
+| Nome no simulado | Nome na seção 7 | O que controla |
+|---|---|---|
+| **Response length** / *max tokens* | Comprimento máximo | **Quantos tokens** a resposta pode ter (mínimo/máximo) |
+| **Temperature** | Temperatura | **Aleatoriedade/criatividade** — reformula toda a distribuição |
+| **Top K** | Top K | **Número fixo** de tokens candidatos |
+| **Top P** / *nucleus sampling* | Top P | **Percentual de probabilidade cumulativa** dos candidatos |
+| **Stop sequences** | Sequências de parada | **Onde** a geração termina |
+
+> Mnemônico para separar os quatro: *número* → Top K; *porcentagem* → Top P; *aleatoriedade* → Temperature; *sequência de caracteres* → Stop sequences; *tamanho* → Response length.
+
+### Conformidade em saúde e retenção de dados
+
+- **HIPAA** é a lei dos EUA para dados de saúde. Serviços **elegíveis para HIPAA** podem ser usados para processar **PHI** (*Protected Health Information*) sob um **BAA** com a AWS. **Amazon Bedrock, Amazon Comprehend Medical, Amazon Transcribe Medical e AWS HealthLake** são elegíveis.
+- **Postura de dados do Amazon Bedrock** (muito cobrada): criptografa dados **em trânsito (TLS)** e **em repouso (chaves do AWS KMS)**, **não armazena** entradas e saídas do cliente e **não usa esses dados para treinar os modelos base**. É o que torna o Bedrock a resposta quando o cenário junta *FM + HIPAA + criptografia + não retenção* em um único serviço.
+- **PHI × PII:** PHI é o subconjunto de saúde. **Comprehend Medical** detecta PHI; **Comprehend** comum e **Macie** detectam PII; **Bedrock Guardrails** redige PII em prompts e respostas em tempo de execução.
+
+### Serviços AWS que aparecem apenas como alternativa errada
+
+Saiba a função em uma linha — é o suficiente para eliminá-los:
+
+| Serviço | Função em uma linha |
+|---|---|
+| **AWS Shield** | Proteção contra **DDoS**. Nenhuma função de IA. |
+| **AWS WAF** | Firewall de aplicação web (filtra requisições HTTP maliciosas). |
+| **AWS Cost Explorer** | Visualizar, analisar e **prever custos**. Não otimiza modelos. |
+| **Amazon EventBridge** | Barramento de **eventos**: roteia eventos e dispara automações. Não guarda payload de prompts/respostas. |
+| **Amazon Kinesis** | Ingestão e processamento de **dados em streaming** em tempo real. |
+| **Amazon Athena** | Consultas **SQL serverless** sobre dados no S3. |
+| **Amazon Redshift** | **Data warehouse** para análise em larga escala. |
+| **Amazon DynamoDB** | NoSQL **chave-valor** de baixa latência. Sem busca full-text ou por similaridade. |
+| **Amazon Aurora** | Banco **relacional** gerenciado para cargas transacionais (OLTP). |
+| **Amazon DocumentDB** | Banco de **documentos JSON** compatível com MongoDB. |
+| **Amazon API Gateway** | Porta de entrada gerenciada para **APIs**. |
+| **Amazon CloudFront** | **CDN** — distribui conteúdo globalmente com baixa latência. |
+| **Amazon SNS** | **Notificações** pub/sub (e-mail, SMS, fila, função). |
+| **AWS CloudFormation** | **Infraestrutura como código** (provisionamento declarativo). |
+| **AWS CodeDeploy** | Automação de **implantação** de aplicações. |
+| **AWS Elastic Beanstalk** | **PaaS**: sobe a aplicação e gerencia a infraestrutura por você. |
+| **IAM Access Analyzer** | Identifica recursos **compartilhados com entidades externas** e valida políticas. |
+| **CIS AWS Foundations Benchmark** | **Padrão de boas práticas** de segurança, avaliado como *standard* no Security Hub. |
+| **AWS Organizations** | Gestão de **múltiplas contas**, com SCPs definindo o teto de permissões. |
+| **AWS Secrets Manager** | Armazena e **rotaciona segredos** (senhas, chaves de API). |
+| **Amazon Cognito** | **Autenticação** de usuários finais de aplicações e bots. |
+| **Amazon GuardDuty** | Detecção de **ameaças ativas** por análise de sinais operacionais. |
+| **Amazon Inspector** | Avaliação contínua de **vulnerabilidades** em recursos. |
+| **AWS Security Hub** | **Visão unificada** da postura de segurança, agregando descobertas. |
+| **AWS DeepRacer** | Carrinho autônomo em escala para **aprender reinforcement learning**. Ferramenta educativa. |
+
+### Implantação, testes e tipos de drift
+
+| Conceito | Definição |
+|---|---|
+| **Teste A/B (*production variants*)** | Divide o tráfego real entre duas versões do modelo no mesmo endpoint para comparar desempenho em produção. |
+| **Shadow test** | A nova versão recebe **cópia** do tráfego, mas suas respostas **não vão ao usuário** — valida sem risco. |
+| **Blue/green e canary** | Estratégias de troca de versão: blue/green alterna entre dois ambientes completos; canary libera para uma fração pequena antes de expandir. |
+| **Data drift** | A **distribuição dos dados de entrada** muda em relação ao treino. |
+| **Concept drift** | A **relação entre entrada e saída** muda (o que era verdade deixou de ser). |
+| **Model/quality drift** | Queda medida na **qualidade das previsões** ao longo do tempo. |
+| **Bias drift / feature attribution drift** | Mudança no viés medido ou na importância relativa das features. O **SageMaker Model Monitor** cobre os quatro tipos: qualidade de dados, qualidade do modelo, viés e atribuição de features. |
+
+---
+
+### Nota de auditoria de cobertura
+
+Verificação feita em **2026-09-30** cruzando, termo a termo, os 6 gabaritos (390 questões) contra o texto deste guia:
+
+| Verificação | Resultado |
+|---|---|
+| Serviços AWS citados nos simulados | Todos cobertos (seções 2, 6, 11, 16 e 18) |
+| Parâmetros de inferência | Todos cobertos, com os nomes alternativos mapeados em 18.7 |
+| Arquiteturas generativas (GAN, VAE, difusão, Transformer) | Cobertas na seção 16 |
+| Métricas de avaliação | Cobertas nas seções 3, 9 e 16; métricas de regressão completadas em 18.1 |
+| Tipos de aprendizado e algoritmos clássicos | Cobertos na seção 16; SVM, PCA, SVD e regressão logística completados em 18.1 |
+| Riscos de prompt (injection, jailbreaking, hijacking, poisoning, leaking) | Cobertos nas seções 8 e 16 |
+| IA responsável e governança | Cobertas nas seções 10, 11 e 16 |
+| Lacunas encontradas e fechadas | Hiperparâmetros de treino, embeddings estáticos, taxonomia de visão computacional, recursos do Polly além do SSML, SLM/borda, HIPAA/PHI, catálogo de FMs e serviços-distratores — todos nesta seção 18 |
+
+**Como usar em dúvida de simulado:** procure primeiro pelo **nome do serviço ou do conceito** na busca do Obsidian. Se a dúvida for sobre *por que a alternativa X está errada*, comece por 18.9 (serviços) e 18.1 (algoritmos). Se o gabarito parecer contradizer a documentação, confira a seção 17 antes de assumir que o guia está desatualizado.

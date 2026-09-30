@@ -125,6 +125,7 @@ Regras da capa:
 
 - Uma **faixa por capítulo**: `Capítulo N — Nome`, mono maiúsculo, fundo `--surface`, borda esquerda de 4px `--accent`.
 - **Seções** (h3) numeradas `N.M` em `--accent-ink`, duas colunas, pontilhado `--line` sob cada item.
+- **Tópicos** (h4) numerados `N.M.K`, no mesmo estilo, recuados.
 - **Tópicos** (h4) logo abaixo da seção, sem número, recuados e em `--muted`.
 - Capítulo sem seções: a própria faixa vira link.
 - Capítulo sem número no original ("Como usar este guia"): a faixa mantém o nome original.
@@ -140,9 +141,12 @@ CAPÍTULO 1                  ← kicker, --accent-ink
 Nome do capítulo            ← h2
 ───────────────────────────────────── (1px ink)
 [1.1] Nome da seção         ← sec-label + h3
+1.1.1 Nome do tópico        ← topic-num + h4 (opcional)
 ```
 
 O número do `sec-label` é o mesmo do sumário, e o `id` da seção é o destino do link.
+
+**Numeração hierárquica (regra do padrão):** capítulo `N`, seção `N.M`, tópico `N.M.K`, sempre reiniciando a contagem no nível acima. O mesmo número aparece no sumário e no título. Nos e-books gerados por script, o `gerar_ebook.py` calcula os números (`span.sec-num` nos títulos do corpo); nos preenchidos à mão a partir do template, use `sec-label` (h3) e `topic-num` (h4). Capítulos sem número no original (ex.: "Como usar este guia") ficam sem numeração nas seções.
 
 ### Rodapé do PDF
 

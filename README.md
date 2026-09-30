@@ -9,6 +9,7 @@ Guias de revisão em HTML e PDF, todos com o mesmo padrão visual: capa, sumári
 | AWS Certified Cloud Practitioner (CLF-C02) | [`CLF-C02/`](CLF-C02/) | [`output/pdf/clf-c02-guia-de-revisao.pdf`](CLF-C02/output/pdf/clf-c02-guia-de-revisao.pdf) |
 | AWS Certified AI Practitioner (AIF-C01) | [`AIF-C01/`](AIF-C01/) | [`output/pdf/aif-c01-guia-de-revisao.pdf`](AIF-C01/output/pdf/aif-c01-guia-de-revisao.pdf) |
 | AWS Certified Developer – Associate (DVA-C02) | [`DVA-C02/`](DVA-C02/) | [`output/pdf/dva-c02-guia-de-revisao.pdf`](DVA-C02/output/pdf/dva-c02-guia-de-revisao.pdf) |
+| Docker — do contêiner à produção | [`Docker/`](Docker/) | [`output/pdf/docker-guia-de-estudo.pdf`](Docker/output/pdf/docker-guia-de-estudo.pdf) |
 
 ## Estrutura
 
@@ -58,6 +59,27 @@ Guias de revisão em HTML e PDF, todos com o mesmo padrão visual: capa, sumári
 
 ## Gerar os PDFs
 
+### Todos de uma vez
+
+```bash
+python3 gerar-all-pdfs.py
+```
+
+O script da raiz encontra sozinho toda pasta que tem um `gerar_pdf.py` (um e-book novo entra automaticamente), regenera o `ebook.html` a partir do Markdown quando a pasta tem `gerar_ebook.py` e salva todos os PDFs em [`PDF-Geral/`](PDF-Geral/), com o mesmo nome de arquivo usado em cada pasta. Opções:
+
+| Opção | Efeito |
+| --- | --- |
+| `--listar` | Mostra os e-books encontrados e o nome de cada PDF, sem gerar nada |
+| `--apenas TEXTO` | Gera só as pastas cujo nome contém o texto (pode repetir: `--apenas docker --apenas dva`) |
+| `--sem-html` | Não regenera o `ebook.html`; só gera o PDF a partir do HTML atual |
+| `--destino PASTA` | Salva em outra pasta no lugar de `PDF-Geral/` |
+| `--chrome CAMINHO` | Caminho do Chrome/Chromium, repassado a cada `gerar_pdf.py` |
+
+Um erro em um e-book não interrompe os outros; no fim, o script lista os que falharam e sai com código 1.
+
+### Um e-book específico
+
+
 Rode a partir da raiz do repositório.
 
 **Well-Architected**: o conteúdo fica direto no `ebook.html`.
@@ -101,7 +123,7 @@ Os detalhes estão em [`CLF-C02/README.md`](CLF-C02/README.md), [`AIF-C01/README
 
    O PDF sai em `nova-pasta/output/pdf/ebook.pdf`. Para outro nome, passe o caminho como segundo argumento.
 
-O padrão visual está documentado em [`template/DESIGN-SYSTEM.md`](template/DESIGN-SYSTEM.md). Todos os PDFs levam no rodapé de cada página o nome do e-book e `Erik Nathan (eriknathan.me)`.
+O padrão visual está documentado em [`template/DESIGN-SYSTEM.md`](template/DESIGN-SYSTEM.md). A numeração é hierárquica em todos os e-books: capítulo (`1`), seção (`1.1`) e tópico (`1.1.1`), igual no sumário e no corpo. Nos e-books gerados por script, o `gerar_ebook.py` cria os números sozinho; não os escreva à mão nos títulos do Markdown. Todos os PDFs levam no rodapé de cada página o nome do e-book e `Erik Nathan (eriknathan.me)`.
 
 > O [`prompt.md`](prompt.md) da raiz é a versão anterior: ele pede um visual diferente para cada e-book. Para seguir o padrão, use `template/PROMPT.md`.
 

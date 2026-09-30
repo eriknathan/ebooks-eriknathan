@@ -102,6 +102,7 @@
   .toc-list a:hover{color:var(--accent-ink)}
   .toc-list a .n{font:.74rem var(--mono);color:var(--accent-ink);flex:0 0 3.2em}
   .toc-list .toc-topic a{padding-left:14px;font-size:.82rem;color:var(--muted)}
+  .toc-list .toc-topic a .n{flex-basis:4em}
   .toc-ending{margin:18px 0 0;font-size:.9rem}
   .toc-ending a{color:var(--text);text-decoration:none}
 
@@ -116,6 +117,7 @@
   .section-head h3{font-size:1.35rem;font-weight:600;letter-spacing:-.025em}
   .topic{margin:24px 0 0;scroll-margin-top:20px}
   .topic>h4{font-size:1.08rem;margin:0 0 10px}
+  .topic-num{font:600 .82em var(--mono);color:var(--accent-ink);margin-right:.35em;letter-spacing:-.02em}
   .book-content ul,.book-content ol{padding-left:1.35em}
   .book-content ol>li::marker{font-family:var(--mono);font-weight:700;color:var(--accent-ink)}
 
@@ -152,6 +154,7 @@
   table{border-collapse:collapse;width:100%;min-width:560px;font-size:.88rem;line-height:1.42}
   th,td{text-align:left;vertical-align:top;padding:9px 11px;border-bottom:1px solid var(--line)}
   th{background:var(--ink);color:#fff;font-size:.78rem;font-weight:600}
+  th code{background:#ffffff26;color:#fff}
   tr:last-child td{border-bottom:0}
   tbody tr:nth-child(even){background:#f7f9fa}
 
@@ -246,6 +249,7 @@
     /* Economia de tinta: fundos escuros viram contorno */
     .sec-label{background:none;color:var(--ink);border:1.5px solid var(--ink)}
     th{background:var(--surface);color:var(--ink)}
+    th code{background:var(--paper);color:var(--ink)}
     .closing{background:#fff;color:var(--ink);border:1px solid var(--ink);border-top:6px solid var(--accent);margin-top:35px}
     .closing h2,.closing p,.closing li{color:var(--ink)}
   }
@@ -293,8 +297,8 @@
       <ul class="toc-list">
         <!-- REPETIR por seção (h3): número N.M -->
         <li><a href="#sec-1-1"><span class="n">1.1</span> {{Nome da seção}}</a></li>
-        <!-- Opcional, por tópico (h4): sem número, recuado -->
-        <li class="toc-topic"><a href="#{{id-do-topico}}"><span class="n"></span> {{Nome do tópico}}</a></li>
+        <!-- Opcional, por tópico (h4): número N.M.K, recuado -->
+        <li class="toc-topic"><a href="#{{id-do-topico}}"><span class="n">1.1.1</span> {{Nome do tópico}}</a></li>
       </ul>
     </details>
 
@@ -318,9 +322,10 @@
         <div class="section-head"><span class="sec-label">1.1</span><h3 id="sec-1-1-title">{{Nome da seção}}</h3></div>
         <p>{{Parágrafo de texto corrido.}}</p>
 
-        <!-- Opcional: tópico (h4) dentro da seção -->
+        <!-- Opcional: tópico (h4) dentro da seção. O número N.M.K é o mesmo do sumário:
+             capítulo.seção.tópico, reiniciando a contagem a cada seção. -->
         <section class="topic" id="{{id-do-topico}}">
-          <h4>{{Nome do tópico}}</h4>
+          <h4><span class="topic-num">1.1.1</span> {{Nome do tópico}}</h4>
           <p>{{Texto do tópico.}}</p>
         </section>
 

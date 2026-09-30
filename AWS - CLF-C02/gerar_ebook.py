@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Converte o material Markdown do SAA-C03 em um e-book HTML autônomo."""
+"""Converte o material Markdown do CLF-C02 em um e-book HTML autônomo."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from markdown_it import MarkdownIt
 
 
 ROOT = Path(__file__).resolve().parent
-SOURCE = ROOT / "material-original.md"
+SOURCE = ROOT / "material.md"
 OUTPUT = ROOT / "ebook.html"
 MARKDOWN = MarkdownIt("commonmark", {"html": True}).enable("table")
 
@@ -24,6 +24,7 @@ class Heading:
     title: str
     anchor: str
     level: int
+    number: str = ""
 
 
 @dataclass
@@ -84,6 +85,9 @@ def organize_content(rendered: str) -> tuple[str, list[Chapter]]:
     current_chapter: Tag | None = None
     current_subchapter: Tag | None = None
     current_topic: Tag | None = None
+    chapter_number: str | None = None
+    section_count = 0
+    topic_count = 0
 
     for node in list(soup.contents):
         if isinstance(node, NavigableString) and not node.strip():
@@ -101,7 +105,26 @@ def organize_content(rendered: str) -> tuple[str, list[Chapter]]:
                 suffix += 1
             used.add(anchor)
             node["id"] = anchor
-            heading = Heading(title, anchor, level)
+            number = ""
+            if level == 2:
+                numbered = re.match(r"^(\d+)\.\s", title)
+                chapter_number = numbered.group(1) if numbered else None
+                section_count = 0
+                topic_count = 0
+            elif chapter_number:
+                if level == 3:
+                    section_count += 1
+                    topic_count = 0
+                    number = f"{chapter_number}.{section_count}"
+                else:
+                    topic_count += 1
+                    number = f"{chapter_number}.{section_count}.{topic_count}"
+            if number:
+                label = soup.new_tag("span", attrs={"class": "sec-num"})
+                label.string = number
+                node.insert(0, label)
+                node.insert(1, " ")
+            heading = Heading(title, anchor, level, number)
 
             if level == 2:
                 current_chapter = soup.new_tag("section", attrs={"class": "chapter", "aria-labelledby": anchor})
@@ -160,18 +183,11 @@ def build_toc(chapters: list[Chapter]) -> str:
             )
             continue
         links: list[str] = []
-        section = 0
         for child in chapter.children:
-            if child.level == 3:
-                section += 1
-                n = f"{number}.{section}" if number else ""
-                links.append(
-                    f'<li><a href="#{child.anchor}"><span class="n">{n}</span> {html.escape(child.title)}</a></li>'
-                )
-            else:
-                links.append(
-                    f'<li class="toc-topic"><a href="#{child.anchor}"><span class="n"></span> {html.escape(child.title)}</a></li>'
-                )
+            css = "" if child.level == 3 else ' class="toc-topic"'
+            links.append(
+                f'<li{css}><a href="#{child.anchor}"><span class="n">{child.number}</span> {html.escape(child.title)}</a></li>'
+            )
         groups.append(
             '<details class="toc-group">'
             f'<summary class="toc-group-title">{html.escape(label)}</summary>'
@@ -250,6 +266,8 @@ CSS = r"""
   .toc-list a{display:flex;gap:8px;align-items:baseline;padding:3px 0;font-size:.88rem;line-height:1.35;color:var(--text);text-decoration:none;border-bottom:1px dotted var(--line)}
   .toc-list a:hover{color:var(--accent-ink)}
   .toc-list a .n{font:.74rem var(--mono);color:var(--accent-ink);flex:0 0 3.2em}
+  .toc-list .toc-topic a .n{flex-basis:4em}
+  .sec-num{font-family:var(--mono);font-weight:600;font-size:.82em;color:var(--accent-ink);margin-right:.35em;letter-spacing:-.02em}
   .toc-list .toc-topic a{padding-left:14px;font-size:.82rem;color:var(--muted)}
   .toc-ending{margin:18px 0 0;font-size:.9rem}
   .toc-ending a{color:var(--text);text-decoration:none}
@@ -274,6 +292,7 @@ CSS = r"""
   table{border-collapse:collapse;width:100%;min-width:590px;font-size:.88rem;line-height:1.42}
   th,td{text-align:left;vertical-align:top;padding:9px 11px;border-bottom:1px solid var(--line)}
   th{background:var(--ink);color:#fff;font-size:.78rem;font-weight:600}
+  th code{background:#ffffff26;color:#fff}
   tr:last-child td{border-bottom:0}
   tbody tr:nth-child(even){background:#f7f9fa}
 
@@ -310,7 +329,7 @@ CSS = r"""
   @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
   @page{size:A4;margin:19mm 17mm 21mm;
-    @bottom-left{content:'SAA-C03  /  GUIA DE REVISÃO  |  Erik Nathan (eriknathan.me)';font:8pt 'IBM Plex Mono',monospace;color:#52616d}
+    @bottom-left{content:'CLF-C02  /  GUIA DE REVISÃO  |  Erik Nathan (eriknathan.me)';font:8pt 'IBM Plex Mono',monospace;color:#52616d}
     @bottom-right{content:counter(page);font:9pt 'IBM Plex Mono',monospace;color:#1b2d3b}
   }
   @page:first{@bottom-left{content:none}@bottom-right{content:none}}
@@ -369,8 +388,8 @@ def build_html(content: str, toc: str, flashcards: int) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Guia de revisão SAA-C03 com tópicos de arquitetura, tabelas de decisão e flashcards.">
-<title>SAA-C03 — Guia de revisão</title>
+<meta name="description" content="Guia de revisão CLF-C02 com conceitos de nuvem, serviços AWS, tabelas de decisão e flashcards.">
+<title>CLF-C02 — Guia de revisão</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
@@ -382,20 +401,20 @@ def build_html(content: str, toc: str, flashcards: int) -> str:
   <header class="cover">
     <div class="cover-top"><span>Guia de estudo</span><span>Atualizado em setembro de 2026</span></div>
     <div class="cover-main">
-      <span class="cover-level">Nível Associate</span>
-      <span class="cover-code">SAA<span class="dash">-</span>C03</span>
-      <span class="cover-exam">AWS Certified Solutions Architect – Associate</span>
+      <span class="cover-level">Nível Foundational</span>
+      <span class="cover-code">CLF<span class="dash">-</span>C02</span>
+      <span class="cover-exam">AWS Certified Cloud Practitioner</span>
       <h1>Guia de revisão</h1>
-      <p class="cover-subtitle">Computação, armazenamento, redes, segurança e decisões de arquitetura para a revisão da certificação.</p>
+      <p class="cover-subtitle">Conceitos de nuvem, segurança, serviços essenciais, preços e suporte para a revisão da certificação.</p>
       <p class="cover-author"><strong>Erik Nathan</strong><a href="https://eriknathan.me/">eriknathan.me</a></p>
     </div>
     <div class="cover-bottom">
       <p class="cover-bottom-label">Domínios do exame · pesos oficiais</p>
-      <div class="domain-grid" style="grid-template-columns:30fr 26fr 24fr 20fr">
-        <div class="domain" style="--w:30"><strong>30%</strong><span lang="en">Design Secure Architectures</span><span class="domain-pt">Arquiteturas seguras</span></div>
-        <div class="domain" style="--w:26"><strong>26%</strong><span lang="en">Design Resilient Architectures</span><span class="domain-pt">Arquiteturas resilientes</span></div>
-        <div class="domain" style="--w:24"><strong>24%</strong><span lang="en">Design High-Performing Architectures</span><span class="domain-pt">Arquiteturas de alto desempenho</span></div>
-        <div class="domain" style="--w:20"><strong>20%</strong><span lang="en">Design Cost-Optimized Architectures</span><span class="domain-pt">Arquiteturas com custo otimizado</span></div>
+      <div class="domain-grid" style="grid-template-columns:24fr 30fr 34fr 12fr">
+        <div class="domain" style="--w:24"><strong>24%</strong><span lang="en">Cloud Concepts</span><span class="domain-pt">Conceitos de nuvem</span></div>
+        <div class="domain" style="--w:30"><strong>30%</strong><span lang="en">Security and Compliance</span><span class="domain-pt">Segurança e conformidade</span></div>
+        <div class="domain" style="--w:34"><strong>34%</strong><span lang="en">Cloud Technology and Services</span><span class="domain-pt">Tecnologia e serviços</span></div>
+        <div class="domain" style="--w:12"><strong>12%</strong><span lang="en">Billing, Pricing, and Support</span><span class="domain-pt">Faturamento, preços e suporte</span></div>
       </div>
     </div>
   </header>
@@ -413,11 +432,11 @@ def build_html(content: str, toc: str, flashcards: int) -> str:
     <h2 id="sintese-title">Síntese de revisão</h2>
     <p>Este guia organiza a revisão pelos quatro domínios do exame e reúne formatos de consulta rápida e prática ativa.</p>
     <ul>
-      <li>Os pesos oficiais são 30% para segurança, 26% para resiliência, 24% para desempenho e 20% para custos.</li>
-      <li>As tabelas de decisão rápida ao fim de cada capítulo e os padrões recorrentes (seção 11) concentram comparações e pegadinhas dos simulados.</li>
-      <li>O mapa de domínios (seção 12) orienta prioridades; as tabelas de números em cada tópico reúnem valores sujeitos a atualização.</li>
-      <li>O autoteste, os cartões adicionais e as questões de múltipla resposta (seções 13 a 15) oferecem {flashcards} perguntas para revisão ativa.</li>
-      <li>O mapa da seção 15 relaciona as 14 tarefas publicadas no guia oficial às seções correspondentes.</li>
+      <li>Os pesos oficiais são 24% para conceitos de nuvem, 30% para segurança e conformidade, 34% para tecnologia e serviços e 12% para faturamento, preços e suporte.</li>
+      <li>As tabelas de decisão rápida ao fim de cada capítulo e os padrões recorrentes (seção 12) concentram as palavras-chave e os pares de serviços que mais se confundem.</li>
+      <li>O mapa de domínios (seção 13) orienta prioridades; preços, planos de suporte e Free Tier foram conferidos em setembro de 2026 e estão sujeitos a atualização.</li>
+      <li>O autoteste e as questões de múltipla resposta (seções 14 e 15) oferecem {flashcards} perguntas para revisão ativa.</li>
+      <li>O mapa da seção 15 relaciona as 19 tarefas publicadas no guia oficial às seções correspondentes.</li>
     </ul>
   </section>
 </article>

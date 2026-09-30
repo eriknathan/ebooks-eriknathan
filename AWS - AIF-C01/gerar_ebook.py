@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Converte o material Markdown do DVA-C02 em um e-book HTML autônomo."""
+"""Converte o material Markdown do AIF-C01 em um e-book HTML autônomo."""
 
 from __future__ import annotations
 
@@ -24,6 +24,7 @@ class Heading:
     title: str
     anchor: str
     level: int
+    number: str = ""
 
 
 @dataclass
@@ -84,6 +85,9 @@ def organize_content(rendered: str) -> tuple[str, list[Chapter]]:
     current_chapter: Tag | None = None
     current_subchapter: Tag | None = None
     current_topic: Tag | None = None
+    chapter_number: str | None = None
+    section_count = 0
+    topic_count = 0
 
     for node in list(soup.contents):
         if isinstance(node, NavigableString) and not node.strip():
@@ -101,7 +105,26 @@ def organize_content(rendered: str) -> tuple[str, list[Chapter]]:
                 suffix += 1
             used.add(anchor)
             node["id"] = anchor
-            heading = Heading(title, anchor, level)
+            number = ""
+            if level == 2:
+                numbered = re.match(r"^(\d+)\.\s", title)
+                chapter_number = numbered.group(1) if numbered else None
+                section_count = 0
+                topic_count = 0
+            elif chapter_number:
+                if level == 3:
+                    section_count += 1
+                    topic_count = 0
+                    number = f"{chapter_number}.{section_count}"
+                else:
+                    topic_count += 1
+                    number = f"{chapter_number}.{section_count}.{topic_count}"
+            if number:
+                label = soup.new_tag("span", attrs={"class": "sec-num"})
+                label.string = number
+                node.insert(0, label)
+                node.insert(1, " ")
+            heading = Heading(title, anchor, level, number)
 
             if level == 2:
                 current_chapter = soup.new_tag("section", attrs={"class": "chapter", "aria-labelledby": anchor})
@@ -160,18 +183,11 @@ def build_toc(chapters: list[Chapter]) -> str:
             )
             continue
         links: list[str] = []
-        section = 0
         for child in chapter.children:
-            if child.level == 3:
-                section += 1
-                n = f"{number}.{section}" if number else ""
-                links.append(
-                    f'<li><a href="#{child.anchor}"><span class="n">{n}</span> {html.escape(child.title)}</a></li>'
-                )
-            else:
-                links.append(
-                    f'<li class="toc-topic"><a href="#{child.anchor}"><span class="n"></span> {html.escape(child.title)}</a></li>'
-                )
+            css = "" if child.level == 3 else ' class="toc-topic"'
+            links.append(
+                f'<li{css}><a href="#{child.anchor}"><span class="n">{child.number}</span> {html.escape(child.title)}</a></li>'
+            )
         groups.append(
             '<details class="toc-group">'
             f'<summary class="toc-group-title">{html.escape(label)}</summary>'
@@ -250,6 +266,8 @@ CSS = r"""
   .toc-list a{display:flex;gap:8px;align-items:baseline;padding:3px 0;font-size:.88rem;line-height:1.35;color:var(--text);text-decoration:none;border-bottom:1px dotted var(--line)}
   .toc-list a:hover{color:var(--accent-ink)}
   .toc-list a .n{font:.74rem var(--mono);color:var(--accent-ink);flex:0 0 3.2em}
+  .toc-list .toc-topic a .n{flex-basis:4em}
+  .sec-num{font-family:var(--mono);font-weight:600;font-size:.82em;color:var(--accent-ink);margin-right:.35em;letter-spacing:-.02em}
   .toc-list .toc-topic a{padding-left:14px;font-size:.82rem;color:var(--muted)}
   .toc-ending{margin:18px 0 0;font-size:.9rem}
   .toc-ending a{color:var(--text);text-decoration:none}
@@ -268,14 +286,13 @@ CSS = r"""
   .book-content ol{padding-left:1.5em}
   .book-content ol>li{padding-left:.25em}
   .book-content ol>li::marker{font-family:var(--mono);font-weight:700;color:var(--accent-ink)}
-  .book-content pre{margin:16px 0 22px;padding:13px 16px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:0 4px 4px 0;overflow-x:auto;font:.8rem/1.55 var(--mono);color:var(--ink)}
-  .book-content pre code{background:none;padding:0;font-size:inherit;overflow-wrap:normal}
   .back-link{font:.75rem var(--mono);display:inline-block;margin:10px 0 22px;text-decoration:none}
 
   .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:4px;margin:20px 0 24px}
   table{border-collapse:collapse;width:100%;min-width:590px;font-size:.88rem;line-height:1.42}
   th,td{text-align:left;vertical-align:top;padding:9px 11px;border-bottom:1px solid var(--line)}
   th{background:var(--ink);color:#fff;font-size:.78rem;font-weight:600}
+  th code{background:#ffffff26;color:#fff}
   tr:last-child td{border-bottom:0}
   tbody tr:nth-child(even){background:#f7f9fa}
 
@@ -312,7 +329,7 @@ CSS = r"""
   @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
   @page{size:A4;margin:19mm 17mm 21mm;
-    @bottom-left{content:'DVA-C02  /  GUIA DE REVISÃO  |  Erik Nathan (eriknathan.me)';font:8pt 'IBM Plex Mono',monospace;color:#52616d}
+    @bottom-left{content:'AIF-C01  /  GUIA DE REVISÃO  |  Erik Nathan (eriknathan.me)';font:8pt 'IBM Plex Mono',monospace;color:#52616d}
     @bottom-right{content:counter(page);font:9pt 'IBM Plex Mono',monospace;color:#1b2d3b}
   }
   @page:first{@bottom-left{content:none}@bottom-right{content:none}}
@@ -349,7 +366,6 @@ CSS = r"""
     .book-content ol>li::marker{color:var(--ink)}
     .book-content hr{display:none}
     .back-link{display:none}
-    .book-content pre{white-space:pre-wrap;overflow:visible;break-inside:avoid;font-size:7.6pt}
     .table-scroll{overflow:visible;border:0}
     table{min-width:0;font-size:7.4pt}
     thead{display:table-header-group}
@@ -372,8 +388,8 @@ def build_html(content: str, toc: str, flashcards: int) -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Guia de revisão DVA-C02 com Lambda, API Gateway, DynamoDB, segurança, CI/CD, observabilidade, tabelas de decisão e flashcards.">
-<title>DVA-C02 — Guia de revisão</title>
+<meta name="description" content="Guia de revisão AIF-C01 com fundamentos de IA, IA generativa, agentes, IA responsável, tabelas de decisão e flashcards.">
+<title>AIF-C01 — Guia de revisão</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
@@ -385,20 +401,21 @@ def build_html(content: str, toc: str, flashcards: int) -> str:
   <header class="cover">
     <div class="cover-top"><span>Guia de estudo</span><span>Atualizado em setembro de 2026</span></div>
     <div class="cover-main">
-      <span class="cover-level">Nível Associate</span>
-      <span class="cover-code">DVA<span class="dash">-</span>C02</span>
-      <span class="cover-exam">AWS Certified Developer – Associate</span>
+      <span class="cover-level">Nível Foundational</span>
+      <span class="cover-code">AIF<span class="dash">-</span>C01</span>
+      <span class="cover-exam">AWS Certified AI Practitioner</span>
       <h1>Guia de revisão</h1>
-      <p class="cover-subtitle">Lambda, APIs, DynamoDB, mensageria, segurança, CI/CD, observabilidade e desenvolvimento com IA para a revisão da certificação. Inclui a transição para o DVA-C03.</p>
+      <p class="cover-subtitle">Fundamentos de IA e ML, IA generativa, agentes, foundation models, IA responsável e segurança para a revisão da certificação.</p>
       <p class="cover-author"><strong>Erik Nathan</strong><a href="https://eriknathan.me/">eriknathan.me</a></p>
     </div>
     <div class="cover-bottom">
       <p class="cover-bottom-label">Domínios do exame · pesos oficiais</p>
-      <div class="domain-grid" style="grid-template-columns:32fr 26fr 24fr 18fr">
-        <div class="domain" style="--w:32"><strong>32%</strong><span lang="en">Development with AWS Services</span><span class="domain-pt">Desenvolvimento com serviços AWS</span></div>
-        <div class="domain" style="--w:26"><strong>26%</strong><span lang="en">Security</span><span class="domain-pt">Segurança</span></div>
-        <div class="domain" style="--w:24"><strong>24%</strong><span lang="en">Deployment</span><span class="domain-pt">Implantação</span></div>
-        <div class="domain" style="--w:18"><strong>18%</strong><span lang="en">Troubleshooting and Optimization</span><span class="domain-pt">Solução de problemas e otimização</span></div>
+      <div class="domain-grid" style="grid-template-columns:20fr 24fr 28fr 14fr 14fr">
+        <div class="domain" style="--w:20"><strong>20%</strong><span lang="en">Fundamentals of AI and ML</span><span class="domain-pt">Fundamentos de IA e ML</span></div>
+        <div class="domain" style="--w:24"><strong>24%</strong><span lang="en">Fundamentals of GenAI</span><span class="domain-pt">Fundamentos de IA generativa</span></div>
+        <div class="domain" style="--w:28"><strong>28%</strong><span lang="en">Applications of Foundation Models</span><span class="domain-pt">Aplicações de foundation models</span></div>
+        <div class="domain" style="--w:14"><strong>14%</strong><span lang="en">Guidelines for Responsible AI</span><span class="domain-pt">Diretrizes de IA responsável</span></div>
+        <div class="domain" style="--w:14"><strong>14%</strong><span lang="en">Security, Compliance, and Governance</span><span class="domain-pt">Segurança, conformidade e governança</span></div>
       </div>
     </div>
   </header>
@@ -416,11 +433,11 @@ def build_html(content: str, toc: str, flashcards: int) -> str:
     <h2 id="sintese-title">Síntese de revisão</h2>
     <p>Este guia organiza a revisão pelos quatro domínios do exame e reúne formatos de consulta rápida e prática ativa.</p>
     <ul>
-      <li>Os pesos oficiais do DVA-C02 são 32% para desenvolvimento, 26% para segurança, 24% para implantação e 18% para troubleshooting e otimização. O DVA-C02 pode ser feito até 30/nov/2026; o DVA-C03 começa em 1º/dez/2026 (seção 14).</li>
-      <li>As tabelas de decisão rápida ao fim de cada capítulo e os padrões recorrentes (seção 15) concentram as palavras-chave, os pares que mais se confundem e as afirmações falsas clássicas.</li>
-      <li>As tabelas de números (Lambda, API Gateway, DynamoDB, mensageria) foram conferidas em setembro de 2026 e mostram os limites que mudaram entre 2024 e 2026.</li>
-      <li>O autoteste e as questões de múltipla resposta (seções 17 e 18) oferecem {flashcards} perguntas para revisão ativa.</li>
-      <li>O mapa da seção 18 relaciona as 13 tarefas publicadas no guia oficial às seções correspondentes.</li>
+      <li>Os pesos oficiais são 20% para fundamentos de IA e ML, 24% para fundamentos de IA generativa, 28% para aplicações de foundation models, 14% para IA responsável e 14% para segurança, conformidade e governança.</li>
+      <li>As tabelas de decisão rápida ao fim de cada capítulo e os padrões recorrentes (seção 12) concentram as palavras-chave e os pares de conceitos e serviços que mais se confundem.</li>
+      <li>O mapa de domínios (seção 13) orienta prioridades; serviços, nomes e disponibilidade foram conferidos em setembro de 2026, após a revisão 1.1 do guia e as mudanças de julho de 2026.</li>
+      <li>O autoteste e as questões de múltipla resposta, ordenação e correspondência (seções 14 e 15) oferecem {flashcards} perguntas para revisão ativa.</li>
+      <li>O mapa da seção 15 relaciona as 14 tarefas publicadas no guia oficial às seções correspondentes.</li>
     </ul>
   </section>
 </article>

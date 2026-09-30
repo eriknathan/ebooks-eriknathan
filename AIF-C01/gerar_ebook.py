@@ -211,23 +211,30 @@ CSS = r"""
   code{font:.86em var(--mono);padding:.1em .25em;background:var(--surface);border-radius:3px;overflow-wrap:anywhere}
   strong{color:var(--ink)}
 
-  /* Capa: os cinco domínios são o motivo gráfico da página. */
+  /* Capa: cada barra tem a largura do peso do domínio; juntas, formam uma faixa de 100%. */
   .cover{min-height:770px;display:grid;grid-template-rows:auto 1fr auto;gap:30px;padding:40px 0 50px;border-top:10px solid var(--ink);position:relative}
   .cover:before{content:'';position:absolute;top:-10px;left:0;width:92px;height:10px;background:var(--accent)}
   .cover-top,.cover-bottom-label{font:700 .75rem/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
   .cover-top{display:flex;justify-content:space-between;gap:20px}
   .cover-main{align-self:center;max-width:690px}
-  .cover-code{display:block;font:700 clamp(4rem,11vw,7.1rem)/.98 var(--mono);letter-spacing:-.085em;color:var(--ink);margin:0 0 14px}
+  .cover-level{display:inline-block;font:700 .78rem/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink);border:2px solid var(--ink);border-radius:3px;padding:7px 10px 6px;margin:0 0 22px}
+  .cover-code{display:block;font:700 clamp(4rem,11vw,7.1rem)/.98 var(--mono);letter-spacing:-.085em;color:var(--ink);margin:0 0 14px;hyphens:none}
+  .cover-code .dash{margin:0 -.05em}
   .cover-exam{display:block;font:700 .95rem/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 30px}
   .cover-main h1{font-size:clamp(2rem,4.4vw,3rem);font-weight:600;letter-spacing:-.045em;max-width:13em;margin:0 0 20px}
-  .cover-subtitle{font-size:1.14rem;color:var(--muted);max-width:40rem;margin:0 0 14px}
-  .cover-note{font:.76rem/1.5 var(--mono);color:var(--teal);margin:0}
+  .cover-subtitle{font-size:1.14rem;color:var(--muted);max-width:40rem;margin:0 0 22px}
+  .cover-author{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:0;padding-top:14px;border-top:1px solid var(--line);max-width:40rem;font-size:1.05rem;line-height:1.4;color:var(--ink)}
+  .cover-author strong{font-weight:600}
+  .cover-author a{font:500 .85rem var(--mono);color:var(--teal)}
   .cover-bottom{border-top:1px solid var(--ink);padding-top:16px}
   .cover-bottom-label{margin:0 0 16px}
-  .domain-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
-  .domain{border-top:4px solid var(--accent);padding-top:8px;min-width:0}
+  .domain-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px 3px}
+  .domain{min-width:0}
+  .domain:before{content:'';display:block;height:9px;background:var(--accent);margin-bottom:10px}
+  .domain strong,.domain span{padding-right:8px}
   .domain strong{display:block;font:600 1.65rem/1 var(--mono);color:var(--ink);margin-bottom:7px}
-  .domain span{display:block;font-size:.78rem;line-height:1.3;color:var(--muted)}
+  .domain span{display:block;font-size:.8rem;line-height:1.3;color:var(--ink)}
+  .domain .domain-pt{font-size:.74rem;color:var(--muted);margin-top:3px}
 
   /* Sumário no padrão do ebook Well-Architected: faixa por capítulo, itens numerados em duas colunas. */
   .toc{padding:40px 0 64px}
@@ -292,7 +299,8 @@ CSS = r"""
     .cover-top{flex-direction:column;gap:3px}
     .cover-code{font-size:clamp(3.2rem,16vw,5rem);margin-bottom:20px}
     .cover-main h1{font-size:2rem}
-    .domain-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .domain-grid{grid-template-columns:1fr!important}
+    .domain:before{width:calc(var(--w)*1%)}
     .toc-list{column-count:1}
     .chapter{padding-top:34px}
     .chapter>h2{font-size:1.7rem}
@@ -311,7 +319,10 @@ CSS = r"""
     html{font-size:9.5pt}
     body{background:#fff;font-size:9.5pt;line-height:1.48}
     .book{max-width:none;margin:0;padding:0;box-shadow:none}
-    .cover{min-height:235mm;break-after:page;padding-top:18px}
+    .cover{height:256mm;min-height:0;break-after:page;padding:18px 0 0}
+    .cover-level{font-size:8pt}
+    .cover-author{font-size:11pt}
+    .cover-author a{font-size:9pt;text-decoration:none}
     .cover-code{font-size:62pt}
     .cover-exam{font-size:10.5pt}
     .cover-main h1{font-size:30pt}
@@ -369,22 +380,23 @@ def build_html(content: str, toc: str, flashcards: int) -> str:
 <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
 <article class="book">
   <header class="cover">
-    <div class="cover-top"><span>Guia de estudo</span><span>AWS Certified AI Practitioner</span></div>
+    <div class="cover-top"><span>Guia de estudo</span><span>Atualizado em setembro de 2026</span></div>
     <div class="cover-main">
-      <span class="cover-code">AIF-C01</span>
+      <span class="cover-level">Nível Foundational</span>
+      <span class="cover-code">AIF<span class="dash">-</span>C01</span>
       <span class="cover-exam">AWS Certified AI Practitioner</span>
       <h1>Guia de revisão</h1>
       <p class="cover-subtitle">Fundamentos de IA e ML, IA generativa, agentes, foundation models, IA responsável e segurança para a revisão da certificação.</p>
-      <p class="cover-note">Por Erik Nathan · <a href="https://eriknathan.me/">eriknathan.me</a></p>
+      <p class="cover-author"><strong>Erik Nathan</strong><a href="https://eriknathan.me/">eriknathan.me</a></p>
     </div>
     <div class="cover-bottom">
       <p class="cover-bottom-label">Domínios do exame · pesos oficiais</p>
-      <div class="domain-grid">
-        <div class="domain"><strong>20%</strong><span>Fundamentals of AI and ML</span></div>
-        <div class="domain"><strong>24%</strong><span>Fundamentals of GenAI</span></div>
-        <div class="domain"><strong>28%</strong><span>Applications of Foundation Models</span></div>
-        <div class="domain"><strong>14%</strong><span>Guidelines for Responsible AI</span></div>
-        <div class="domain"><strong>14%</strong><span>Security, Compliance, and Governance</span></div>
+      <div class="domain-grid" style="grid-template-columns:20fr 24fr 28fr 14fr 14fr">
+        <div class="domain" style="--w:20"><strong>20%</strong><span lang="en">Fundamentals of AI and ML</span><span class="domain-pt">Fundamentos de IA e ML</span></div>
+        <div class="domain" style="--w:24"><strong>24%</strong><span lang="en">Fundamentals of GenAI</span><span class="domain-pt">Fundamentos de IA generativa</span></div>
+        <div class="domain" style="--w:28"><strong>28%</strong><span lang="en">Applications of Foundation Models</span><span class="domain-pt">Aplicações de foundation models</span></div>
+        <div class="domain" style="--w:14"><strong>14%</strong><span lang="en">Guidelines for Responsible AI</span><span class="domain-pt">Diretrizes de IA responsável</span></div>
+        <div class="domain" style="--w:14"><strong>14%</strong><span lang="en">Security, Compliance, and Governance</span><span class="domain-pt">Segurança, conformidade e governança</span></div>
       </div>
     </div>
   </header>

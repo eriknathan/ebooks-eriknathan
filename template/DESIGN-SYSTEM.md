@@ -38,7 +38,7 @@ Ao trocar o destaque, mantenha `--accent-ink` com pelo menos 4,5:1 sobre `#fffff
 | `--muted` | `#52616d` | Subtítulos, descrições, tópicos do sumário, rodapé | 6,4:1 |
 | `--line` | `#cbd5db` | Bordas finas, pontilhado do sumário, divisórias | — |
 | `--surface` | `#f2f6f7` | Faixas do sumário, blockquote, resposta de flashcard, `code` | — |
-| `--teal` | `#086b70` | Links na tela, linha de autoria, rótulo "Resposta" | 6,3:1 |
+| `--teal` | `#086b70` | Links na tela, site na linha de autoria, rótulo "Resposta" | 6,3:1 |
 
 ---
 
@@ -56,9 +56,12 @@ As duas vêm do Google Fonts, com alternativas locais (`-apple-system`, `Segoe U
 | Elemento | Tela | PDF | Detalhe |
 | --- | --- | --- | --- |
 | Base (`body`) | 16px / 1,65 | 9,5pt / 1,48 | — |
-| Código da capa (`.cover-code`) | até 6rem, mono 700 | 56pt | `letter-spacing: -.085em` |
+| Selo de nível (`.cover-level`) | 0,78rem mono 700, maiúsculas | 8pt | Contorno de 2px `--ink` |
+| Código da capa (`.cover-code`) | até 6rem, mono 700 | 56pt | `letter-spacing: -.085em`; hífen em `<span class="dash">` |
+| Nome completo (`.cover-exam`) | 0,95rem mono 700, maiúsculas | 10,5pt | `--accent-ink` |
 | Título da capa (`h1`) | até 3rem, 600 | 30pt | `letter-spacing: -.045em` |
 | Subtítulo da capa | 1,14rem | 12pt | `--muted` |
+| Autoria (`.cover-author`) | 1,05rem, nome em 600 | 11pt | Site em mono `--teal`, sem sublinhado no PDF |
 | Título "Sumário" | 1,9rem | 18pt | Borda inferior de 3px `--ink` |
 | Faixa de capítulo no sumário | 0,76rem mono 700, maiúsculas | 8pt | `letter-spacing: .06em` |
 | Item do sumário | 0,88rem | 8,9pt | Número em mono 0,74rem / 7,8pt |
@@ -77,7 +80,7 @@ Regras de leitura: parágrafos e itens com no máximo **75ch**, `orphans`/`widow
 
 | Recurso | Valores | Onde |
 | --- | --- | --- |
-| Barras grossas | 10px (capa), 6px (capítulo), 3px (sumário), 4px (destaques da capa) | Estrutura de página |
+| Barras grossas | 10px (capa), 9px (destaques da capa), 6px (capítulo), 3px (sumário) | Estrutura de página |
 | Borda de destaque lateral | 4px (faixa do sumário, blockquote, flashcard), 5px (callout) | Componentes com ênfase |
 | Borda fina | 1px `--line` | Cards, tabelas, divisórias de seção |
 | Raios | 3–6px em caixas, 8px em cards, 999px em chips, 50% em marcadores | — |
@@ -90,22 +93,33 @@ Regras de leitura: parágrafos e itens com no máximo **75ch**, `orphans`/`widow
 
 ### Capa (`.cover`)
 
-Ocupa a primeira folha inteira, sem rodapé.
+Ocupa a primeira folha inteira, sem rodapé: no PDF, `.cover` tem a altura exata da área útil da página (`256mm` com as margens 19/21mm), então os destaques ficam presos na base da folha.
 
 ```
 ┌ barra ▬▬▬(laranja 92px)▬▬▬▬▬▬▬▬▬▬▬▬(ink)▬▬▬▬▬▬▬▬▬▬▬▬▬▬ ┐
-  CATEGORIA                           NOME COMPLETO DO ASSUNTO
+  CATEGORIA                         ATUALIZADO EM MÊS DE ANO
 
+  ┌ NÍVEL ASSOCIATE ┐     ← selo opcional (nível da certificação)
   TÍTULO-CURTO            ← mono gigante
+  NOME COMPLETO           ← mono, --accent-ink (opcional)
   Título                  ← sans 600
   Subtítulo em --muted
-  Por Erik Nathan · eriknathan.me
+  ─────────────────────
+  Erik Nathan  eriknathan.me
 
   ───────────────────────────────────────────────────────────
   RÓTULO DOS DESTAQUES
-  ▬▬▬▬▬   ▬▬▬▬▬   ▬▬▬▬▬   ▬▬▬▬▬    ← 3 a 6 destaques
-  30%     26%     24%     20%        (número em mono + legenda)
+  ▬▬▬▬▬▬▬▬ ▬▬▬▬▬▬▬ ▬▬▬▬▬▬ ▬▬▬▬▬   ← 3 a 6 destaques
+  30%      26%     24%    20%       (número em mono + legenda + nota opcional)
 ```
+
+Regras da capa:
+
+- **Nada repete.** O topo direito traz a data de atualização; o nome completo do assunto fica só abaixo do código.
+- **Barra mostra o peso.** Quando os destaques são pesos (domínios de exame), a grade recebe `style="grid-template-columns:30fr 26fr 24fr 20fr"` e cada item `style="--w:30"`; juntas, as barras formam uma faixa de 100%. Destaques sem peso (pilares, módulos) usam colunas iguais.
+- **Nota opcional.** `<span class="highlight-note">` (`.domain-pt` nos geradores) traz a tradução ou um detalhe curto em `--muted`. O nome oficial em inglês leva `lang="en"`.
+- **Selo em vez de cor.** O nível da certificação diferencia e-books da mesma família sem quebrar a regra de uma cor de destaque.
+- **Hífen no código.** Em mono, o hífen ocupa uma célula inteira; envolva-o em `<span class="dash">-</span>`.
 
 ### Sumário (`.toc`)
 
@@ -217,7 +231,7 @@ Gere sempre pelo Chrome headless (`template/gerar_pdf.py`), que respeita `@page`
 
 ## Responsivo e acessibilidade
 
-- **≤ 700px:** folha sem margem e sem sombra, gutter de 16px, sumário e destaques da capa em coluna única ou dupla, tabelas com rolagem horizontal.
+- **≤ 700px:** folha sem margem e sem sombra, gutter de 16px, sumário e destaques da capa em coluna única (a barra de cada destaque passa a ter `--w`% da largura), tabelas com rolagem horizontal.
 - **Semântica:** `article.book` › `header.cover` › `nav.toc` › `main#conteudo` › `section.chapter` › `section.section` › `section.topic`. Os níveis de título seguem a ordem (h1 na capa, h2 no capítulo, h3 na seção, h4 no tópico).
 - **Foco:** contorno de 3px `--accent-ink` em links, `summary` e tabelas roláveis.
 - **Link de pular** para o conteúdo, no topo.

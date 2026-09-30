@@ -28,7 +28,7 @@ Transforme o material Markdown em `<conteudo>` num e-book de estudo, em HTML e P
 
 ## Estrutura (nesta ordem)
 
-1. **Capa** (`.cover`): categoria e nome completo no topo, `TITULO_CURTO` grande em mono, título, subtítulo, linha de autoria (já preenchida) e uma grade de 3 a 6 destaques (módulos, pilares, pesos, números-chave do material).
+1. **Capa** (`.cover`): categoria e data de atualização no topo, selo de nível (opcional), `TITULO_CURTO` grande em mono (hífen em `<span class="dash">`), nome completo, título, subtítulo, linha de autoria (já preenchida) e uma grade de 3 a 6 destaques (módulos, pilares, pesos, números-chave do material). Se os destaques forem pesos, a largura de cada barra segue o peso (ver comentário no template).
 2. **Sumário** (`.toc`), no padrão:
    - uma faixa por capítulo: `Capítulo N — Nome` (mono, maiúsculas, fundo cinza, borda de destaque à esquerda);
    - seções (h3) numeradas como `N.M`, em duas colunas, com linha pontilhada;
@@ -77,11 +77,13 @@ Na resposta, informe os caminhos do HTML e do PDF e liste os possíveis erros ou
 Pasta do projeto: [ex.: SAA-C03]
 Nome do PDF: [ex.: saa-c03-guia-de-revisao]
 Categoria (topo esquerdo da capa): [ex.: Guia de estudo]
-Nome completo do assunto (topo direito): [ex.: AWS Certified Solutions Architect – Associate]
+Data de atualização (topo direito): [ex.: setembro de 2026]
+Selo de nível (opcional): [ex.: Nível Associate]
 Título curto (destaque grande em mono): [ex.: SAA-C03]
+Nome completo do assunto (abaixo do título curto): [ex.: AWS Certified Solutions Architect – Associate]
 Título: [ex.: Guia de revisão]
 Subtítulo: [uma frase descrevendo o material]
-Rótulo e itens da grade de destaques: [ex.: Domínios do exame · 30% Secure, 26% Resilient...]
+Rótulo e itens da grade de destaques: [ex.: Domínios do exame · pesos oficiais · 30% Design Secure Architectures (Arquiteturas seguras), 26% ...]
 Rodapé do PDF: [ex.: SAA-C03  /  GUIA DE REVISÃO]
 Cor de destaque (opcional): [padrão laranja #ff9900]
 </dados>

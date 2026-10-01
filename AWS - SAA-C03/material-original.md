@@ -1464,6 +1464,10 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 
 #### Recursos comuns dos load balancers
 - **Internet-facing vs. internal**: o internet-facing fica em subnets públicas, e os alvos podem ficar em subnets **privadas**. O internal atende tráfego dentro da VPC ou do on-premises.
+- **Tipos de alvo do target group**: o tipo define para qual endereço o load balancer envia o tráfego.
+  - **`instance`** (registro por instance ID): o tráfego vai para o **IP privado primário da interface de rede primária** da instância. IP público e Elastic IP **nunca** são usados, mesmo que a instância os tenha.
+  - **`ip`**: qualquer IP privado da VPC (IPs secundários, tasks `awsvpc`) ou de redes conectadas por peering, VPN ou Direct Connect, como servidores on-premises. IPs publicamente roteáveis não podem ser registrados.
+  - **`lambda`** (só no ALB) e **`alb`** (só no NLB).
 - **Cross-zone load balancing**: distribui igualmente entre alvos de todas as AZs. É **ativado por padrão no ALB** (sem custo) e **desativado por padrão no NLB/GWLB**, com cobrança de tráfego entre AZs quando ativado.
 - **TLS**: termine no load balancer com certificado do **ACM** (renovação automática). Para criptografia fim a fim, **re-criptografe** até os alvos ou use NLB com passthrough TCP.
 - **Security groups**: o SG dos alvos deve aceitar tráfego **apenas do SG do load balancer**. ALB e NLB suportam security groups.
@@ -1478,6 +1482,8 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - "Inspecionar todo o tráfego com firewall de terceiros": **GWLB**.
 - "Login com Cognito antes de chegar à aplicação": **autenticação no ALB**.
 - "Alvos em uma AZ recebem mais carga que outros no NLB": **cross-zone load balancing** desativado.
+- "Para qual endereço o ALB/NLB envia o tráfego de alvos registrados por instance ID?": **IP privado primário da interface de rede primária**. Alternativas com IP público, Elastic IP ou "o próprio instance ID" são distratores.
+- "Balancear para servidores on-premises": target type **`ip`**, com conectividade via VPN ou Direct Connect.
 
 ### Entrega de conteúdo e DNS
 

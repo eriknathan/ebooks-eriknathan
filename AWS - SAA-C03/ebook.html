@@ -2618,6 +2618,13 @@ Os snapshots podem virar volumes EBS para recuperação na AWS.</li>
 <li><strong>Classic Load Balancer</strong>: legado. Não é resposta para novos designs.</li>
 </ul><section aria-labelledby="recursos-comuns-dos-load-balancers" class="topic"><h4 id="recursos-comuns-dos-load-balancers"><span class="sec-num">4.3.1</span> Recursos comuns dos load balancers</h4><ul>
 <li><strong>Internet-facing vs. internal</strong>: o internet-facing fica em subnets públicas, e os alvos podem ficar em subnets <strong>privadas</strong>. O internal atende tráfego dentro da VPC ou do on-premises.</li>
+<li><strong>Tipos de alvo do target group</strong>: o tipo define para qual endereço o load balancer envia o tráfego.
+<ul>
+<li><strong><code>instance</code></strong> (registro por instance ID): o tráfego vai para o <strong>IP privado primário da interface de rede primária</strong> da instância. IP público e Elastic IP <strong>nunca</strong> são usados, mesmo que a instância os tenha.</li>
+<li><strong><code>ip</code></strong>: qualquer IP privado da VPC (IPs secundários, tasks <code>awsvpc</code>) ou de redes conectadas por peering, VPN ou Direct Connect, como servidores on-premises. IPs publicamente roteáveis não podem ser registrados.</li>
+<li><strong><code>lambda</code></strong> (só no ALB) e <strong><code>alb</code></strong> (só no NLB).</li>
+</ul>
+</li>
 <li><strong>Cross-zone load balancing</strong>: distribui igualmente entre alvos de todas as AZs. É <strong>ativado por padrão no ALB</strong> (sem custo) e <strong>desativado por padrão no NLB/GWLB</strong>, com cobrança de tráfego entre AZs quando ativado.</li>
 <li><strong>TLS</strong>: termine no load balancer com certificado do <strong>ACM</strong> (renovação automática). Para criptografia fim a fim, <strong>re-criptografe</strong> até os alvos ou use NLB com passthrough TCP.</li>
 <li><strong>Security groups</strong>: o SG dos alvos deve aceitar tráfego <strong>apenas do SG do load balancer</strong>. ALB e NLB suportam security groups.</li>
@@ -2631,6 +2638,8 @@ Os snapshots podem virar volumes EBS para recuperação na AWS.</li>
 <li>"Inspecionar todo o tráfego com firewall de terceiros": <strong>GWLB</strong>.</li>
 <li>"Login com Cognito antes de chegar à aplicação": <strong>autenticação no ALB</strong>.</li>
 <li>"Alvos em uma AZ recebem mais carga que outros no NLB": <strong>cross-zone load balancing</strong> desativado.</li>
+<li>"Para qual endereço o ALB/NLB envia o tráfego de alvos registrados por instance ID?": <strong>IP privado primário da interface de rede primária</strong>. Alternativas com IP público, Elastic IP ou "o próprio instance ID" são distratores.</li>
+<li>"Balancear para servidores on-premises": target type <strong><code>ip</code></strong>, com conectividade via VPN ou Direct Connect.</li>
 </ul></section></section><section aria-labelledby="entrega-de-conteudo-e-dns" class="subchapter"><h3 id="entrega-de-conteudo-e-dns"><span class="sec-num">4.4</span> Entrega de conteúdo e DNS</h3><section aria-labelledby="amazon-route-53-registros-e-hosted-zones" class="topic"><h4 id="amazon-route-53-registros-e-hosted-zones"><span class="sec-num">4.4.1</span> Amazon Route 53 — registros e hosted zones</h4><ul>
 <li><strong>Amazon Route 53</strong>: DNS gerenciado com políticas de roteamento (simples, ponderado, latência, geolocalização, geoproximidade, failover, multivalue, IP-based) + health checks. Oferece SLA de 100% de disponibilidade e registro de domínios.</li>
 <li><strong>Registros</strong>:

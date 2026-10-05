@@ -1,0 +1,12 @@
+.DS_Store
+__pycache__/
+*.pyc
+
+# Cópias locais geradas pelo gerar_pdf.py de cada pasta; os PDFs versionados ficam em PDF-Geral/
+output/
+
+# Restos do perfil temporário do Chrome quando a geração é interrompida
+ebook-pdf-*/
+
+# Cópias de conflito do iCloud ("arquivo 2.pdf")
+* 2.*

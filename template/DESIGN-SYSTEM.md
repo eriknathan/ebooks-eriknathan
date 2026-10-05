@@ -1,6 +1,6 @@
 # Design system — e-books de estudo (HTML + PDF)
 
-Referência do padrão visual usado nos PDFs (SAA-C03, Well-Architected). A implementação está em [`ebook-template.html`](ebook-template.html); este documento explica **o que** cada peça é e **quando** usar. Se os dois divergirem, vale o template.
+Referência do padrão visual dos e-books gerados a partir de Markdown (todos, exceto o Well-Architected, que ainda tem HTML próprio). A implementação está em [`ebook-template.html`](ebook-template.html): o [`ferramentas/gerar_ebook.py`](../ferramentas/gerar_ebook.py) lê dali o CSS e as fontes e monta capa, sumário, capítulos e síntese com a mesma estrutura dos moldes. Este documento explica **o que** cada peça é e **quando** usar. Se os dois divergirem, vale o template.
 
 ## Princípios
 
@@ -146,7 +146,7 @@ Nome do capítulo            ← h2
 
 O número do `sec-label` é o mesmo do sumário, e o `id` da seção é o destino do link.
 
-**Numeração hierárquica (regra do padrão):** capítulo `N`, seção `N.M`, tópico `N.M.K`, sempre reiniciando a contagem no nível acima. O mesmo número aparece no sumário e no título. Nos e-books gerados por script, o `gerar_ebook.py` calcula os números (`span.sec-num` nos títulos do corpo); nos preenchidos à mão a partir do template, use `sec-label` (h3) e `topic-num` (h4). Capítulos sem número no original (ex.: "Como usar este guia") ficam sem numeração nas seções.
+**Numeração hierárquica (regra do padrão):** capítulo `N`, seção `N.M`, tópico `N.M.K`, sempre reiniciando a contagem no nível acima. O mesmo número aparece no sumário e no título. O `ferramentas/gerar_ebook.py` calcula os números e os coloca em `sec-label` (h3) e `topic-num` (h4); não os escreva à mão. Com `numeracao = "markdown"` no `ebook.toml`, capítulos sem número no original (ex.: "Como usar este guia") ficam sem kicker e sem numeração nas seções.
 
 ### Rodapé do PDF
 
@@ -169,6 +169,8 @@ Use o componente pelo formato do conteúdo, não para variar o visual.
 | Sequência cronológica | `.timeline > .timeline-item` | Linha vertical com pontos laranja, data em mono |
 | Passo a passo | `ol.numbered-list` | Número em círculo `--accent-soft`, divisória entre passos |
 | Colunas, comparações | `.table-scroll > table` | Cabeçalho `--ink`, linhas zebradas, rolagem horizontal na tela |
+| Código, comandos | `.book-content pre` | Fundo `--surface`, borda esquerda `--teal`, mono 0,8rem (7,6pt no PDF, com quebra de linha) |
+| Separador (`---`) | `.book-content hr` | Linha `--line` na tela; some no PDF |
 | Pergunta aberta | `details.flashcard` | Borda esquerda laranja, resposta em `--surface` |
 | Múltipla escolha | `details.flashcard` + `.flashcard-options` | Alternativas com letra mono, resposta abaixo |
 | Síntese final | `.closing` | Bloco `--ink` com borda superior laranja |
@@ -229,7 +231,7 @@ Use o componente pelo formato do conteúdo, não para variar o visual.
 | Links | Sem sublinhado, na cor do texto |
 | Cores | `print-color-adjust: exact` para manter faixas e bordas |
 
-Gere sempre pelo Chrome headless (`template/gerar_pdf.py`), que respeita `@page` e as margens com rodapé. Não use captura de tela.
+Gere sempre pelo Chrome headless (`ferramentas/gerar_pdf.py`), que respeita `@page` e as margens com rodapé e depois escreve o número da página de cada linha do sumário (por isso `.toc-list a` tem 24px de folga à direita no PDF). Não use captura de tela.
 
 ---
 

@@ -1,0 +1,58 @@
+# Metadados do e-book. Os campos de texto aceitam HTML inline (<code>, <strong>, <em>).
+fonte = "material.md"
+pdf = "saa-c03-guia-de-revisao.pdf"
+rodape = "SAA-C03  /  GUIA DE REVISÃO"
+numeracao = "markdown"
+
+[pagina]
+titulo = "SAA-C03 — Guia de revisão"
+descricao = "Guia de revisão SAA-C03 com tópicos de arquitetura, tabelas de decisão e flashcards."
+
+[capa]
+categoria = "Guia de estudo"
+atualizado = "setembro de 2026"
+selo = "Nível Associate"
+codigo = "SAA-C03"
+exame = "AWS Certified Solutions Architect – Associate"
+titulo = "Guia de revisão"
+subtitulo = "Computação, armazenamento, redes, segurança e decisões de arquitetura para a revisão da certificação."
+rotulo_destaques = "Domínios do exame · pesos oficiais"
+destaques_com_peso = true
+
+[[capa.destaques]]
+valor = "30%"
+texto = "Design Secure Architectures"
+idioma = "en"
+nota = "Arquiteturas seguras"
+peso = 30
+
+[[capa.destaques]]
+valor = "26%"
+texto = "Design Resilient Architectures"
+idioma = "en"
+nota = "Arquiteturas resilientes"
+peso = 26
+
+[[capa.destaques]]
+valor = "24%"
+texto = "Design High-Performing Architectures"
+idioma = "en"
+nota = "Arquiteturas de alto desempenho"
+peso = 24
+
+[[capa.destaques]]
+valor = "20%"
+texto = "Design Cost-Optimized Architectures"
+idioma = "en"
+nota = "Arquiteturas com custo otimizado"
+peso = 20
+
+[sintese]
+introducao = "Este guia organiza a revisão pelos quatro domínios do exame e reúne formatos de consulta rápida e prática ativa."
+itens = [
+  "Os pesos oficiais são 30% para segurança, 26% para resiliência, 24% para desempenho e 20% para custos.",
+  "As tabelas de decisão rápida ao fim de cada capítulo e os padrões recorrentes (seção 11) concentram comparações e pegadinhas dos simulados.",
+  "O mapa de domínios (seção 12) orienta prioridades; as tabelas de números em cada tópico reúnem valores sujeitos a atualização.",
+  "O autoteste, os cartões adicionais e as questões de múltipla resposta (seções 13 a 15) oferecem {flashcards} perguntas para revisão ativa.",
+  "O mapa da seção 15 relaciona as 14 tarefas publicadas no guia oficial às seções correspondentes.",
+]

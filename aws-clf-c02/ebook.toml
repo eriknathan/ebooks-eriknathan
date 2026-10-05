@@ -1,0 +1,58 @@
+# Metadados do e-book. Os campos de texto aceitam HTML inline (<code>, <strong>, <em>).
+fonte = "material.md"
+pdf = "clf-c02-guia-de-revisao.pdf"
+rodape = "CLF-C02  /  GUIA DE REVISÃO"
+numeracao = "markdown"
+
+[pagina]
+titulo = "CLF-C02 — Guia de revisão"
+descricao = "Guia de revisão CLF-C02 com conceitos de nuvem, serviços AWS, tabelas de decisão e flashcards."
+
+[capa]
+categoria = "Guia de estudo"
+atualizado = "setembro de 2026"
+selo = "Nível Foundational"
+codigo = "CLF-C02"
+exame = "AWS Certified Cloud Practitioner"
+titulo = "Guia de revisão"
+subtitulo = "Conceitos de nuvem, segurança, serviços essenciais, preços e suporte para a revisão da certificação."
+rotulo_destaques = "Domínios do exame · pesos oficiais"
+destaques_com_peso = true
+
+[[capa.destaques]]
+valor = "24%"
+texto = "Cloud Concepts"
+idioma = "en"
+nota = "Conceitos de nuvem"
+peso = 24
+
+[[capa.destaques]]
+valor = "30%"
+texto = "Security and Compliance"
+idioma = "en"
+nota = "Segurança e conformidade"
+peso = 30
+
+[[capa.destaques]]
+valor = "34%"
+texto = "Cloud Technology and Services"
+idioma = "en"
+nota = "Tecnologia e serviços"
+peso = 34
+
+[[capa.destaques]]
+valor = "12%"
+texto = "Billing, Pricing, and Support"
+idioma = "en"
+nota = "Faturamento, preços e suporte"
+peso = 12
+
+[sintese]
+introducao = "Este guia organiza a revisão pelos quatro domínios do exame e reúne formatos de consulta rápida e prática ativa."
+itens = [
+  "Os pesos oficiais são 24% para conceitos de nuvem, 30% para segurança e conformidade, 34% para tecnologia e serviços e 12% para faturamento, preços e suporte.",
+  "As tabelas de decisão rápida ao fim de cada capítulo e os padrões recorrentes (seção 12) concentram as palavras-chave e os pares de serviços que mais se confundem.",
+  "O mapa de domínios (seção 13) orienta prioridades; preços, planos de suporte e Free Tier foram conferidos em setembro de 2026 e estão sujeitos a atualização.",
+  "O autoteste e as questões de múltipla resposta (seções 14 e 15) oferecem {flashcards} perguntas para revisão ativa.",
+  "O mapa da seção 15 relaciona as 19 tarefas publicadas no guia oficial às seções correspondentes.",
+]

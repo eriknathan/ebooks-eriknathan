@@ -9,7 +9,10 @@
      os que não forem usados.
   3. Não altere o CSS além do bloco "TOKENS DO E-BOOK" e do texto
      do rodapé em @page. Tudo o mais é o padrão visual comum.
-  4. Gere o PDF: python3 template/gerar_pdf.py pasta/ebook.html pasta/saida.pdf
+  4. Gere o PDF: python3 ferramentas/gerar_pdf.py pasta/ebook.html
+  Os e-books gerados a partir de Markdown não usam este arquivo inteiro:
+  ferramentas/gerar_ebook.py lê daqui o CSS e as fontes e monta o resto
+  com a mesma estrutura dos moldes abaixo.
 -->
 <html lang="pt-BR">
 <head>
@@ -77,8 +80,10 @@
   .cover-author a{font:500 .85rem var(--mono);color:var(--teal)}
   .cover-bottom{border-top:1px solid var(--ink);padding-top:16px}
   .cover-bottom-label{margin:0 0 16px}
-  /* Sem style inline, as colunas são iguais. Com pesos, a grade recebe
-     grid-template-columns proporcional e cada item recebe --w (0–100). */
+  /* Sem style inline, as colunas se ajustam à largura (na A4 cabem até 4).
+     Com 5 ou 6 destaques, use grid-template-columns:repeat(N,minmax(0,1fr)).
+     Com pesos, a grade recebe colunas proporcionais e cada item recebe --w (0–100).
+     O gerar_ebook.py sempre escreve as colunas no style. */
   .highlight-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px 3px}
   .highlight{min-width:0}
   .highlight:before{content:'';display:block;height:9px;background:var(--accent);margin-bottom:10px}
@@ -119,6 +124,8 @@
   .topic>h4{font-size:1.08rem;margin:0 0 10px}
   .topic-num{font:600 .82em var(--mono);color:var(--accent-ink);margin-right:.35em;letter-spacing:-.02em}
   .book-content ul,.book-content ol{padding-left:1.35em}
+  .book-content ol{padding-left:1.5em}
+  .book-content ol>li{padding-left:.25em}
   .book-content ol>li::marker{font-family:var(--mono);font-weight:700;color:var(--accent-ink)}
 
   /* ---------- Componentes ---------- */
@@ -149,6 +156,11 @@
   .numbered-list li{display:flex;gap:12px;align-items:flex-start;border-bottom:1px solid var(--line);padding:0 0 8px;margin:0;break-inside:avoid}
   .numbered-list li:last-child{border-bottom:0;padding-bottom:0}
   .numbered-list .b{font:700 .76rem var(--mono);color:var(--ink);background:var(--accent-soft);border:1px solid var(--accent);border-radius:50%;width:24px;height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+
+  /* Bloco de código (``` no Markdown) e separador (---) */
+  .book-content pre{margin:16px 0 22px;padding:13px 16px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:0 4px 4px 0;overflow-x:auto;font:.8rem/1.55 var(--mono);color:var(--ink);hyphens:none}
+  .book-content pre code{background:none;padding:0;font-size:inherit;overflow-wrap:normal;hyphens:none}
+  .book-content hr{border:0;border-top:1px solid var(--line);margin:30px 0}
 
   .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:4px;margin:20px 0 24px}
   table{border-collapse:collapse;width:100%;min-width:560px;font-size:.88rem;line-height:1.42}
@@ -224,7 +236,8 @@
     details.toc-group .toc-group-title:after,details.toc-group[open] .toc-group-title:after,
     .flashcard summary:after,.flashcard[open] summary:after{content:none}
     .toc-list{display:block!important}
-    .toc-list a{font-size:8.9pt;padding:2px 0}
+    /* A folga à direita recebe o número da página, inserido pelo gerar_pdf.py */
+    .toc-list a{font-size:8.9pt;padding:2px 24px 2px 0}
     .toc-list a .n{font-size:7.8pt}
     .toc-list .toc-topic a{font-size:8.3pt}
 
@@ -234,6 +247,11 @@
     .section{margin-top:18px;padding-top:12px}
     .section-head,.topic>h4{break-after:avoid}
     .book-content p,.book-content li{max-width:none}
+    /* O marcador em mono negrito ("10.") precisa de mais recuo no corpo de 9,5pt */
+    .book-content ol{padding-left:2.25em}
+
+    .book-content pre{white-space:pre-wrap;overflow:visible;break-inside:avoid;font-size:7.6pt}
+    .book-content hr{display:none}
 
     .table-scroll{overflow:visible;border:0}
     table{min-width:0;font-size:7.6pt}

@@ -1,0 +1,58 @@
+# Metadados do e-book. Os campos de texto aceitam HTML inline (<code>, <strong>, <em>).
+fonte = "material.md"
+pdf = "dva-c02-guia-de-revisao.pdf"
+rodape = "DVA-C02  /  GUIA DE REVISÃO"
+numeracao = "markdown"
+
+[pagina]
+titulo = "DVA-C02 — Guia de revisão"
+descricao = "Guia de revisão DVA-C02 com Lambda, API Gateway, DynamoDB, segurança, CI/CD, observabilidade, tabelas de decisão e flashcards."
+
+[capa]
+categoria = "Guia de estudo"
+atualizado = "setembro de 2026"
+selo = "Nível Associate"
+codigo = "DVA-C02"
+exame = "AWS Certified Developer – Associate"
+titulo = "Guia de revisão"
+subtitulo = "Lambda, APIs, DynamoDB, mensageria, segurança, CI/CD, observabilidade e desenvolvimento com IA para a revisão da certificação. Inclui a transição para o DVA-C03."
+rotulo_destaques = "Domínios do exame · pesos oficiais"
+destaques_com_peso = true
+
+[[capa.destaques]]
+valor = "32%"
+texto = "Development with AWS Services"
+idioma = "en"
+nota = "Desenvolvimento com serviços AWS"
+peso = 32
+
+[[capa.destaques]]
+valor = "26%"
+texto = "Security"
+idioma = "en"
+nota = "Segurança"
+peso = 26
+
+[[capa.destaques]]
+valor = "24%"
+texto = "Deployment"
+idioma = "en"
+nota = "Implantação"
+peso = 24
+
+[[capa.destaques]]
+valor = "18%"
+texto = "Troubleshooting and Optimization"
+idioma = "en"
+nota = "Solução de problemas e otimização"
+peso = 18
+
+[sintese]
+introducao = "Este guia organiza a revisão pelos quatro domínios do exame e reúne formatos de consulta rápida e prática ativa."
+itens = [
+  "Os pesos oficiais do DVA-C02 são 32% para desenvolvimento, 26% para segurança, 24% para implantação e 18% para troubleshooting e otimização. O DVA-C02 pode ser feito até 30/nov/2026; o DVA-C03 começa em 1º/dez/2026 (seção 14).",
+  "As tabelas de decisão rápida ao fim de cada capítulo e os padrões recorrentes (seção 15) concentram as palavras-chave, os pares que mais se confundem e as afirmações falsas clássicas.",
+  "As tabelas de números (Lambda, API Gateway, DynamoDB, mensageria) foram conferidas em setembro de 2026 e mostram os limites que mudaram entre 2024 e 2026.",
+  "O autoteste e as questões de múltipla resposta (seções 17 e 18) oferecem {flashcards} perguntas para revisão ativa.",
+  "O mapa da seção 18 relaciona as 13 tarefas publicadas no guia oficial às seções correspondentes.",
+]

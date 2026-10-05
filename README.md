@@ -4,70 +4,73 @@ Guias de revisão em HTML e PDF, todos com o mesmo padrão visual: capa, sumári
 
 | E-book | Pasta | PDF |
 | --- | --- | --- |
-| AWS Well-Architected Framework | [`aws-well-architected-framework/`](aws-well-architected-framework/) | [`pdf/ebook-aws-well-architected.pdf`](aws-well-architected-framework/pdf/ebook-aws-well-architected.pdf) |
-| AWS Certified Solutions Architect – Associate (SAA-C03) | [`SAA-C03/`](SAA-C03/) | [`output/pdf/saa-c03-guia-de-revisao.pdf`](SAA-C03/output/pdf/saa-c03-guia-de-revisao.pdf) |
-| AWS Certified Cloud Practitioner (CLF-C02) | [`CLF-C02/`](CLF-C02/) | [`output/pdf/clf-c02-guia-de-revisao.pdf`](CLF-C02/output/pdf/clf-c02-guia-de-revisao.pdf) |
-| AWS Certified AI Practitioner (AIF-C01) | [`AIF-C01/`](AIF-C01/) | [`output/pdf/aif-c01-guia-de-revisao.pdf`](AIF-C01/output/pdf/aif-c01-guia-de-revisao.pdf) |
-| AWS Certified Developer – Associate (DVA-C02) | [`DVA-C02/`](DVA-C02/) | [`output/pdf/dva-c02-guia-de-revisao.pdf`](DVA-C02/output/pdf/dva-c02-guia-de-revisao.pdf) |
-| Docker — do contêiner à produção | [`Docker/`](Docker/) | [`output/pdf/docker-guia-de-estudo.pdf`](Docker/output/pdf/docker-guia-de-estudo.pdf) |
-| Kubernetes — do Pod à produção | [`Kubernetes/`](Kubernetes/) | [`output/pdf/kubernetes-guia-de-estudo.pdf`](Kubernetes/output/pdf/kubernetes-guia-de-estudo.pdf) |
-| GH-200 — GitHub Actions Certification | [GH-200 - GitHub Actions Certification/](<GH-200 - GitHub Actions Certification/>) | [output/pdf/gh-200-guia-de-estudo.pdf](<GH-200 - GitHub Actions Certification/output/pdf/gh-200-guia-de-estudo.pdf>) |
+| AWS Well-Architected Framework | [aws-well-architected/](aws-well-architected/) | [ebook-aws-well-architected.pdf](PDF-Geral/ebook-aws-well-architected.pdf) |
+| AWS Certified Solutions Architect – Associate (SAA-C03) | [aws-saa-c03/](aws-saa-c03/) | [saa-c03-guia-de-revisao.pdf](PDF-Geral/saa-c03-guia-de-revisao.pdf) |
+| AWS Certified Cloud Practitioner (CLF-C02) | [aws-clf-c02/](aws-clf-c02/) | [clf-c02-guia-de-revisao.pdf](PDF-Geral/clf-c02-guia-de-revisao.pdf) |
+| AWS Certified AI Practitioner (AIF-C01) | [aws-aif-c01/](aws-aif-c01/) | [aif-c01-guia-de-revisao.pdf](PDF-Geral/aif-c01-guia-de-revisao.pdf) |
+| AWS Certified Developer – Associate (DVA-C02) | [aws-dva-c02/](aws-dva-c02/) | [dva-c02-guia-de-revisao.pdf](PDF-Geral/dva-c02-guia-de-revisao.pdf) |
+| Docker — do contêiner à produção | [docker/](docker/) | [docker-guia-de-estudo.pdf](PDF-Geral/docker-guia-de-estudo.pdf) |
+| Kubernetes — do Pod à produção | [kubernetes/](kubernetes/) | [kubernetes-guia-de-estudo.pdf](PDF-Geral/kubernetes-guia-de-estudo.pdf) |
+| GH-200 — GitHub Actions Certification | [gh-200/](gh-200/) | [gh-200-guia-de-estudo.pdf](PDF-Geral/gh-200-guia-de-estudo.pdf) |
+
+Os PDFs versionados ficam só em [`PDF-Geral/`](PDF-Geral/). O `ferramentas/gerar_pdf.py` grava por padrão uma cópia local em `<pasta>/output/pdf/`, que é ignorada pelo git.
 
 ## Estrutura
 
+Cada e-book é uma pasta com o conteúdo e os metadados; o código e o visual ficam num lugar só.
+
 ```text
 .
-├── template/                        # padrão para novos e-books
-│   ├── ebook-template.html          # HTML-base com todo o CSS e os componentes
-│   ├── DESIGN-SYSTEM.md             # cores, tipografia, componentes e regras de impressão
-│   ├── PROMPT.md                    # prompt para gerar um e-book novo no padrão
-│   └── gerar_pdf.py                 # gera o PDF de qualquer HTML
-├── aws-well-architected-framework/
-│   ├── ebook.html                   # e-book (editado diretamente)
-│   ├── gerar_pdf.py
-│   └── pdf/
-├── SAA-C03/
-│   ├── material-original.md         # fonte do conteúdo
-│   ├── gerar_ebook.py               # Markdown → ebook.html
-│   ├── ebook.html                   # gerado; não edite à mão
-│   ├── gerar_pdf.py
-│   └── output/pdf/
-├── CLF-C02/                         # mesmo fluxo do SAA-C03
-│   ├── material.md                  # fonte do conteúdo
-│   ├── gerar_ebook.py               # Markdown → ebook.html
-│   ├── ebook.html                   # gerado; não edite à mão
-│   ├── gerar_pdf.py
-│   └── output/pdf/
-├── AIF-C01/                         # mesmo fluxo do SAA-C03
-│   ├── material.md                  # fonte do conteúdo
-│   ├── gerar_ebook.py               # Markdown → ebook.html
-│   ├── ebook.html                   # gerado; não edite à mão
-│   ├── gerar_pdf.py
-│   └── output/pdf/
-├── DVA-C02/                         # mesmo fluxo do SAA-C03
-│   ├── material.md                  # fonte do conteúdo
-│   ├── gerar_ebook.py               # Markdown → ebook.html
-│   ├── ebook.html                   # gerado; não edite à mão
-│   ├── gerar_pdf.py
-│   └── output/pdf/
-└── prompt.md                        # prompt antigo (visual livre por e-book)
+├── ferramentas/
+│   ├── gerar_ebook.py                     # material.md + ebook.toml + template → ebook.html
+│   ├── gerar_pdf.py                       # ebook.html → PDF com o sumário numerado
+│   ├── gerar_todos.py                     # HTML e PDF de todos os e-books, em PDF-Geral/
+│   └── comum.py                           # leitura do ebook.toml e descoberta dos e-books
+├── template/
+│   ├── ebook-template.html                # fonte única do CSS e da estrutura
+│   ├── DESIGN-SYSTEM.md                   # cores, tipografia, componentes e regras de impressão
+│   ├── PROMPT.md                          # prompt para criar um e-book novo no padrão
+│   └── legado/prompt-antigo.md            # prompt anterior (visual livre por e-book)
+├── aws-aif-c01/
+│   ├── material.md                        # conteúdo
+│   ├── ebook.toml                         # capa, síntese, rodapé e nome do PDF
+│   ├── ebook.html                         # gerado; não edite à mão
+│   └── README.md
+├── aws-clf-c02/                           # mesmo formato
+├── aws-dva-c02/                           # idem
+├── aws-saa-c03/                           # idem
+├── docker/                                # idem
+├── kubernetes/                            # idem
+├── gh-200/                                # idem, mais extra.css (ajustes de paginação)
+├── aws-well-architected/                  # ebook.html editado à mão; ebook.toml sem `fonte`
+├── PDF-Geral/                             # PDFs de todos os e-books
+├── requirements.txt
+└── PLANO-DE-MELHORIAS.md                  # plano de reorganização do repositório
 ```
 
 ## Requisitos
 
 - Python 3.9+
 - Google Chrome ou Chromium, para gerar o PDF. Se não for encontrado automaticamente, use `--chrome /caminho/para/chrome` ou a variável `CHROME_BIN`.
-- Só para o SAA-C03, o CLF-C02, o AIF-C01 e o DVA-C02: `python3 -m pip install markdown-it-py beautifulsoup4`
+- Pacotes Python:
 
-## Gerar os PDFs
+  ```bash
+  python3 -m pip install -r requirements.txt
+  ```
+
+  `markdown-it-py` e `beautifulsoup4` geram o HTML; `pymupdf` numera as páginas do sumário no PDF; `tomli` lê o `ebook.toml` no Python 3.9 e 3.10.
+
+## Gerar os e-books
+
+Os comandos funcionam a partir de qualquer pasta. Os e-books são identificados pelo caminho da pasta ou por um trecho do nome (`docker`, `saa`, `gh-200`).
 
 ### Todos de uma vez
 
 ```bash
-python3 gerar-all-pdfs.py
+python3 ferramentas/gerar_todos.py
 ```
 
-O script da raiz encontra sozinho toda pasta que tem um `gerar_pdf.py` (um e-book novo entra automaticamente), regenera o `ebook.html` a partir do Markdown quando a pasta tem `gerar_ebook.py` e salva todos os PDFs em [`PDF-Geral/`](PDF-Geral/), com o mesmo nome de arquivo usado em cada pasta. Opções:
+Encontra sozinho toda pasta que tem um `ebook.toml` (um e-book novo entra automaticamente), regenera o `ebook.html` quando o `ebook.toml` indica a `fonte` em Markdown e salva todos os PDFs em [`PDF-Geral/`](PDF-Geral/). Opções:
 
 | Opção | Efeito |
 | --- | --- |
@@ -75,61 +78,37 @@ O script da raiz encontra sozinho toda pasta que tem um `gerar_pdf.py` (um e-boo
 | `--apenas TEXTO` | Gera só as pastas cujo nome contém o texto (pode repetir: `--apenas docker --apenas dva`) |
 | `--sem-html` | Não regenera o `ebook.html`; só gera o PDF a partir do HTML atual |
 | `--destino PASTA` | Salva em outra pasta no lugar de `PDF-Geral/` |
-| `--chrome CAMINHO` | Caminho do Chrome/Chromium, repassado a cada `gerar_pdf.py` |
+| `--chrome CAMINHO` | Caminho do Chrome/Chromium |
 
 Um erro em um e-book não interrompe os outros; no fim, o script lista os que falharam e sai com código 1.
 
-### Um e-book específico
-
-
-Rode a partir da raiz do repositório.
-
-**Well-Architected**: o conteúdo fica direto no `ebook.html`.
+### Passo a passo
 
 ```bash
-python3 aws-well-architected-framework/gerar_pdf.py \
-  --output aws-well-architected-framework/pdf/ebook-aws-well-architected.pdf
+python3 ferramentas/gerar_ebook.py docker      # só o HTML (sem argumento: todos)
+python3 ferramentas/gerar_pdf.py docker        # só o PDF, em docker/output/pdf/
+python3 ferramentas/gerar_pdf.py docker --output /tmp/docker.pdf
 ```
 
-Sem `--output`, o script grava em `aws-well-architected-framework/output/pdf/`, e não na pasta `pdf/` onde fica o PDF versionado.
+O `gerar_ebook.py` falha, sem gravar nada, se o HTML perder algum texto ou bloco de código do Markdown, se houver `id` duplicado ou link interno sem destino.
 
-**SAA-C03**: edite o `material-original.md` e gere o HTML antes do PDF.
+No **Well-Architected**, o conteúdo fica direto no `ebook.html`; só o passo do PDF se aplica (`python3 ferramentas/gerar_pdf.py well-architected`).
 
-```bash
-cd SAA-C03
-python3 gerar_ebook.py
-python3 gerar_pdf.py
-```
-
-Os detalhes do SAA-C03 estão em [`SAA-C03/README.md`](SAA-C03/README.md).
-
-**CLF-C02**, **AIF-C01** e **DVA-C02**: mesmo fluxo, com o conteúdo em `material.md`.
-
-```bash
-cd CLF-C02   # ou AIF-C01, DVA-C02
-python3 gerar_ebook.py
-python3 gerar_pdf.py
-```
-
-Os detalhes estão em [`CLF-C02/README.md`](CLF-C02/README.md), [`AIF-C01/README.md`](AIF-C01/README.md) e [`DVA-C02/README.md`](DVA-C02/README.md).
-
-O **GH-200** também usa `material.md` → `gerar_ebook.py` → `gerar_pdf.py`. Os requisitos e comandos estão no [README do GH-200](<GH-200 - GitHub Actions Certification/README.md>). Para gerar sua cópia na coleção: `python3 gerar-all-pdfs.py --apenas GH-200`.
+Os detalhes de cada e-book estão no `README.md` da pasta.
 
 ## Criar um e-book novo
 
 1. Abra [`template/PROMPT.md`](template/PROMPT.md), preencha o bloco `<dados>` (pasta, título, capa, rodapé) e cole o material em `<conteudo>`.
-2. Envie o prompt ao Claude neste repositório. Ele copia o [`ebook-template.html`](template/ebook-template.html) para a nova pasta e preenche o conteúdo sem alterar o visual.
-3. Gere o PDF:
+2. Envie o prompt ao Claude neste repositório. Ele cria a pasta com o `material.md` e o `ebook.toml`, sem script próprio e sem alterar o visual.
+3. Gere o HTML e o PDF:
 
    ```bash
-   python3 template/gerar_pdf.py nova-pasta/ebook.html
+   python3 ferramentas/gerar_todos.py --apenas "nova-pasta"
    ```
 
-   O PDF sai em `nova-pasta/output/pdf/ebook.pdf`. Para outro nome, passe o caminho como segundo argumento.
+O padrão visual está documentado em [`template/DESIGN-SYSTEM.md`](template/DESIGN-SYSTEM.md). A numeração é hierárquica em todos os e-books: capítulo (`1`), seção (`1.1`) e tópico (`1.1.1`), igual no sumário e no corpo. O `gerar_ebook.py` cria os números sozinho; não os escreva à mão nos títulos do Markdown (a exceção é o `## N. Título` dos capítulos quando o `ebook.toml` usa `numeracao = "markdown"`). Todos os PDFs levam no rodapé de cada página o nome do e-book e `Erik Nathan (eriknathan.me)`.
 
-O padrão visual está documentado em [`template/DESIGN-SYSTEM.md`](template/DESIGN-SYSTEM.md). A numeração é hierárquica em todos os e-books: capítulo (`1`), seção (`1.1`) e tópico (`1.1.1`), igual no sumário e no corpo. Nos e-books gerados por script, o `gerar_ebook.py` cria os números sozinho; não os escreva à mão nos títulos do Markdown. Todos os PDFs levam no rodapé de cada página o nome do e-book e `Erik Nathan (eriknathan.me)`.
-
-> O [`prompt.md`](prompt.md) da raiz é a versão anterior: ele pede um visual diferente para cada e-book. Para seguir o padrão, use `template/PROMPT.md`.
+> O [`template/legado/prompt-antigo.md`](template/legado/prompt-antigo.md) é a versão anterior do prompt: ele pede um visual diferente para cada e-book. Para seguir o padrão, use `template/PROMPT.md`.
 
 ## Autor
 

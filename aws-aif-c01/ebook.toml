@@ -1,0 +1,65 @@
+# Metadados do e-book. Os campos de texto aceitam HTML inline (<code>, <strong>, <em>).
+fonte = "material.md"
+pdf = "aif-c01-guia-de-revisao.pdf"
+rodape = "AIF-C01  /  GUIA DE REVISÃO"
+numeracao = "markdown"
+
+[pagina]
+titulo = "AIF-C01 — Guia de revisão"
+descricao = "Guia de revisão AIF-C01 com fundamentos de IA, IA generativa, agentes, IA responsável, tabelas de decisão e flashcards."
+
+[capa]
+categoria = "Guia de estudo"
+atualizado = "setembro de 2026"
+selo = "Nível Foundational"
+codigo = "AIF-C01"
+exame = "AWS Certified AI Practitioner"
+titulo = "Guia de revisão"
+subtitulo = "Fundamentos de IA e ML, IA generativa, agentes, foundation models, IA responsável e segurança para a revisão da certificação."
+rotulo_destaques = "Domínios do exame · pesos oficiais"
+destaques_com_peso = true
+
+[[capa.destaques]]
+valor = "20%"
+texto = "Fundamentals of AI and ML"
+idioma = "en"
+nota = "Fundamentos de IA e ML"
+peso = 20
+
+[[capa.destaques]]
+valor = "24%"
+texto = "Fundamentals of GenAI"
+idioma = "en"
+nota = "Fundamentos de IA generativa"
+peso = 24
+
+[[capa.destaques]]
+valor = "28%"
+texto = "Applications of Foundation Models"
+idioma = "en"
+nota = "Aplicações de foundation models"
+peso = 28
+
+[[capa.destaques]]
+valor = "14%"
+texto = "Guidelines for Responsible AI"
+idioma = "en"
+nota = "Diretrizes de IA responsável"
+peso = 14
+
+[[capa.destaques]]
+valor = "14%"
+texto = "Security, Compliance, and Governance"
+idioma = "en"
+nota = "Segurança, conformidade e governança"
+peso = 14
+
+[sintese]
+introducao = "Este guia organiza a revisão pelos quatro domínios do exame e reúne formatos de consulta rápida e prática ativa."
+itens = [
+  "Os pesos oficiais são 20% para fundamentos de IA e ML, 24% para fundamentos de IA generativa, 28% para aplicações de foundation models, 14% para IA responsável e 14% para segurança, conformidade e governança.",
+  "As tabelas de decisão rápida ao fim de cada capítulo e os padrões recorrentes (seção 12) concentram as palavras-chave e os pares de conceitos e serviços que mais se confundem.",
+  "O mapa de domínios (seção 13) orienta prioridades; serviços, nomes e disponibilidade foram conferidos em setembro de 2026, após a revisão 1.1 do guia e as mudanças de julho de 2026.",
+  "O autoteste e as questões de múltipla resposta, ordenação e correspondência (seções 14 e 15) oferecem {flashcards} perguntas para revisão ativa.",
+  "O mapa da seção 15 relaciona as 14 tarefas publicadas no guia oficial às seções correspondentes.",
+]

@@ -1,0 +1,54 @@
+# Metadados do e-book. Os campos de texto aceitam HTML inline (<code>, <strong>, <em>).
+fonte = "material.md"
+pdf = "kubernetes-guia-de-estudo.pdf"
+rodape = "KUBERNETES  /  GUIA DE ESTUDO"
+numeracao = "markdown"
+
+[pagina]
+titulo = "Kubernetes — Guia de estudo"
+descricao = "Guia de estudo de Kubernetes: arquitetura, Pods, Deployments, armazenamento, Services, Ingress e Gateway API, autoescalonamento, políticas, RBAC e Helm, com tabelas de decisão e flashcards."
+
+[capa]
+categoria = "Guia de estudo"
+atualizado = "setembro de 2026"
+codigo = "KUBERNETES"
+exame = "Arquitetura · Workloads · Operação"
+titulo = "Do Pod à produção"
+subtitulo = "Da arquitetura do cluster ao Helm: Pods, Deployments, volumes, Services, Ingress e Gateway API, autoescalonamento, agendamento, políticas, Network Policies e RBAC, com tabelas de decisão, pegadinhas e flashcards. Conferido com o Kubernetes 1.37."
+rotulo_destaques = "Cinco blocos do guia"
+destaques_com_peso = false
+
+[[capa.destaques]]
+valor = "01"
+texto = "Fundamentos"
+nota = "Capítulos 1 a 3"
+
+[[capa.destaques]]
+valor = "02"
+texto = "Workloads e cluster"
+nota = "Capítulos 4 a 7"
+
+[[capa.destaques]]
+valor = "03"
+texto = "Dados, rede e configuração"
+nota = "Capítulos 8 a 12"
+
+[[capa.destaques]]
+valor = "04"
+texto = "Operação e segurança"
+nota = "Capítulos 13 a 17"
+
+[[capa.destaques]]
+valor = "05"
+texto = "Helm e revisão"
+nota = "Capítulos 18 a 21"
+
+[sintese]
+introducao = "Este guia percorre o Kubernetes da arquitetura do cluster à entrega de aplicações com Helm, reunindo formatos de consulta rápida e prática ativa."
+itens = [
+  "O Kubernetes é declarativo: o API server guarda o estado desejado no etcd, e controladores, scheduler e kubelet trabalham em laços para alcançá-lo. O runtime (containerd ou CRI-O) executa os contêineres pela CRI (capítulos 1 a 3).",
+  "Aplicações rodam em Pods criados por controladores: Deployments para réplicas sem estado, StatefulSets para identidade e dados, DaemonSets para agentes de nó. Requests, limits e probes definem onde e como elas rodam (capítulos 4 a 7 e 10).",
+  "Volumes com CSI e StorageClasses, Services com DNS, ConfigMaps e Secrets e a entrada de tráfego pela Gateway API (ou por um Ingress mantido) com cert-manager completam a aplicação (capítulos 8 a 12).",
+  "HPA, regras de agendamento, políticas de admissão, Network Policies e RBAC sustentam a operação segura; o Helm empacota tudo em charts versionados (capítulos 13 a 18).",
+  "As pegadinhas, a referência de comandos e o autoteste (capítulos 19 a 21) oferecem revisão rápida, com {flashcards} perguntas. Versões e comportamentos foram conferidos em setembro de 2026.",
+]

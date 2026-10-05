@@ -1,0 +1,17 @@
+  /* Blocos extensos de YAML podem continuar na folha seguinte; o resto do ajuste compacta a paginação. */
+  @media print{
+    .book-content> .callout:first-child{margin-top:0}
+    .book-content> .callout:first-child+.chapter{break-before:auto}
+    .section{margin-top:14px;padding-top:10px}
+    .section-head{margin-bottom:10px}
+    .section-head,.chapter-head,.topic>h4{break-inside:avoid;break-after:avoid}
+    .table-scroll{margin:14px 0 18px}
+    thead{break-after:avoid}
+    tbody tr:first-child{break-before:avoid}
+    .chapter[aria-labelledby="dominio-4-gerenciar-o-github-actions-para-a-organizacao"] th,
+    .chapter[aria-labelledby="dominio-4-gerenciar-o-github-actions-para-a-organizacao"] td{padding-top:4px;padding-bottom:4px}
+    .section:has(#versionamento-releases-e-imutabilidade){break-inside:avoid}
+    .book-content pre{margin:12px 0 16px;white-space:pre-wrap;overflow:visible;overflow-wrap:anywhere;break-inside:auto;font-size:7.6pt;line-height:1.4;box-decoration-break:clone}
+    .book-content pre code{overflow-wrap:anywhere}
+    .closing{margin-top:18px;padding:18px 22px}
+  }

@@ -9,35 +9,45 @@ Transforme o material Markdown em `<conteudo>` num e-book de estudo, em HTML e P
 
 ## Arquivos
 
-- **Base visual obrigatória:** `template/ebook-template.html`. Copie esse arquivo para `<pasta>/ebook.html` e preencha. Não crie um novo design.
-- **Referência do padrão:** `template/DESIGN-SYSTEM.md` (cores, tipografia, componentes e regras de impressão). Consulte antes de decidir qual componente usar.
-- **PDF:** `python3 template/gerar_pdf.py <pasta>/ebook.html <pasta>/output/pdf/<nome-do-pdf>.pdf`
-- Se o material for longo ou tiver que ser regerado várias vezes, escreva um `<pasta>/gerar_ebook.py` que converta o Markdown e injete o resultado no template, como em `Docker/gerar_ebook.py` (a referência atual: já numera capítulos, seções e tópicos e gera o sumário). Assim a formatação continua igual quando o material mudar.
+Todo e-book é uma pasta na raiz com três arquivos editáveis. O HTML e o PDF são gerados pelos scripts de `ferramentas/`, que aplicam o visual de `template/ebook-template.html`. Não crie um novo design nem um script por pasta.
 
-## O que pode e o que não pode mudar no template
+- **`<pasta>/material.md`:** o conteúdo. `##` vira capítulo, `###` seção e `####` tópico. Callouts `> [!question]- Pergunta` (com a resposta nas linhas `>` seguintes) viram flashcards. Parágrafos `Q01.` seguidos de uma lista viram questões de múltipla escolha. Blocos de código, tabelas e citações são convertidos sem ajuste.
+- **`<pasta>/ebook.toml`:** capa, síntese, rodapé, nome do PDF e título da página. Copie o de um e-book parecido (com pesos na capa: `aws-saa-c03/ebook.toml`; com blocos numerados: `Docker/ebook.toml`) e troque os valores. Os campos de texto aceitam HTML inline; `{flashcards}` na síntese vira o total de perguntas.
+- **`<pasta>/extra.css` (opcional):** só para ajustes de paginação deste e-book, como em `gh-200/extra.css`. Não redefina componentes.
+- **Referência do padrão:** `template/DESIGN-SYSTEM.md` (cores, tipografia, componentes e regras de impressão).
+
+Para gerar, a partir da raiz:
+
+```bash
+python3 ferramentas/gerar_ebook.py "<pasta>"   # material.md + ebook.toml → ebook.html
+python3 ferramentas/gerar_pdf.py "<pasta>"     # ebook.html → <pasta>/output/pdf/<pdf>
+python3 ferramentas/gerar_todos.py --apenas "<pasta>"   # os dois passos, com o PDF em PDF-Geral/
+```
+
+### Numeração
+
+- `numeracao = "automatica"` (padrão): todo `##` vira `Capítulo 1`, `Capítulo 2`… Não escreva números nos títulos.
+- `numeracao = "markdown"`: só os `##` que começam com `N. ` são numerados (`## 3. Redes`); os demais (ex.: `## Como usar este guia`) ficam sem número, e suas seções também.
+- Seções e tópicos são sempre numerados pelo script (`N.M` e `N.M.K`). Não escreva esses números à mão.
+
+## O que pode e o que não pode mudar
 
 **Pode:**
-- Preencher todos os marcadores `{{...}}` e apagar os moldes que não forem usados.
-- Repetir os blocos marcados com `REPETIR`.
-- Trocar as cores do bloco `TOKENS DO E-BOOK` **somente** se `<dados>` pedir outra cor de destaque. Mantenha o contraste AA em `--accent-ink`.
-- Trocar o texto do rodapé em `@page` (`{{RODAPE}}`). A autoria que vem depois dele (`| Erik Nathan (eriknathan.me)`) é fixa e aparece em todas as páginas.
+- Escolher os campos da capa no `ebook.toml` (selo, nome completo e notas são opcionais) e de 1 a 6 destaques; com `destaques_com_peso = true`, a largura de cada barra segue o `peso`.
+- Trocar as cores do bloco `TOKENS DO E-BOOK` **somente** se `<dados>` pedir outra cor de destaque: redefina as variáveis de `:root` no `extra.css`. Mantenha o contraste AA em `--accent-ink`.
+- Definir o texto do `rodape`. A autoria que vem depois dele (`| Erik Nathan (eriknathan.me)`) é fixa e aparece em todas as páginas.
 
 **Não pode:**
-- Alterar o resto do CSS, as fontes, os tamanhos, as regras de impressão ou a estrutura da capa e do sumário.
+- Alterar o CSS do template, as fontes, os tamanhos, as regras de impressão ou a estrutura da capa e do sumário.
 - Criar componentes novos. Se nenhum componente servir, use parágrafo, lista ou tabela.
 
-## Estrutura (nesta ordem)
+## Estrutura gerada (nesta ordem)
 
-1. **Capa** (`.cover`): categoria e data de atualização no topo, selo de nível (opcional), `TITULO_CURTO` grande em mono (hífen em `<span class="dash">`), nome completo, título, subtítulo, linha de autoria (já preenchida) e uma grade de 3 a 6 destaques (módulos, pilares, pesos, números-chave do material). Se os destaques forem pesos, a largura de cada barra segue o peso (ver comentário no template).
-2. **Sumário** (`.toc`), no padrão:
-   - uma faixa por capítulo: `Capítulo N — Nome` (mono, maiúsculas, fundo cinza, borda de destaque à esquerda);
-   - seções (h3) numeradas como `N.M`, em duas colunas, com linha pontilhada;
-   - tópicos (h4), se houver, logo abaixo da seção, recuados e numerados como `N.M.K`;
-   - capítulo sem seções: a faixa vira um link direto (`div.toc-group > a.toc-group-title`);
-   - capítulos sem número no original (introdução, "como usar") ficam com o nome original, sem `Capítulo N`.
-3. **Capítulos** (`section.chapter`): `chapter-head` com o kicker `Capítulo N` e o título. Cada seção usa `sec-label` com o mesmo número `N.M` do sumário e o mesmo `id` do link. Cada tópico (h4) leva `<span class="topic-num">N.M.K</span>` antes do título, com o mesmo número do sumário. A numeração é sempre hierárquica (capítulo › seção › tópico) e reinicia a cada nível; não escreva números à mão nos títulos do Markdown quando usar um `gerar_ebook.py`, porque o script os gera.
-4. **Perguntas** no ponto em que aparecem no original, com `details.flashcard` (aberta ou múltipla escolha).
-5. **Síntese de revisão** (`.closing`) no final.
+1. **Capa** (`.cover`): categoria e data no topo, selo (opcional), `codigo` grande em mono, nome completo, título, subtítulo, autoria fixa e a grade de destaques.
+2. **Sumário** (`.toc`): uma faixa `Capítulo N — Nome` por capítulo, seções `N.M` e tópicos `N.M.K` em duas colunas; capítulo sem seções vira link direto. No PDF, o número da página entra à direita de cada linha.
+3. **Capítulos** (`section.chapter`): `chapter-head` com o kicker `Capítulo N`, seções com `sec-label` e tópicos com `topic-num`, com os mesmos números do sumário.
+4. **Perguntas** no ponto em que aparecem no original, com `details.flashcard`.
+5. **Síntese de revisão** (`.closing`) no final, a partir do `[sintese]` do `ebook.toml`.
 
 ## Regras de conteúdo (prioridade máxima)
 
@@ -50,31 +60,33 @@ Transforme o material Markdown em `<conteudo>` num e-book de estudo, em HTML e P
 
 ## Componente por tipo de conteúdo
 
+Os componentes sem sintaxe própria no Markdown entram como HTML no próprio `material.md`, com as classes do template.
+
 | Conteúdo no original | Componente do template |
 | --- | --- |
-| Definição-chave ou citação oficial | `blockquote` |
+| Definição-chave ou citação oficial | `blockquote` (`> texto` no Markdown) |
 | Aviso, dica, "importante", "atenção" | `.callout` (rótulo em `.icon`: Dica, Atenção, Importante) |
 | Itens paralelos com descrição | `.cards-grid > .card` |
 | Sequência cronológica | `.timeline` |
 | Colunas ou comparações | `.table-scroll > table` (com `caption.sr-only` e `th scope="col"`) |
 | Termos soltos, siglas, nomes | `.chips` |
 | Passo a passo | `ol.numbered-list` |
-| Pergunta e resposta | `details.flashcard` |
+| Pergunta e resposta | `details.flashcard` (callout `> [!question]-`) |
+| Código ou comandos | bloco cercado por três crases |
 | Texto corrido | parágrafo (não transforme em card) |
 
 ## Conferência antes de entregar
 
-1. Compare Markdown e HTML seção por seção: nada omitido ou alterado.
-2. Todos os links do sumário apontam para `id`s existentes; nenhum `id` duplicado; numeração do sumário igual à dos `sec-label` e dos `topic-num`.
-3. Nenhum `{{...}}` sobrando no HTML (`grep -n "{{" <pasta>/ebook.html` deve voltar vazio).
-4. Gere o PDF e confira capa, sumário, uma página com tabela, uma com perguntas e a última página: respostas visíveis, rodapé com número, sem páginas quase vazias.
+1. Compare o material original com o `material.md` seção por seção: nada omitido ou alterado. O `gerar_ebook.py` confere sozinho que o HTML preserva todo o texto e os blocos de código do Markdown.
+2. O `gerar_ebook.py` falha se houver `id` duplicado, link interno sem destino ou marcador `{{...}}` sobrando; corrija a causa no Markdown ou no `ebook.toml`.
+3. Gere o PDF e confira capa, sumário, uma página com tabela, uma com perguntas e a última página: respostas visíveis, rodapé com número, sem páginas quase vazias.
 
 Na resposta, informe os caminhos do HTML e do PDF e liste os possíveis erros ou ambiguidades encontrados no original.
 
 ---
 
 <dados>
-Pasta do projeto: [ex.: SAA-C03]
+Pasta do projeto, em minúsculas e sem espaços: [ex.: aws-saa-c03]
 Nome do PDF: [ex.: saa-c03-guia-de-revisao]
 Categoria (topo esquerdo da capa): [ex.: Guia de estudo]
 Data de atualização (topo direito): [ex.: setembro de 2026]

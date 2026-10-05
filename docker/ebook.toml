@@ -1,0 +1,55 @@
+# Metadados do e-book. Os campos de texto aceitam HTML inline (<code>, <strong>, <em>).
+fonte = "material.md"
+pdf = "docker-guia-de-estudo.pdf"
+rodape = "DOCKER  /  GUIA DE ESTUDO"
+numeracao = "markdown"
+
+[pagina]
+titulo = "Docker — Guia de estudo"
+descricao = "Guia de estudo de Docker: contêineres, Dockerfile, BuildKit, redes, volumes, Compose, segurança, Swarm e CI/CD, com tabelas de decisão e flashcards."
+
+[capa]
+categoria = "Guia de estudo"
+atualizado = "setembro de 2026"
+codigo = "DOCKER"
+exame = "Engine · Compose · Swarm"
+titulo = "Do contêiner à produção"
+subtitulo = "Fundamentos, Dockerfile, BuildKit, redes, volumes, Compose, segurança, observabilidade, orquestração e CI/CD, com preparação para o Docker Certified Associate (DCA), tabelas de decisão, pegadinhas e flashcards. Conferido com o Docker Engine 29 e o Compose 5."
+rotulo_destaques = "Cinco blocos do guia"
+destaques_com_peso = false
+
+[[capa.destaques]]
+valor = "01"
+texto = "Fundamentos"
+nota = "Capítulos 1 e 2"
+
+[[capa.destaques]]
+valor = "02"
+texto = "Imagens e build"
+nota = "Capítulos 3 a 5"
+
+[[capa.destaques]]
+valor = "03"
+texto = "Rede, dados e Compose"
+nota = "Capítulos 6 a 8"
+
+[[capa.destaques]]
+valor = "04"
+texto = "Segurança e operação"
+nota = "Capítulos 9 e 10"
+
+[[capa.destaques]]
+valor = "05"
+texto = "Orquestração e produção"
+nota = "Capítulos 11 e 12"
+
+[sintese]
+introducao = "Este guia organiza o estudo de Docker em cinco blocos, do funcionamento do contêiner no kernel até a imagem assinada em produção, e reúne formatos de consulta rápida e prática ativa."
+itens = [
+  "Um contêiner é um processo isolado por namespaces e limitado por cgroups; ele vive enquanto o PID 1 vive. Forma exec, parada graciosa e códigos de saída explicam boa parte dos problemas de execução (capítulos 1 e 2).",
+  "Imagens são camadas endereçadas por conteúdo: tags mudam, digests não. Ordem das instruções, multi-stage, build secrets e cache exportado definem imagens pequenas, rápidas de construir e sem segredos (capítulos 3 a 5).",
+  "Redes definidas pelo usuário, portas publicadas só quando necessário, volumes para dados persistentes e Compose com healthchecks formam a base de qualquer aplicação multi-contêiner (capítulos 6 a 8).",
+  "Segurança e operação dependem de menos privilégios, limites de recursos, logs com rotação e uma cadeia de suprimentos verificável; a imagem é construída uma vez e promovida pelo digest (capítulos 9 a 12).",
+  "Para o Docker Certified Associate, o capítulo 13 liga cada objetivo do roteiro oficial ao ponto do guia que o cobre e explica os tópicos que só a prova ainda cobra: UCP e DTR (hoje MKE e MSR), Docker Content Trust, devicemapper e o Kubernetes básico.",
+  "As tabelas de decisão, as pegadinhas e a referência de comandos (capítulos 14 e 15) servem de revisão rápida; o autoteste (capítulo 16) oferece {flashcards} perguntas para revisão ativa. Versões e limites foram conferidos em setembro de 2026.",
+]

@@ -1,0 +1,42 @@
+# Metadados do e-book. Os campos de texto aceitam HTML inline (<code>, <strong>, <em>).
+fonte = "material.md"
+pdf = "gh-200-guia-de-estudo.pdf"
+rodape = "GH-200 / GUIA DE ESTUDO"
+numeracao = "automatica"
+
+[pagina]
+titulo = "GH-200 — GitHub Actions Certification — Guia de estudo"
+descricao = "Guia GH-200 de GitHub Actions: cinco domínios, exemplos YAML, cinco laboratórios e simulado autoral com 25 questões comentadas."
+
+[capa]
+categoria = "Guia de estudo"
+atualizado = "setembro de 2026"
+codigo = "GH-200"
+exame = "GitHub Actions Certification"
+titulo = "Automação, segurança e entrega contínua"
+subtitulo = "Preparação para os cinco domínios do exame, com exemplos de workflows, laboratórios guiados, consulta rápida e simulado comentado."
+rotulo_destaques = "Estudo, prática e revisão"
+destaques_com_peso = false
+
+[[capa.destaques]]
+valor = "05"
+texto = "Domínios do exame"
+
+[[capa.destaques]]
+valor = "05"
+texto = "Laboratórios guiados"
+
+[[capa.destaques]]
+valor = "25"
+texto = "Questões comentadas"
+
+[sintese]
+introducao = "Reorganização dos pontos centrais do material para a última revisão."
+itens = [
+  "Leia eventos, filtros, dependências e condições antes de prever a execução.",
+  "Escolha outputs para pequenos valores, artefatos para arquivos e cache para reaproveitar trabalho.",
+  "Distinga templates, workflows reutilizáveis e ações compostas pelo que cada um encapsula.",
+  "Administre runners, variáveis, segredos e políticas conforme o acesso necessário.",
+  "Revise permissões, entradas não confiáveis, OIDC e proveniência antes de conceder acesso à implantação.",
+  "Use os laboratórios e o simulado para identificar lacunas e explicar cada correção.",
+]

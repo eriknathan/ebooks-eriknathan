@@ -14,6 +14,7 @@ Callouts `> [!question]-` viram flashcards; parágrafos `Q01.` seguidos de lista
 from __future__ import annotations
 
 import argparse
+import base64
 import html
 import re
 import sys
@@ -22,10 +23,11 @@ from dataclasses import dataclass, field
 from bs4 import BeautifulSoup, NavigableString, Tag
 from markdown_it import MarkdownIt
 
-from comum import TEMPLATE, Ebook, resolver_ebooks, slug
+from comum import FONTES, TEMPLATE, Ebook, resolver_ebooks, slug
 
 
 MARKDOWN = MarkdownIt("commonmark", {"html": True}).enable("table")
+MARCA_FONTES = "/* @font-face embutidos pelo gerar_ebook.py */"
 AUTORIA = '<p class="cover-author"><strong>Erik Nathan</strong><a href="https://eriknathan.me/">eriknathan.me</a></p>'
 
 
@@ -263,10 +265,28 @@ def template_css(ebook: Ebook) -> str:
     return css
 
 
-def fonts_link() -> str:
-    template = BeautifulSoup(TEMPLATE.read_text(encoding="utf-8"), "html.parser")
-    links = template.head.find_all("link")
-    return "\n".join(str(link) for link in links)
+def unicode_range(faixa: str) -> list[range]:
+    faixas = []
+    for parte in faixa.split(","):
+        inicio, _, fim = parte.strip().removeprefix("U+").partition("-")
+        faixas.append(range(int(inicio, 16), int(fim or inicio, 16) + 1))
+    return faixas
+
+
+def font_faces(texto: str) -> str:
+    """@font-face de template/fontes em base64, só das faces cujo unicode-range aparece no texto.
+
+    Assim o HTML continua autônomo e o PDF sai igual com ou sem rede."""
+    usados = {ord(c) for c in texto}
+    regras = []
+    for regra in re.findall(r"@font-face\{[^}]+\}", FONTES.read_text(encoding="utf-8")):
+        faixas = unicode_range(re.search(r"unicode-range:([^;}]+)", regra).group(1))
+        if not any(c in faixa for faixa in faixas for c in usados):
+            continue
+        arquivo = re.search(r"url\(([^)]+)\)", regra).group(1)
+        dados = base64.b64encode((FONTES.parent / arquivo).read_bytes()).decode("ascii")
+        regras.append("  " + regra.replace(f"url({arquivo})", f"url(data:font/woff2;base64,{dados})"))
+    return "\n".join(regras)
 
 
 def build_cover(capa: dict) -> str:
@@ -326,8 +346,10 @@ def build_html(ebook: Ebook, content: Tag, chapters: list[Heading], flashcards: 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="{html.escape(pagina["descricao"])}">
 <title>{html.escape(pagina["titulo"])}</title>
-{fonts_link()}
-<style>{template_css(ebook)}</style>
+<style>
+  /* ---------- Fontes (template/fontes, IBM Plex, OFL) ---------- */
+{MARCA_FONTES}
+{template_css(ebook)}</style>
 </head>
 <body>
 <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
@@ -386,6 +408,7 @@ def gerar(ebook: Ebook) -> str:
         raise ValueError(f"Estrutura inesperada: {flashcards} flashcards, {len(chapters)} capítulos")
     questions = len(content.select("details.flashcard"))
     output = build_html(ebook, content, chapters, questions)
+    output = output.replace(MARCA_FONTES, font_faces(output), 1)
 
     soup = BeautifulSoup(output, "html.parser")
     ids = [node["id"] for node in soup.select("[id]")]

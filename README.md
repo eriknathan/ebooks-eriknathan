@@ -25,9 +25,11 @@ Cada e-book é uma pasta com o conteúdo e os metadados; o código e o visual fi
 │   ├── gerar_ebook.py                     # material.md + ebook.toml + template → ebook.html
 │   ├── gerar_pdf.py                       # ebook.html → PDF com o sumário numerado
 │   ├── gerar_todos.py                     # HTML e PDF de todos os e-books, em PDF-Geral/
+│   ├── verificar_links.py                 # links relativos dos .md (usado no CI)
 │   └── comum.py                           # leitura do ebook.toml e descoberta dos e-books
 ├── template/
 │   ├── ebook-template.html                # fonte única do CSS e da estrutura
+│   ├── fontes/                            # IBM Plex (OFL), embutida nos HTML gerados
 │   ├── DESIGN-SYSTEM.md                   # cores, tipografia, componentes e regras de impressão
 │   ├── PROMPT.md                          # prompt para criar um e-book novo no padrão
 │   └── legado/prompt-antigo.md            # prompt anterior (visual livre por e-book)
@@ -44,6 +46,7 @@ Cada e-book é uma pasta com o conteúdo e os metadados; o código e o visual fi
 ├── gh-200/                                # idem, mais extra.css (ajustes de paginação)
 ├── aws-well-architected/                  # ebook.html editado à mão; ebook.toml sem `fonte`
 ├── PDF-Geral/                             # PDFs de todos os e-books
+├── .github/workflows/verificar.yml        # CI: HTML em sincronia com o Markdown e links
 ├── requirements.txt
 └── PLANO-DE-MELHORIAS.md                  # plano de reorganização do repositório
 ```
@@ -51,7 +54,7 @@ Cada e-book é uma pasta com o conteúdo e os metadados; o código e o visual fi
 ## Requisitos
 
 - Python 3.9+
-- Google Chrome ou Chromium, para gerar o PDF. Se não for encontrado automaticamente, use `--chrome /caminho/para/chrome` ou a variável `CHROME_BIN`.
+- Google Chrome ou Chromium, para gerar o PDF. Se não for encontrado automaticamente, use `--chrome /caminho/para/chrome` ou a variável `CHROME_BIN`. Não precisa de rede: as fontes estão no repositório.
 - Pacotes Python:
 
   ```bash
@@ -95,6 +98,13 @@ O `gerar_ebook.py` falha, sem gravar nada, se o HTML perder algum texto ou bloco
 No **Well-Architected**, o conteúdo fica direto no `ebook.html`; só o passo do PDF se aplica (`python3 ferramentas/gerar_pdf.py well-architected`).
 
 Os detalhes de cada e-book estão no `README.md` da pasta.
+
+### Ao atualizar um e-book
+
+1. Edite o `material.md` e, se a revisão mudou o conteúdo, a data em `[capa] atualizado` do `ebook.toml` (ex.: `"outubro de 2026"`). Ela aparece no topo da capa; nada a atualiza sozinho.
+2. Rode `python3 ferramentas/gerar_todos.py --apenas <pasta>` e commite o `material.md`, o `ebook.toml`, o `ebook.html` e o PDF juntos.
+
+O CI ([`.github/workflows/verificar.yml`](.github/workflows/verificar.yml)) roda a cada push e pull request: regenera os HTML com Python 3.9 e com a versão mais recente e falha se algum `ebook.html` commitado estiver diferente do gerado, ou se um `.md` tiver link relativo quebrado. Os PDFs não são gerados no CI: no Linux, os caracteres que caem em fonte de reserva (setas, `≥`) mudam a largura e, em alguns e-books, a paginação. Gere os PDFs sempre no macOS.
 
 ## Criar um e-book novo
 

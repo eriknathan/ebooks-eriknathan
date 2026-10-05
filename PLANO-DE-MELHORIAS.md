@@ -250,31 +250,38 @@ Etapa isolada, num commit só, com `git mv` para preservar o histórico:
 
 ## Fase 4 — Automação
 
+> **Concluída em 05/10/2026, com a 4.3 encerrada pelo critério do próprio plano** (os PDFs do Linux não saem iguais aos do macOS). Resultados:
+>
+> - **4.1:** IBM Plex em `template/fontes/` (latin e latin-ext; o Plex Sans normal é variável, um arquivo para 400–700). O `gerar_ebook.py` embute em base64 só as faces que o texto usa (cerca de 135 KB por HTML; hoje só o subconjunto latin). O Well-Architected, editado à mão, ganhou `aws-well-architected/fontes/` com as fontes dele, carregadas por caminho relativo. Com e sem rede, os 8 PDFs ficaram idênticos pixel a pixel aos anteriores; antes, sem rede, o Well-Architected mudava inteiro (140 páginas em vez de 137). Como os PDFs não mudaram, `PDF-Geral/` não foi regenerado.
+> - **4.2:** `.github/workflows/verificar.yml` (Python 3.9 e 3.x) e `ferramentas/verificar_links.py`. Simulado em contêineres Linux: passa com o repositório atual e falha quando só o `material.md` é editado. Ainda não rodou no GitHub (sem push).
+> - **4.3:** no Linux (Chromium em contêiner), todas as páginas têm pequenas diferenças de rasterização, e o CLF-C02 e o SAA-C03 mudam de paginação (95→96 e 157→159), porque os caracteres sem glifo no Plex (`→`, `≥`, `└`) caem em fontes de reserva diferentes. O `publicar.yml` não foi criado; os PDFs continuam gerados no macOS (coerente com D1). O `gerar_pdf.py` passou a usar `--no-sandbox` quando roda como root ou com `CI=true`, condição necessária para o Chromium em contêiner.
+> - **4.4:** documentado no README da raiz ("Ao atualizar um e-book").
+
 ### 4.1 Fontes locais
 
-- [ ] Baixar IBM Plex Sans e IBM Plex Mono (licença OFL) para `template/fontes/` e trocar o `<link>` do Google Fonts por `@font-face`. O `ebook.html` precisa continuar autônomo: embutir as fontes em base64 no HTML gerado ou referenciá-las por caminho relativo e copiá-las junto.
-- [ ] Objetivo: o PDF sai igual com ou sem rede.
+- [x] Baixar IBM Plex Sans e IBM Plex Mono (licença OFL) para `template/fontes/` e trocar o `<link>` do Google Fonts por `@font-face`. O `ebook.html` precisa continuar autônomo: embutir as fontes em base64 no HTML gerado ou referenciá-las por caminho relativo e copiá-las junto.
+- [x] Objetivo: o PDF sai igual com ou sem rede.
 
 ### 4.2 CI de verificação (a cada push e pull request)
 
 Workflow `.github/workflows/verificar.yml`:
 
-- [ ] Instalar Python e `requirements.txt`.
-- [ ] Rodar `ferramentas/gerar_ebook.py` para todas as pastas e falhar se `git diff --exit-code -- '*/ebook.html'` mostrar diferença (HTML fora de sincronia com o Markdown).
-- [ ] Rodar a checagem de links relativos dos READMEs.
+- [x] Instalar Python e `requirements.txt`.
+- [x] Rodar `ferramentas/gerar_ebook.py` para todas as pastas e falhar se `git diff --exit-code -- '*/ebook.html'` mostrar diferença (HTML fora de sincronia com o Markdown).
+- [x] Rodar a checagem de links relativos dos READMEs.
 
 ### 4.3 Publicação dos PDFs (manual ou por tag)
 
 Workflow `.github/workflows/publicar.yml`, disparado por `workflow_dispatch` ou por uma tag `v*`:
 
-- [ ] Instalar Chrome (`browser-actions/setup-chrome`) e as dependências.
-- [ ] `python3 ferramentas/gerar_todos.py --destino dist/`.
-- [ ] Criar ou atualizar a Release com os 8 PDFs (`gh release upload`).
-- [ ] Conferir se os PDFs gerados no Linux saem iguais aos do macOS (fontes e quebras de página); se não saírem, manter a geração local e usar o CI só para a verificação da 4.2.
+- [ ] ~~Instalar Chrome (`browser-actions/setup-chrome`) e as dependências.~~ (não feito: ver 4.3)
+- [ ] ~~`python3 ferramentas/gerar_todos.py --destino dist/`.~~ (não feito: ver 4.3)
+- [ ] ~~Criar ou atualizar a Release com os 8 PDFs (`gh release upload`).~~ (não feito: ver 4.3)
+- [x] Conferir se os PDFs gerados no Linux saem iguais aos do macOS (fontes e quebras de página); se não saírem, manter a geração local e usar o CI só para a verificação da 4.2.
 
 ### 4.4 Data de atualização
 
-- [ ] Hoje "Atualizado em setembro de 2026" está fixo em cada gerador. Com a Fase 2 ela vai para o `ebook.toml`; documentar no README que ela deve ser atualizada junto com o conteúdo.
+- [x] Hoje "Atualizado em setembro de 2026" está fixo em cada gerador. Com a Fase 2 ela vai para o `ebook.toml`; documentar no README que ela deve ser atualizada junto com o conteúdo.
 
 **Verificação:** um PR que altere só o `material.md`, sem regenerar o HTML, falha no CI; uma tag gera uma Release com os 8 PDFs.
 

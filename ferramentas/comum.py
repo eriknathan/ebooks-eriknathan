@@ -20,6 +20,7 @@ else:  # Python 3.9 e 3.10
 
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE = ROOT / "template" / "ebook-template.html"
+FONTES = ROOT / "template" / "fontes" / "fontes.css"
 CONFIG = "ebook.toml"
 
 

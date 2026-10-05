@@ -135,6 +135,9 @@ def gerar_pdf(source: Path, destination: Path, chrome: str | None = None) -> Non
             f"--print-to-pdf={candidate}",
             source.as_uri(),
         ]
+        # Como root (contêiner) ou no CI, o sandbox do Chrome não sobe; o HTML é local e do próprio repositório.
+        if getattr(os, "geteuid", lambda: -1)() == 0 or os.environ.get("CI") == "true":
+            command.insert(1, "--no-sandbox")
         log = work / "chrome.log"
         with log.open("w", encoding="utf-8") as messages:
             process = subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=messages)

@@ -49,7 +49,7 @@ Ao trocar o destaque, mantenha `--accent-ink` com pelo menos 4,5:1 sobre `#fffff
 | IBM Plex Sans | `--sans` | 400, 500, 600, 700 | Corpo, títulos |
 | IBM Plex Mono | `--mono` | 400, 500, 600, 700 | Código da capa, rótulos, números, faixas, chips, `code` |
 
-As duas vêm do Google Fonts, com alternativas locais (`-apple-system`, `Segoe UI`, `Arial` / `Menlo`, `Consolas`) para abrir sem rede.
+As duas ficam em [`fontes/`](fontes/) (subconjuntos latin e latin-ext, licença OFL). O `gerar_ebook.py` embute no HTML, em base64, só as faces que o texto usa, então o e-book abre e o PDF sai igual sem rede. Caracteres que o Plex não tem (setas, `≥`, desenhos de caixa) usam as alternativas da pilha (`-apple-system`, `Segoe UI`, `Arial` / `Menlo`, `Consolas`), que variam por sistema operacional: por isso os PDFs são gerados sempre no mesmo sistema (hoje, macOS).
 
 ### Escala
 

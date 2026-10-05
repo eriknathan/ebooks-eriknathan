@@ -7,4 +7,4 @@
 
 Para regenerar o PDF depois de editar o `ebook.html`, a partir da raiz: `python3 ferramentas/gerar_todos.py --apenas well-architected` (grava em `PDF-Geral/`). Os outros comandos estão no [README da raiz](../README.md#gerar-os-e-books).
 
-O visual segue a estrutura do padrão do repositório (capa, sumário por módulo, rodapé), mas com CSS e tipografia próprios (Fraunces e Source Sans 3) no `<head>` do HTML; ele não usa o [`template/ebook-template.html`](../template/ebook-template.html).
+O visual segue a estrutura do padrão do repositório (capa, sumário por módulo, rodapé), mas com CSS e tipografia próprios (Fraunces, Source Sans 3, JetBrains Mono e IBM Plex) no `<head>` do HTML; ele não usa o [`template/ebook-template.html`](../template/ebook-template.html). As fontes ficam em [`fontes/`](fontes/) (subconjunto latin, licença OFL) e são carregadas por caminho relativo, então o PDF sai igual sem rede; mova a pasta `fontes/` junto se copiar o `ebook.html`.

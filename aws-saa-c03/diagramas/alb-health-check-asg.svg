@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 240" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <rect class="d-box" x="10" y="50" width="100" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="60" y="77" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Usuários</text>
+  <text class="d-text" x="60" y="95" text-anchor="middle" font-size="11" fill="#52616d">HTTP</text>
+
+  <rect class="d-box" x="150" y="50" width="120" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="210" y="77" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">ALB</text>
+  <text class="d-text" x="210" y="95" text-anchor="middle" font-size="11" fill="#52616d">camada 7</text>
+
+  <rect class="d-box-accent" x="310" y="50" width="170" height="60" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="395" y="77" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Target group</text>
+  <text class="d-label" x="395" y="95" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">GET /health</text>
+
+  <rect class="d-box" x="530" y="50" width="220" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="640" y="77" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Auto Scaling group</text>
+  <text class="d-label" x="640" y="95" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">HealthCheckType=ELB</text>
+
+  <!-- Instâncias -->
+  <rect class="d-box" x="230" y="160" width="150" height="65" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="305" y="188" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">EC2 saudável</text>
+  <text class="d-text" x="305" y="206" text-anchor="middle" font-size="11" fill="#52616d">responde 200</text>
+  <rect class="d-zone" x="430" y="160" width="150" height="65" rx="6" fill="#f2f6f7" stroke="#cbd5db" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text class="d-title" x="505" y="188" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">EC2 com falha</text>
+  <text class="d-text" x="505" y="206" text-anchor="middle" font-size="11" fill="#52616d">responde 500</text>
+  <rect class="d-box" x="630" y="160" width="120" height="65" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="690" y="188" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">EC2 nova</text>
+  <text class="d-text" x="690" y="206" text-anchor="middle" font-size="11" fill="#52616d">substituta</text>
+
+  <!-- 1: requisições -->
+  <line class="d-line" x1="110" y1="80" x2="148" y2="80" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="129" cy="62" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="129" y="66" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+  <line class="d-line" x1="270" y1="80" x2="308" y2="80" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+
+  <!-- 2: health check nas instâncias -->
+  <polyline class="d-line" points="360,110 360,135 305,135 305,158" fill="none" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <polyline class="d-line" points="430,110 430,135 505,135 505,158" fill="none" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="395" cy="135" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="395" y="139" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+
+  <!-- 3: status para o Auto Scaling -->
+  <line class="d-line" x1="480" y1="80" x2="528" y2="80" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="504" cy="62" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="504" y="66" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+
+  <!-- 4: encerra e substitui -->
+  <line class="d-line-muted" x1="560" y1="110" x2="560" y2="158" stroke="#52616d" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+  <line class="d-line" x1="700" y1="110" x2="700" y2="158" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="630" cy="135" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="630" y="139" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">4</text>
+  <text class="d-text" x="572" y="139" font-size="11" fill="#52616d">encerra</text>
+  <text class="d-text" x="712" y="139" font-size="11" fill="#52616d">lança</text>
+</svg>

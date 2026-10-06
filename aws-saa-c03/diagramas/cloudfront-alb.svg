@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 222" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <!-- Usuários e CloudFront -->
+  <rect class="d-box" x="10" y="60" width="130" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="75" y="91" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Usuários</text>
+  <text class="d-text" x="75" y="110" text-anchor="middle" font-size="12" fill="#52616d">no mundo todo</text>
+
+  <rect class="d-box-accent" x="220" y="55" width="190" height="80" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="315" y="84" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">CloudFront</text>
+  <text class="d-text" x="315" y="103" text-anchor="middle" font-size="11" fill="#52616d">edge location mais próxima</text>
+  <text class="d-text" x="315" y="120" text-anchor="middle" font-size="11" fill="#52616d">cache por Accept-Language</text>
+
+  <!-- 1 e 2: usuários ↔ borda -->
+  <line class="d-line" x1="140" y1="80" x2="218" y2="80" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="180" cy="62" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="180" y="66" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+  <line class="d-line" x1="220" y1="112" x2="142" y2="112" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="180" cy="131" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="180" y="135" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+  <text class="d-text" x="180" y="157" text-anchor="middle" font-size="11" fill="#52616d">Hit na borda</text>
+
+  <!-- Região de origem -->
+  <rect class="d-zone" x="470" y="20" width="280" height="150" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="484" y="40" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">us-west-1</text>
+  <rect class="d-box" x="490" y="60" width="110" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="545" y="91" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">ALB</text>
+  <text class="d-text" x="545" y="110" text-anchor="middle" font-size="12" fill="#52616d">origem</text>
+  <rect class="d-box" x="640" y="60" width="100" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="690" y="91" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">EC2</text>
+  <text class="d-text" x="690" y="110" text-anchor="middle" font-size="12" fill="#52616d">Auto Scaling</text>
+
+  <!-- 3: cache miss → origem -->
+  <line class="d-line" x1="410" y1="80" x2="488" y2="80" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="450" cy="62" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="450" y="66" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+  <line class="d-line" x1="490" y1="112" x2="412" y2="112" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <text class="d-text" x="440" y="157" text-anchor="middle" font-size="11" fill="#52616d">Miss</text>
+
+  <!-- 4: ALB → EC2 -->
+  <line class="d-line" x1="600" y1="95" x2="638" y2="95" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="619" cy="77" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="619" y="81" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">4</text>
+
+  <text class="d-text" x="10" y="200" font-size="12" fill="#52616d">O ALB aceita só o CloudFront: VPC origins ou prefix list do CloudFront no security group + header secreto.</text>
+</svg>

@@ -9,6 +9,8 @@ Uso (a partir de qualquer pasta):
 Cada pasta precisa de um ebook.toml (capa, síntese, rodapé) e do Markdown indicado em `fonte`.
 Títulos ## viram capítulos, ### seções e #### tópicos; a numeração é gerada pelo script.
 Callouts `> [!question]-` viram flashcards; parágrafos `Q01.` seguidos de lista viram questões.
+Uma imagem sozinha num parágrafo (`![Legenda](diagramas/arquivo.svg)`) vira figure.diagram, com o
+arquivo embutido no HTML: SVG inline e PNG/JPG/WebP em base64.
 """
 
 from __future__ import annotations
@@ -19,8 +21,10 @@ import html
 import re
 import sys
 from dataclasses import dataclass, field
+from pathlib import Path
+from urllib.parse import unquote
 
-from bs4 import BeautifulSoup, NavigableString, Tag
+from bs4 import BeautifulSoup, Comment, NavigableString, Tag
 from markdown_it import MarkdownIt
 
 from comum import FONTES, TEMPLATE, Ebook, resolver_ebooks, slug
@@ -240,6 +244,71 @@ def organize_content(rendered: str, numbering: str) -> tuple[Tag, list[Heading]]
     return container, chapters
 
 
+IMAGENS = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
+
+
+def inline_svg(arquivo: Path, legenda: str) -> Tag:
+    """Lê o SVG e prefixa os ids com o nome do arquivo, para dois diagramas na mesma página não colidirem."""
+    texto = re.sub(r"<\?xml[^>]*\?>|<!DOCTYPE[^>]*>", "", arquivo.read_text(encoding="utf-8"))
+    svg = BeautifulSoup(texto, "html.parser").find("svg")
+    if svg is None:
+        raise ValueError(f"Diagrama sem <svg>: {arquivo.name}")
+    if svg.find("script") or any(a.startswith("on") for tag in [svg, *svg.find_all(True)] for a in tag.attrs):
+        raise ValueError(f"Diagrama com script: {arquivo.name}")
+    for comentario in svg.find_all(string=lambda s: isinstance(s, Comment)):
+        comentario.extract()
+    prefixo = slug(arquivo.stem)
+    ids = {tag["id"] for tag in svg.find_all(id=True)}
+    for tag in [svg, *svg.find_all(True)]:
+        for nome, valor in list(tag.attrs.items()):
+            if nome == "id":
+                tag[nome] = f"{prefixo}-{valor}"
+            elif isinstance(valor, str) and "#" in valor:
+                tag[nome] = re.sub(r"#([\w.-]+)", lambda m: f"#{prefixo}-{m.group(1)}" if m.group(1) in ids else m.group(0), valor)
+    for nome in ("width", "height"):
+        svg.attrs.pop(nome, None)
+    svg["role"] = "img"
+    svg["aria-label"] = legenda
+    return svg
+
+
+def embed_diagrams(content: Tag, pasta: Path) -> int:
+    """Troca cada imagem sozinha num parágrafo por figure.diagram, com o arquivo embutido no HTML."""
+    soup = BeautifulSoup("", "html.parser")
+    total = 0
+    for image in list(content.find_all("img")):
+        src = image.get("src", "")
+        paragraph = image.parent
+        if paragraph.name != "p" or paragraph.get_text(strip=True) or len(paragraph.find_all(True)) != 1:
+            raise ValueError(f"O diagrama deve ficar sozinho no parágrafo: {src}")
+        if re.match(r"[a-z][a-z0-9+.-]*:", src):
+            raise ValueError(f"O diagrama deve ser um arquivo da pasta do e-book: {src}")
+        legenda = image.get("alt", "").strip()
+        if not legenda:
+            raise ValueError(f"Diagrama sem legenda (texto entre colchetes): {src}")
+        arquivo = pasta / unquote(src)
+        if not arquivo.is_file():
+            raise ValueError(f"Diagrama não encontrado: {src}")
+        extensao = arquivo.suffix.lower()
+        if extensao == ".svg":
+            corpo = inline_svg(arquivo, legenda)
+        elif extensao in IMAGENS:
+            dados = base64.b64encode(arquivo.read_bytes()).decode("ascii")
+            corpo = soup.new_tag("img", attrs={"src": f"data:{IMAGENS[extensao]};base64,{dados}", "alt": legenda})
+        else:
+            raise ValueError(f"Formato de diagrama não suportado: {src}")
+        figure = soup.new_tag("figure", attrs={"class": "diagram"})
+        frame = soup.new_tag("div", attrs={"class": "diagram-frame"})
+        frame.append(corpo)
+        caption = soup.new_tag("figcaption")
+        caption.string = legenda
+        figure.append(frame)
+        figure.append(caption)
+        paragraph.replace_with(figure)
+        total += 1
+    return total
+
+
 def build_toc(chapters: list[Heading]) -> str:
     groups = []
     for chapter in chapters:
@@ -410,6 +479,7 @@ def gerar(ebook: Ebook) -> str:
     content, chapters = organize_content(MARKDOWN.render(converted), numbering)
     if flashcards != expected_flashcards or len(chapters) != expected_chapters:
         raise ValueError(f"Estrutura inesperada: {flashcards} flashcards, {len(chapters)} capítulos")
+    diagrams = embed_diagrams(content, ebook.pasta)
     questions = len(content.select("details.flashcard"))
     output = build_html(ebook, content, chapters, questions)
     output = output.replace(MARCA_FONTES, font_faces(output), 1)
@@ -424,7 +494,7 @@ def gerar(ebook: Ebook) -> str:
     if re.search(r"\{\{[A-Z_]+\}\}", output):
         raise ValueError("Marcador de template não preenchido")
     ebook.html.write_text(output, encoding="utf-8")
-    return f"{len(chapters)} capítulos, {questions} perguntas e {len(soup.select('pre'))} blocos de código"
+    return f"{len(chapters)} capítulos, {questions} perguntas, {diagrams} diagramas e {len(soup.select('pre'))} blocos de código"
 
 
 def main() -> int:

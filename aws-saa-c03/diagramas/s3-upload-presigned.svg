@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 240" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <rect class="d-box" x="10" y="40" width="130" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="75" y="71" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Cliente</text>
+  <text class="d-text" x="75" y="90" text-anchor="middle" font-size="11" fill="#52616d">navegador ou app</text>
+
+  <rect class="d-box-accent" x="200" y="40" width="150" height="70" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="275" y="71" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Amazon S3</text>
+  <text class="d-text" x="275" y="90" text-anchor="middle" font-size="11" fill="#52616d">bucket de originais</text>
+
+  <rect class="d-box" x="430" y="40" width="140" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="500" y="71" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">AWS Lambda</text>
+  <text class="d-text" x="500" y="90" text-anchor="middle" font-size="11" fill="#52616d">gera miniaturas</text>
+
+  <rect class="d-box" x="640" y="40" width="110" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="695" y="71" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Amazon S3</text>
+  <text class="d-text" x="695" y="90" text-anchor="middle" font-size="11" fill="#52616d">miniaturas</text>
+
+  <rect class="d-box" x="10" y="160" width="130" height="65" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="75" y="188" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">EC2</text>
+  <text class="d-text" x="75" y="206" text-anchor="middle" font-size="11" fill="#52616d">aplicação web</text>
+
+  <!-- 1: URL pré-assinada -->
+  <line class="d-line" x1="75" y1="160" x2="75" y2="112" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="57" cy="136" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="57" y="140" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+  <text class="d-text" x="87" y="140" font-size="11" fill="#52616d">URL assinada</text>
+
+  <!-- 2: upload direto -->
+  <line class="d-line" x1="140" y1="75" x2="198" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="169" cy="58" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="169" y="62" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+  <text class="d-text" x="169" y="96" text-anchor="middle" font-size="11" fill="#52616d">PUT</text>
+
+  <!-- 3: evento -->
+  <line class="d-line" x1="350" y1="75" x2="428" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="389" cy="58" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="389" y="62" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+  <text class="d-text" x="389" y="96" text-anchor="middle" font-size="11" fill="#52616d">evento</text>
+
+  <!-- 4: grava em outro bucket -->
+  <line class="d-line" x1="570" y1="75" x2="638" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="604" cy="58" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="604" y="62" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">4</text>
+
+  <!-- Notas -->
+  <rect class="d-zone" x="200" y="160" width="550" height="65" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-text" x="216" y="187" font-size="12" fill="#52616d">O EC2 só assina a URL: o arquivo e o redimensionamento não passam por ele.</text>
+  <text class="d-text" x="216" y="207" font-size="12" fill="#52616d">Miniaturas no mesmo bucket e prefixo disparariam a Lambda de novo, em loop.</text>
+</svg>

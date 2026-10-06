@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Confere se os links relativos dos arquivos .md do repositório apontam para arquivos existentes.
 
-Ignora URLs externas, âncoras soltas (#...) e os material.md (o conteúdo dos e-books pode citar
+Ignora URLs externas, âncoras soltas (#...), código (blocos e inline) e os material.md (o conteúdo dos e-books pode citar
 caminhos de exemplo). Sai com código 1 se encontrar algum link quebrado.
 """
 
@@ -18,6 +18,7 @@ from comum import ROOT
 def links_quebrados(arquivo: Path) -> list[str]:
     texto = arquivo.read_text(encoding="utf-8")
     texto = re.sub(r"^(```|~~~).*?^\1", "", texto, flags=re.MULTILINE | re.DOTALL)
+    texto = re.sub(r"`[^`\n]+`", "", texto)  # exemplos em código inline não são links
     quebrados = []
     for match in re.finditer(r"\]\((<[^>]+>|[^)\s]+)\)", texto):
         alvo = match.group(1).strip("<>")

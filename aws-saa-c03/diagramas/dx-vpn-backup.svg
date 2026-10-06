@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 225" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <rect class="d-box" x="10" y="80" width="150" height="65" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="85" y="107" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Data center</text>
+  <text class="d-text" x="85" y="125" text-anchor="middle" font-size="11" fill="#52616d">roteador com BGP</text>
+
+  <rect class="d-box-accent" x="230" y="20" width="200" height="60" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="330" y="47" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Direct Connect</text>
+  <text class="d-text" x="330" y="65" text-anchor="middle" font-size="11" fill="#52616d">principal · latência estável</text>
+
+  <rect class="d-box" x="230" y="145" width="200" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text class="d-title" x="330" y="172" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">VPN Site-to-Site</text>
+  <text class="d-text" x="330" y="190" text-anchor="middle" font-size="11" fill="#52616d">backup · 2 túneis pela internet</text>
+
+  <rect class="d-box" x="500" y="80" width="130" height="65" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="565" y="107" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Gateway</text>
+  <text class="d-text" x="565" y="125" text-anchor="middle" font-size="11" fill="#52616d">VGW ou Transit GW</text>
+
+  <rect class="d-box" x="660" y="80" width="90" height="65" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="705" y="107" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">VPC</text>
+  <text class="d-text" x="705" y="125" text-anchor="middle" font-size="11" fill="#52616d">workload</text>
+
+  <!-- 1: caminho principal -->
+  <polyline class="d-line" points="160,100 195,100 195,50 228,50" fill="none" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <polyline class="d-line" points="430,50 465,50 465,100 498,100" fill="none" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="178" cy="72" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="178" y="76" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+
+  <!-- 2: caminho de backup -->
+  <polyline class="d-line-muted" points="160,125 195,125 195,175 228,175" fill="none" stroke="#52616d" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+  <polyline class="d-line-muted" points="430,175 465,175 465,125 498,125" fill="none" stroke="#52616d" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="178" cy="153" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="178" y="157" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+
+  <!-- 3: failover por BGP -->
+  <circle class="d-step" cx="465" cy="112" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="465" y="116" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+  <text class="d-text" x="330" y="112" text-anchor="middle" font-size="11" fill="#52616d">BGP + BFD trocam o</text>
+  <text class="d-text" x="330" y="127" text-anchor="middle" font-size="11" fill="#52616d">caminho sozinhos</text>
+
+  <line class="d-line" x1="630" y1="112" x2="658" y2="112" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+</svg>

@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 245" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <!-- Origem -->
+  <rect class="d-zone" x="10" y="15" width="290" height="220" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="24" y="33" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">Região de origem</text>
+  <rect class="d-box" x="30" y="45" width="250" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="155" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">S3 de origem</text>
+  <text class="d-text" x="155" y="90" text-anchor="middle" font-size="11" fill="#52616d">clickstream · SSE-KMS · versionado</text>
+  <rect class="d-box-accent" x="30" y="160" width="250" height="60" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="155" y="187" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Chave multirregional</text>
+  <text class="d-text" x="155" y="205" text-anchor="middle" font-size="11" fill="#52616d">primária</text>
+
+  <!-- Destino -->
+  <rect class="d-zone" x="400" y="15" width="350" height="220" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="414" y="33" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">Região de DR</text>
+  <rect class="d-box" x="420" y="45" width="170" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="505" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">S3 de destino</text>
+  <text class="d-text" x="505" y="90" text-anchor="middle" font-size="11" fill="#52616d">réplicas SSE-KMS</text>
+  <rect class="d-box" x="620" y="45" width="115" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="677" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Athena</text>
+  <text class="d-text" x="677" y="90" text-anchor="middle" font-size="11" fill="#52616d">SQL ad hoc</text>
+  <text class="d-text" x="677" y="125" text-anchor="middle" font-size="11" fill="#52616d">precisa de</text>
+  <text class="d-text" x="677" y="140" text-anchor="middle" font-size="11" fill="#52616d">kms:Decrypt</text>
+  <rect class="d-box" x="420" y="160" width="170" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="505" y="185" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Chave multirregional</text>
+  <text class="d-text" x="505" y="203" text-anchor="middle" font-size="11" fill="#52616d">réplica, mesmo ID</text>
+
+  <!-- 1: SSE-KMS na origem -->
+  <line class="d-line" x1="155" y1="158" x2="155" y2="107" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="137" cy="132" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="137" y="136" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+
+  <!-- 2: CRR -->
+  <line class="d-line" x1="280" y1="75" x2="418" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="349" cy="58" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="349" y="62" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+  <text class="d-text" x="340" y="96" text-anchor="middle" font-size="11" fill="#52616d">CRR: descriptografa</text>
+  <text class="d-text" x="340" y="111" text-anchor="middle" font-size="11" fill="#52616d">e criptografa de novo</text>
+
+  <!-- 3: chave do destino -->
+  <line class="d-line" x1="505" y1="158" x2="505" y2="107" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="487" cy="132" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="487" y="136" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+
+  <!-- 4: Athena -->
+  <line class="d-line" x1="590" y1="75" x2="618" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="604" cy="58" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="604" y="62" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">4</text>
+
+  <!-- Replicação da chave -->
+  <line class="d-line-muted" x1="280" y1="190" x2="418" y2="190" stroke="#52616d" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+  <text class="d-text" x="349" y="181" text-anchor="middle" font-size="11" fill="#52616d">réplica da chave</text>
+</svg>

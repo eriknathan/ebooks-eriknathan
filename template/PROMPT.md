@@ -11,7 +11,8 @@ Transforme o material Markdown em `<conteudo>` num e-book de estudo, em HTML e P
 
 Todo e-book é uma pasta na raiz com três arquivos editáveis. O HTML e o PDF são gerados pelos scripts de `ferramentas/`, que aplicam o visual de `template/ebook-template.html`. Não crie um novo design nem um script por pasta.
 
-- **`<pasta>/material.md`:** o conteúdo. `##` vira capítulo, `###` seção e `####` tópico. Callouts `> [!question]- Pergunta` (com a resposta nas linhas `>` seguintes) viram flashcards. Parágrafos `Q01.` seguidos de uma lista viram questões de múltipla escolha. Blocos de código, tabelas e citações são convertidos sem ajuste.
+- **`<pasta>/material.md`:** o conteúdo. `##` vira capítulo, `###` seção e `####` tópico. Callouts `> [!question]- Pergunta` (com a resposta nas linhas `>` seguintes) viram flashcards. Parágrafos `Q01.` seguidos de uma lista viram questões de múltipla escolha. Blocos de código, tabelas e citações são convertidos sem ajuste. Uma imagem sozinha no parágrafo (`![Legenda](diagramas/arquivo.svg)`) vira diagrama, com o arquivo embutido no HTML.
+- **`<pasta>/diagramas/` (opcional):** os SVGs dos diagramas, desenhados com as classes `d-*` descritas em `template/DESIGN-SYSTEM.md#diagramas`.
 - **`<pasta>/ebook.toml`:** capa, síntese, rodapé, nome do PDF e título da página. Copie o de um e-book parecido (com pesos na capa: `aws-saa-c03/ebook.toml`; com blocos numerados: `docker/ebook.toml`) e troque os valores. Os campos de texto aceitam HTML inline; `{flashcards}` na síntese vira o total de perguntas.
 - **`<pasta>/extra.css` (opcional):** só para ajustes de paginação deste e-book, como em `gh-200/extra.css`. Não redefina componentes.
 - **Referência do padrão:** `template/DESIGN-SYSTEM.md` (cores, tipografia, componentes e regras de impressão).
@@ -71,6 +72,7 @@ Os componentes sem sintaxe própria no Markdown entram como HTML no próprio `ma
 | Colunas ou comparações | `.table-scroll > table` (com `caption.sr-only` e `th scope="col"`) |
 | Termos soltos, siglas, nomes | `.chips` |
 | Passo a passo | `ol.numbered-list` |
+| Diagrama ou imagem de arquitetura | `figure.diagram` (`![Legenda](diagramas/arquivo.svg)`), seguido da lista numerada dos passos |
 | Pergunta e resposta | `details.flashcard` (callout `> [!question]-`) |
 | Código ou comandos | bloco cercado por três crases |
 | Texto corrido | parágrafo (não transforme em card) |

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 230" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <rect class="d-box" x="10" y="40" width="160" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="90" y="70" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Usuário ou admin</text>
+  <text class="d-text" x="90" y="89" text-anchor="middle" font-size="12" fill="#52616d">da conta-membro</text>
+
+  <rect class="d-box-accent" x="300" y="40" width="170" height="70" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="385" y="70" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Block Public Access</text>
+  <text class="d-text" x="385" y="89" text-anchor="middle" font-size="12" fill="#52616d">nível da conta</text>
+
+  <rect class="d-box" x="580" y="40" width="170" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="665" y="70" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Buckets S3</text>
+  <text class="d-text" x="665" y="89" text-anchor="middle" font-size="12" fill="#52616d">todos os da conta</text>
+  <text class="d-text" x="665" y="135" text-anchor="middle" font-size="11" fill="#52616d">bucket policy e ACL públicas</text>
+  <text class="d-text" x="665" y="150" text-anchor="middle" font-size="11" fill="#52616d">são rejeitadas ou ignoradas</text>
+
+  <rect class="d-box" x="160" y="150" width="160" height="65" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="240" y="177" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Organizations</text>
+  <text class="d-text" x="240" y="196" text-anchor="middle" font-size="12" fill="#52616d">SCP com Deny</text>
+
+  <!-- 1: tentativa de desativar -->
+  <line class="d-line-muted" x1="170" y1="75" x2="298" y2="75" stroke="#52616d" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="205" cy="58" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="205" y="62" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+  <text class="d-text" x="223" y="62" font-size="11" fill="#52616d">desativar?</text>
+
+  <!-- 2: SCP nega -->
+  <line class="d-line" x1="240" y1="150" x2="240" y2="80" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="222" cy="125" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="222" y="129" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+  <text class="d-label" x="252" y="134" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">AccessDenied</text>
+
+  <!-- 3: bloqueio em todos os buckets -->
+  <line class="d-line" x1="470" y1="75" x2="578" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="524" cy="58" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="524" y="62" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+</svg>

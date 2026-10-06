@@ -40,7 +40,7 @@ Cada e-book é uma pasta com o conteúdo e os metadados; o código e o visual fi
 │   └── README.md
 ├── aws-clf-c02/                           # mesmo formato
 ├── aws-dva-c02/                           # idem
-├── aws-saa-c03/                           # idem
+├── aws-saa-c03/                           # idem, mais diagramas/ (SVGs embutidos no HTML)
 ├── docker/                                # idem
 ├── kubernetes/                            # idem
 ├── gh-200/                                # idem, mais extra.css (ajustes de paginação)

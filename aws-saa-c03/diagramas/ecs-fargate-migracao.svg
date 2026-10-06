@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 255" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <rect class="d-box" x="10" y="45" width="100" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="60" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Usuários</text>
+  <text class="d-text" x="60" y="90" text-anchor="middle" font-size="11" fill="#52616d">HTTP/S</text>
+
+  <rect class="d-box" x="150" y="45" width="120" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="210" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">ALB</text>
+  <text class="d-text" x="210" y="90" text-anchor="middle" font-size="11" fill="#52616d">target type ip</text>
+
+  <!-- Cluster ECS -->
+  <rect class="d-zone" x="310" y="15" width="300" height="165" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="324" y="33" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">serviço ECS</text>
+  <rect class="d-box-accent" x="330" y="45" width="260" height="60" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="460" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Tasks no Fargate</text>
+  <text class="d-text" x="460" y="90" text-anchor="middle" font-size="11" fill="#52616d">mesmas imagens, sem instâncias EC2</text>
+  <rect class="d-box" x="380" y="125" width="160" height="42" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="460" y="151" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Service Auto Scaling</text>
+  <line class="d-line" x1="460" y1="125" x2="460" y2="107" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="362" cy="146" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="362" y="150" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">4</text>
+
+  <rect class="d-box" x="650" y="45" width="100" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="700" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">ECR</text>
+  <text class="d-text" x="700" y="90" text-anchor="middle" font-size="11" fill="#52616d">imagens</text>
+
+  <rect class="d-zone" x="10" y="190" width="160" height="55" rx="6" fill="#f2f6f7" stroke="#cbd5db" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text class="d-title" x="90" y="214" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">On-premises</text>
+  <text class="d-text" x="90" y="232" text-anchor="middle" font-size="11" fill="#52616d">contêineres de antes</text>
+
+  <!-- Tráfego -->
+  <line class="d-line" x1="110" y1="75" x2="148" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <line class="d-line" x1="270" y1="75" x2="328" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="299" cy="58" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="299" y="62" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+
+  <!-- 1: push das imagens -->
+  <polyline class="d-line-muted" points="170,217 700,217 700,107" fill="none" stroke="#52616d" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="430" cy="201" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="430" y="205" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+  <text class="d-text" x="430" y="236" text-anchor="middle" font-size="11" fill="#52616d">push das mesmas imagens</text>
+
+  <!-- 3: pull -->
+  <line class="d-line" x1="650" y1="75" x2="592" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="621" cy="58" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="621" y="62" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+  <text class="d-text" x="621" y="96" text-anchor="middle" font-size="11" fill="#52616d">pull</text>
+</svg>

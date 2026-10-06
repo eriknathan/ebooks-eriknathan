@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 190" font-family="IBM Plex Sans, Arial, sans-serif">
+  <text class="d-label" x="40" y="24" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">capacidade do Auto Scaling group</text>
+
+  <!-- Job em lote -->
+  <rect class="d-box-accent" x="330" y="75" width="230" height="55" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="445" y="99" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Job em lote mensal</text>
+  <text class="d-text" x="445" y="117" text-anchor="middle" font-size="11" fill="#52616d">CPU alta durante a execução</text>
+
+  <!-- Eixo do tempo -->
+  <line class="d-line-muted" x1="40" y1="150" x2="740" y2="150" stroke="#52616d" stroke-width="1"/>
+  <line class="d-line-muted" x1="230" y1="150" x2="230" y2="157" stroke="#52616d" stroke-width="1"/>
+  <line class="d-line-muted" x1="330" y1="150" x2="330" y2="157" stroke="#52616d" stroke-width="1"/>
+  <line class="d-line-muted" x1="600" y1="150" x2="600" y2="157" stroke="#52616d" stroke-width="1"/>
+  <text class="d-text" x="230" y="174" text-anchor="middle" font-size="11" fill="#52616d">T − 20 min</text>
+  <text class="d-text" x="330" y="174" text-anchor="middle" font-size="11" fill="#52616d">T: início do job</text>
+  <text class="d-text" x="600" y="174" text-anchor="middle" font-size="11" fill="#52616d">depois do job</text>
+
+  <!-- Capacidade -->
+  <polyline class="d-line" points="40,135 230,135 230,55 600,55 600,135 740,135" fill="none" stroke="#1b2d3b" stroke-width="2.5"/>
+  <text class="d-text" x="50" y="126" font-size="11" fill="#52616d">capacidade base</text>
+  <text class="d-text" x="250" y="47" font-size="11" fill="#52616d">capacidade do job (min e desired maiores)</text>
+
+  <!-- Passos -->
+  <circle class="d-step" cx="212" cy="95" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="212" y="99" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+  <circle class="d-step" cx="310" cy="95" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="310" y="99" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+  <circle class="d-step" cx="618" cy="95" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="618" y="99" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+</svg>

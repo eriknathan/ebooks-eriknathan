@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 240" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <rect class="d-box" x="10" y="60" width="120" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="70" y="87" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Usuários</text>
+  <text class="d-text" x="70" y="105" text-anchor="middle" font-size="11" fill="#52616d">e tráfego da botnet</text>
+
+  <!-- Borda -->
+  <rect class="d-zone" x="170" y="15" width="260" height="210" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="184" y="33" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">borda da AWS</text>
+  <rect class="d-box-accent" x="190" y="45" width="220" height="60" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="300" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">CloudFront</text>
+  <text class="d-text" x="300" y="90" text-anchor="middle" font-size="11" fill="#52616d">absorve o volume nas edge locations</text>
+  <rect class="d-box" x="190" y="140" width="110" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="245" y="163" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Shield</text>
+  <text class="d-title" x="245" y="180" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Advanced</text>
+  <text class="d-text" x="245" y="198" text-anchor="middle" font-size="11" fill="#52616d">+ SRT 24x7</text>
+  <rect class="d-box" x="310" y="140" width="100" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="360" y="170" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">AWS WAF</text>
+  <text class="d-text" x="360" y="188" text-anchor="middle" font-size="11" fill="#52616d">rate-based</text>
+  <line class="d-line" x1="245" y1="140" x2="245" y2="107" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <line class="d-line" x1="360" y1="140" x2="360" y2="107" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="303" cy="123" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="303" y="127" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+
+  <!-- Origem -->
+  <rect class="d-zone" x="480" y="15" width="270" height="210" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="494" y="33" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">origem · VPC</text>
+  <rect class="d-box" x="500" y="45" width="230" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="615" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">ALB</text>
+  <text class="d-text" x="615" y="90" text-anchor="middle" font-size="11" fill="#52616d">aceita só o CloudFront</text>
+  <rect class="d-box" x="500" y="140" width="230" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="615" y="168" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">EC2 Windows</text>
+  <text class="d-text" x="615" y="186" text-anchor="middle" font-size="11" fill="#52616d">Auto Scaling · subnets privadas</text>
+  <line class="d-line" x1="615" y1="105" x2="615" y2="138" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="597" cy="122" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="597" y="126" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">4</text>
+
+  <!-- 1 e 3 -->
+  <line class="d-line" x1="130" y1="90" x2="188" y2="90" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="159" cy="73" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="159" y="77" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+  <line class="d-line" x1="410" y1="75" x2="498" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="454" cy="58" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="454" y="62" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+  <text class="d-text" x="454" y="96" text-anchor="middle" font-size="11" fill="#52616d">só o legítimo</text>
+</svg>

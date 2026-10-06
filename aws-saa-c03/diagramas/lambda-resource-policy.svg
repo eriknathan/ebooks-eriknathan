@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 230" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <rect class="d-box" x="10" y="40" width="160" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="90" y="67" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Regra do EventBridge</text>
+  <text class="d-text" x="90" y="85" text-anchor="middle" font-size="11" fill="#52616d">todas as noites</text>
+
+  <rect class="d-box-accent" x="210" y="25" width="210" height="90" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="315" y="50" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Política baseada em recurso</text>
+  <text class="d-label" x="315" y="70" text-anchor="middle" font-size="10" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">events.amazonaws.com</text>
+  <text class="d-label" x="315" y="86" text-anchor="middle" font-size="10" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">lambda:InvokeFunction</text>
+  <text class="d-label" x="315" y="102" text-anchor="middle" font-size="10" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">aws:SourceArn = a regra</text>
+
+  <rect class="d-box" x="460" y="40" width="120" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="520" y="67" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Lambda</text>
+  <text class="d-text" x="520" y="85" text-anchor="middle" font-size="11" fill="#52616d">gera relatórios</text>
+
+  <rect class="d-box" x="460" y="150" width="120" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="520" y="177" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Execution role</text>
+  <text class="d-text" x="520" y="195" text-anchor="middle" font-size="11" fill="#52616d">o que ela acessa</text>
+
+  <rect class="d-box" x="620" y="150" width="130" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="685" y="177" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">S3 e DynamoDB</text>
+  <text class="d-text" x="685" y="195" text-anchor="middle" font-size="11" fill="#52616d">dados de vendas</text>
+
+  <rect class="d-box" x="10" y="150" width="160" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text class="d-title" x="90" y="177" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Outra regra ou conta</text>
+  <text class="d-text" x="90" y="195" text-anchor="middle" font-size="11" fill="#52616d">fora da condição</text>
+
+  <!-- 1: entrada permitida -->
+  <line class="d-line" x1="170" y1="70" x2="208" y2="70" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="189" cy="53" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="189" y="57" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+  <line class="d-line" x1="420" y1="70" x2="458" y2="70" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="439" cy="53" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="439" y="57" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+  <text class="d-label" x="460" y="30" font-size="10" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">entrada</text>
+
+  <!-- 3: saída -->
+  <line class="d-line" x1="520" y1="100" x2="520" y2="148" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <line class="d-line" x1="580" y1="180" x2="618" y2="180" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="599" cy="163" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="599" y="167" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+  <text class="d-label" x="620" y="140" font-size="10" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">saída</text>
+
+  <!-- 4: negado -->
+  <polyline class="d-line-muted" points="170,180 315,180 315,117" fill="none" stroke="#52616d" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="297" cy="148" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="297" y="152" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">4</text>
+  <text class="d-label" x="243" y="200" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">AccessDenied</text>
+</svg>

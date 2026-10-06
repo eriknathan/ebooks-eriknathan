@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 255" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <rect class="d-box-accent" x="10" y="25" width="160" height="75" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="90" y="52" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Organizations</text>
+  <text class="d-text" x="90" y="70" text-anchor="middle" font-size="11" fill="#52616d">SCP e declarative</text>
+  <text class="d-text" x="90" y="86" text-anchor="middle" font-size="11" fill="#52616d">policy na OU</text>
+
+  <rect class="d-box" x="10" y="165" width="160" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="90" y="192" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Data center</text>
+  <text class="d-text" x="90" y="210" text-anchor="middle" font-size="11" fill="#52616d">Direct Connect ou VPN</text>
+
+  <!-- Contas -->
+  <rect class="d-zone" x="210" y="15" width="540" height="230" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="224" y="33" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">contas da OU</text>
+
+  <rect class="d-box" x="230" y="45" width="240" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="350" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">VPC em ap-northeast-3</text>
+  <text class="d-text" x="350" y="90" text-anchor="middle" font-size="11" fill="#52616d">sem Internet Gateway nem NAT</text>
+  <text class="d-text" x="350" y="105" text-anchor="middle" font-size="11" fill="#52616d">SG e NACL restritivos</text>
+
+  <rect class="d-box" x="230" y="165" width="240" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text class="d-title" x="350" y="192" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Outras Regiões</text>
+  <text class="d-text" x="350" y="210" text-anchor="middle" font-size="11" fill="#52616d">negadas pela SCP</text>
+
+  <rect class="d-box" x="530" y="45" width="200" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="630" y="74" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">AWS Config</text>
+  <text class="d-text" x="630" y="92" text-anchor="middle" font-size="11" fill="#52616d">regras e agregador</text>
+
+  <rect class="d-box" x="530" y="165" width="200" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text class="d-title" x="630" y="192" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Internet Gateway</text>
+  <text class="d-text" x="630" y="210" text-anchor="middle" font-size="11" fill="#52616d">criação e anexo negados</text>
+
+  <!-- 1: políticas sobre as contas -->
+  <line class="d-line" x1="170" y1="60" x2="208" y2="60" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="189" cy="43" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="189" y="47" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+
+  <!-- 2: Regiões negadas -->
+  <circle class="d-step" cx="230" cy="165" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="230" y="169" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+
+  <!-- 3: sem caminho para a internet -->
+  <polyline class="d-line-muted" points="470,95 500,95 500,195 528,195" fill="none" stroke="#52616d" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="500" cy="145" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="500" y="149" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+
+  <!-- 4: Config avalia -->
+  <line class="d-line" x1="530" y1="65" x2="472" y2="65" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="501" cy="49" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="501" y="53" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">4</text>
+
+  <!-- 5: rede privada com o data center -->
+  <polyline class="d-line" points="170,195 195,195 195,100 228,100" fill="none" stroke="#1b2d3b" stroke-width="1.5" marker-start="url(#seta)" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="195" cy="140" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="195" y="144" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">5</text>
+</svg>

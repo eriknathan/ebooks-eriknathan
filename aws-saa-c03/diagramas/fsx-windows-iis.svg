@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 255" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <rect class="d-box" x="10" y="100" width="90" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="55" y="127" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Usuários</text>
+  <text class="d-text" x="55" y="145" text-anchor="middle" font-size="11" fill="#52616d">HTTP/S</text>
+
+  <rect class="d-box" x="128" y="100" width="92" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="174" y="135" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">ALB</text>
+
+  <!-- AZs -->
+  <rect class="d-zone" x="250" y="15" width="370" height="105" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="264" y="33" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">AZ a</text>
+  <rect class="d-zone" x="250" y="140" width="370" height="105" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="264" y="158" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">AZ b</text>
+
+  <rect class="d-box" x="270" y="45" width="140" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="340" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">EC2 · IIS</text>
+  <text class="d-text" x="340" y="90" text-anchor="middle" font-size="11" fill="#52616d">no domínio do AD</text>
+  <rect class="d-box" x="270" y="170" width="140" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="340" y="197" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">EC2 · IIS</text>
+  <text class="d-text" x="340" y="215" text-anchor="middle" font-size="11" fill="#52616d">no domínio do AD</text>
+
+  <rect class="d-box-accent" x="470" y="45" width="140" height="60" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="540" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">FSx preferido</text>
+  <text class="d-text" x="540" y="90" text-anchor="middle" font-size="11" fill="#52616d">compartilhamento SMB</text>
+  <rect class="d-box" x="470" y="170" width="140" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="540" y="197" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">FSx standby</text>
+  <text class="d-text" x="540" y="215" text-anchor="middle" font-size="11" fill="#52616d">failover automático</text>
+
+  <!-- Fora das AZs -->
+  <rect class="d-box" x="645" y="45" width="105" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="697" y="72" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Active</text>
+  <text class="d-title" x="697" y="89" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Directory</text>
+  <rect class="d-box" x="645" y="170" width="105" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text class="d-title" x="697" y="197" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">NAS</text>
+  <text class="d-text" x="697" y="215" text-anchor="middle" font-size="11" fill="#52616d">on-premises</text>
+
+  <!-- 1 -->
+  <line class="d-line" x1="100" y1="130" x2="126" y2="130" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="113" cy="88" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="113" y="92" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+
+  <!-- 2: ALB para as duas AZs -->
+  <polyline class="d-line" points="220,115 240,115 240,75 268,75" fill="none" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <polyline class="d-line" points="220,145 240,145 240,200 268,200" fill="none" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="240" cy="130" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="240" y="134" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+
+  <!-- 3: SMB -->
+  <line class="d-line" x1="410" y1="75" x2="468" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <polyline class="d-line" points="410,200 440,200 440,90 468,90" fill="none" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="439" cy="58" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="439" y="62" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+
+  <!-- 4: réplica síncrona -->
+  <line class="d-line" x1="540" y1="105" x2="540" y2="168" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="558" cy="137" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="558" y="141" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">4</text>
+  <text class="d-text" x="530" y="141" text-anchor="end" font-size="11" fill="#52616d">réplica síncrona</text>
+
+  <!-- AD e migração -->
+  <line class="d-line" x1="612" y1="75" x2="643" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-start="url(#seta)" marker-end="url(#seta)"/>
+  <polyline class="d-line-muted" points="645,200 632,200 632,95 612,95" fill="none" stroke="#52616d" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="697" cy="150" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="697" y="154" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">5</text>
+  <text class="d-text" x="697" y="133" text-anchor="middle" font-size="11" fill="#52616d">DataSync</text>
+</svg>

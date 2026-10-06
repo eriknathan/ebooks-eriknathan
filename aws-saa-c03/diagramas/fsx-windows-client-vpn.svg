@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 260" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <rect class="d-box" x="10" y="45" width="110" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="65" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Funcionário</text>
+  <text class="d-text" x="65" y="90" text-anchor="middle" font-size="11" fill="#52616d">remoto</text>
+
+  <rect class="d-box" x="160" y="45" width="140" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="230" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Client VPN</text>
+  <text class="d-text" x="230" y="90" text-anchor="middle" font-size="11" fill="#52616d">login com o AD</text>
+
+  <!-- VPC -->
+  <rect class="d-zone" x="340" y="15" width="410" height="120" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="354" y="33" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">VPC · subnets privadas</text>
+  <rect class="d-box-accent" x="360" y="45" width="200" height="70" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="460" y="70" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">FSx for Windows</text>
+  <text class="d-text" x="460" y="88" text-anchor="middle" font-size="11" fill="#52616d">SMB · ACLs NTFS · Multi-AZ</text>
+  <text class="d-label" x="460" y="105" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">SG: 445 só da VPN</text>
+  <rect class="d-box" x="600" y="45" width="135" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="667" y="75" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">DataSync</text>
+  <text class="d-text" x="667" y="93" text-anchor="middle" font-size="11" fill="#52616d">copia arquivos e ACLs</text>
+
+  <!-- On-premises -->
+  <rect class="d-zone" x="340" y="165" width="410" height="85" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="354" y="183" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">on-premises</text>
+  <rect class="d-box" x="360" y="192" width="170" height="48" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="445" y="213" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Active Directory</text>
+  <text class="d-text" x="445" y="230" text-anchor="middle" font-size="11" fill="#52616d">grupos por departamento</text>
+  <rect class="d-box" x="580" y="192" width="155" height="48" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text class="d-title" x="657" y="213" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Servidor de arquivos</text>
+  <text class="d-text" x="657" y="230" text-anchor="middle" font-size="11" fill="#52616d">origem, sem espaço</text>
+
+  <!-- 1 e 2 -->
+  <line class="d-line" x1="120" y1="75" x2="158" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="139" cy="58" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="139" y="62" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+  <line class="d-line" x1="300" y1="75" x2="358" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="320" cy="58" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="320" y="62" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+  <text class="d-text" x="320" y="96" text-anchor="middle" font-size="11" fill="#52616d">SMB</text>
+
+  <!-- 3: FSx no domínio -->
+  <line class="d-line" x1="440" y1="117" x2="440" y2="190" stroke="#1b2d3b" stroke-width="1.5" marker-start="url(#seta)" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="422" cy="150" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="422" y="154" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+  <text class="d-text" x="452" y="154" font-size="11" fill="#52616d">Direct Connect / VPN</text>
+
+  <!-- 4: migração -->
+  <line class="d-line-muted" x1="667" y1="190" x2="667" y2="117" stroke="#52616d" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+  <line class="d-line" x1="600" y1="80" x2="562" y2="80" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="649" cy="150" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="649" y="154" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">4</text>
+</svg>

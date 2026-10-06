@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 270" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <!-- VPC -->
+  <rect class="d-zone" x="10" y="15" width="560" height="245" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="24" y="33" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">VPC · uma linha por AZ</text>
+
+  <!-- AZ a -->
+  <rect class="d-box" x="30" y="45" width="170" height="55" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="115" y="68" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Subnet privada a</text>
+  <text class="d-text" x="115" y="86" text-anchor="middle" font-size="11" fill="#52616d">0.0.0.0/0 → NAT a</text>
+  <rect class="d-box-accent" x="250" y="45" width="170" height="55" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="335" y="68" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">NAT Gateway a</text>
+  <text class="d-text" x="335" y="86" text-anchor="middle" font-size="11" fill="#52616d">subnet pública a</text>
+
+  <!-- AZ b -->
+  <rect class="d-box" x="30" y="115" width="170" height="55" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="115" y="138" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Subnet privada b</text>
+  <text class="d-text" x="115" y="156" text-anchor="middle" font-size="11" fill="#52616d">0.0.0.0/0 → NAT b</text>
+  <rect class="d-box-accent" x="250" y="115" width="170" height="55" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="335" y="138" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">NAT Gateway b</text>
+  <text class="d-text" x="335" y="156" text-anchor="middle" font-size="11" fill="#52616d">subnet pública b</text>
+
+  <!-- AZ c -->
+  <rect class="d-box" x="30" y="185" width="170" height="55" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="115" y="208" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Subnet privada c</text>
+  <text class="d-text" x="115" y="226" text-anchor="middle" font-size="11" fill="#52616d">0.0.0.0/0 → NAT c</text>
+  <rect class="d-box-accent" x="250" y="185" width="170" height="55" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="335" y="208" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">NAT Gateway c</text>
+  <text class="d-text" x="335" y="226" text-anchor="middle" font-size="11" fill="#52616d">subnet pública c</text>
+
+  <rect class="d-box" x="460" y="105" width="95" height="75" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="507" y="133" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Internet</text>
+  <text class="d-title" x="507" y="150" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Gateway</text>
+  <text class="d-text" x="507" y="167" text-anchor="middle" font-size="11" fill="#52616d">um por VPC</text>
+
+  <rect class="d-box" x="610" y="105" width="140" height="75" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="680" y="137" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Internet</text>
+  <text class="d-text" x="680" y="155" text-anchor="middle" font-size="11" fill="#52616d">patches e updates</text>
+
+  <!-- 1: privada para o NAT da mesma AZ -->
+  <line class="d-line" x1="200" y1="72" x2="248" y2="72" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <line class="d-line" x1="200" y1="142" x2="248" y2="142" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <line class="d-line" x1="200" y1="212" x2="248" y2="212" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="224" cy="56" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="224" y="60" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+
+  <!-- 2: NAT para o IGW -->
+  <polyline class="d-line" points="420,72 440,72 440,130 458,130" fill="none" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <line class="d-line" x1="420" y1="142" x2="458" y2="142" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <polyline class="d-line" points="420,212 440,212 440,155 458,155" fill="none" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="440" cy="100" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="440" y="104" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+
+  <!-- 3: saída -->
+  <line class="d-line" x1="555" y1="142" x2="608" y2="142" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="581" cy="125" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="581" y="129" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+  <text class="d-text" x="680" y="205" text-anchor="middle" font-size="11" fill="#52616d">conexões de fora não entram</text>
+</svg>

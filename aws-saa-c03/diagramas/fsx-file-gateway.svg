@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 225" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <!-- On-premises -->
+  <rect class="d-zone" x="10" y="15" width="320" height="200" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="24" y="33" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">data center</text>
+  <rect class="d-box" x="30" y="45" width="120" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="90" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Equipe clínica</text>
+  <text class="d-text" x="90" y="90" text-anchor="middle" font-size="11" fill="#52616d">mesmo caminho SMB</text>
+  <rect class="d-box-accent" x="190" y="45" width="120" height="60" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="250" y="67" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">FSx File</text>
+  <text class="d-title" x="250" y="83" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Gateway</text>
+  <text class="d-text" x="250" y="99" text-anchor="middle" font-size="11" fill="#52616d">cache local</text>
+  <rect class="d-box" x="30" y="145" width="280" height="55" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="170" y="169" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Active Directory</text>
+  <text class="d-text" x="170" y="187" text-anchor="middle" font-size="11" fill="#52616d">mesmo domínio e permissões NTFS</text>
+
+  <!-- AWS -->
+  <rect class="d-zone" x="440" y="15" width="310" height="200" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="454" y="33" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">AWS</text>
+  <rect class="d-box" x="460" y="45" width="270" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="595" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">FSx for Windows File Server</text>
+  <text class="d-text" x="595" y="90" text-anchor="middle" font-size="11" fill="#52616d">cópia única e autoritativa dos arquivos</text>
+  <rect class="d-box" x="460" y="145" width="270" height="55" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="595" y="169" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Aplicações na nuvem</text>
+  <text class="d-text" x="595" y="187" text-anchor="middle" font-size="11" fill="#52616d">SMB direto ao FSx</text>
+
+  <!-- 1 -->
+  <line class="d-line" x1="150" y1="75" x2="188" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="169" cy="58" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="169" y="62" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+
+  <!-- 2: gateway para o FSx -->
+  <line class="d-line" x1="310" y1="75" x2="458" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-start="url(#seta)" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="385" cy="58" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="385" y="62" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+  <text class="d-text" x="385" y="94" text-anchor="middle" font-size="11" fill="#52616d">Direct Connect ou VPN</text>
+
+  <!-- 3: domínio -->
+  <polyline class="d-line" points="310,172 420,172 420,100 458,100" fill="none" stroke="#1b2d3b" stroke-width="1.5" marker-start="url(#seta)" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="420" cy="136" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="420" y="140" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+
+  <!-- 4: nuvem -->
+  <line class="d-line" x1="595" y1="145" x2="595" y2="107" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="577" cy="126" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="577" y="130" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">4</text>
+</svg>

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <!-- Usuários e Route 53 -->
+  <rect class="d-box" x="10" y="115" width="110" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="65" y="142" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Usuários</text>
+  <text class="d-text" x="65" y="160" text-anchor="middle" font-size="12" fill="#52616d">globais</text>
+
+  <rect class="d-box" x="160" y="105" width="140" height="80" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="230" y="135" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Route 53</text>
+  <text class="d-text" x="230" y="154" text-anchor="middle" font-size="11" fill="#52616d">política failover</text>
+  <text class="d-text" x="230" y="170" text-anchor="middle" font-size="11" fill="#52616d">+ health check</text>
+
+  <line class="d-line" x1="120" y1="145" x2="158" y2="145" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="139" cy="127" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="139" y="131" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+
+  <!-- Região primária -->
+  <rect class="d-zone" x="340" y="15" width="410" height="120" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="354" y="33" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">Região primária</text>
+  <rect class="d-box" x="360" y="45" width="160" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="440" y="75" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">EC2 Auto Scaling</text>
+  <text class="d-text" x="440" y="94" text-anchor="middle" font-size="12" fill="#52616d">aplicação ativa</text>
+  <rect class="d-box-accent" x="580" y="45" width="160" height="70" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="660" y="75" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Aurora primário</text>
+  <text class="d-text" x="660" y="94" text-anchor="middle" font-size="12" fill="#52616d">leitura e escrita</text>
+
+  <!-- Região secundária -->
+  <rect class="d-zone" x="340" y="165" width="410" height="120" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="354" y="183" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">Região secundária</text>
+  <rect class="d-box" x="360" y="195" width="160" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="440" y="225" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">EC2 Auto Scaling</text>
+  <text class="d-text" x="440" y="244" text-anchor="middle" font-size="12" fill="#52616d">em espera</text>
+  <rect class="d-box" x="580" y="195" width="160" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="660" y="225" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Aurora secundário</text>
+  <text class="d-text" x="660" y="244" text-anchor="middle" font-size="12" fill="#52616d">somente leitura</text>
+
+  <!-- 2: caminho normal -->
+  <polyline class="d-line" points="300,125 325,125 325,80 358,80" fill="none" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <line class="d-line" x1="520" y1="80" x2="578" y2="80" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="310" cy="92" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="310" y="96" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+
+  <!-- 3: replicação -->
+  <line class="d-line" x1="660" y1="115" x2="660" y2="193" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="640" cy="150" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="640" y="154" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+  <text class="d-text" x="672" y="154" font-size="11" fill="#52616d">réplica &lt; 1 s</text>
+
+  <!-- 4: failover -->
+  <polyline class="d-line-muted" points="300,165 325,165 325,230 358,230" fill="none" stroke="#52616d" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+  <line class="d-line-muted" x1="520" y1="230" x2="578" y2="230" stroke="#52616d" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="310" cy="200" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="310" y="204" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">4</text>
+  <text class="d-text" x="549" y="278" text-anchor="middle" font-size="11" fill="#52616d">após promover</text>
+</svg>

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 245" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <!-- VPC -->
+  <rect class="d-zone" x="10" y="15" width="510" height="220" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="24" y="33" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">VPC · subnets privadas, sem NAT</text>
+
+  <rect class="d-box" x="30" y="45" width="160" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="110" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">EC2 autorizadas</text>
+  <text class="d-label" x="110" y="90" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">sg-app</text>
+
+  <rect class="d-box" x="30" y="150" width="160" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text class="d-title" x="110" y="177" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Outra EC2</text>
+  <text class="d-text" x="110" y="195" text-anchor="middle" font-size="11" fill="#52616d">fora do sg-app</text>
+
+  <rect class="d-box-accent" x="270" y="45" width="230" height="60" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="385" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Interface endpoint</text>
+  <text class="d-text" x="385" y="90" text-anchor="middle" font-size="11" fill="#52616d">SG: 443 só de sg-app · DNS privado</text>
+
+  <text class="d-text" x="270" y="185" font-size="11" fill="#52616d">IAM com aws:SourceVpce: chamadas</text>
+  <text class="d-text" x="270" y="201" font-size="11" fill="#52616d">que não passam pelo endpoint</text>
+  <text class="d-text" x="270" y="217" font-size="11" fill="#52616d">são negadas</text>
+
+  <!-- 1: chamada autorizada -->
+  <line class="d-line" x1="190" y1="75" x2="268" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="229" cy="58" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="229" y="62" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+
+  <!-- 2: bloqueada -->
+  <polyline class="d-line-muted" points="190,180 245,180 245,107" fill="none" stroke="#52616d" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="227" cy="140" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="227" y="144" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+  <text class="d-label" x="257" y="144" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">bloqueada pelo SG</text>
+
+  <!-- AWS -->
+  <rect class="d-box" x="590" y="45" width="160" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="670" y="72" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Comprehend</text>
+  <text class="d-text" x="670" y="90" text-anchor="middle" font-size="11" fill="#52616d">análise de texto</text>
+
+  <rect class="d-box" x="590" y="150" width="160" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="670" y="177" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Amazon S3</text>
+  <text class="d-text" x="670" y="195" text-anchor="middle" font-size="11" fill="#52616d">feedback dos pacientes</text>
+
+  <!-- 3: PrivateLink -->
+  <line class="d-line" x1="500" y1="75" x2="588" y2="75" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="544" cy="58" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="544" y="62" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+  <text class="d-text" x="544" y="96" text-anchor="middle" font-size="11" fill="#52616d">PrivateLink</text>
+
+  <!-- 4: leitura do S3 -->
+  <line class="d-line" x1="670" y1="105" x2="670" y2="148" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="652" cy="127" r="10" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="652" y="131" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">4</text>
+  <text class="d-text" x="638" y="131" text-anchor="end" font-size="11" fill="#52616d">data access role</text>
+</svg>

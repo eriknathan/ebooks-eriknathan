@@ -173,6 +173,7 @@ Use o componente pelo formato do conteúdo, não para variar o visual.
 | Sequência cronológica | `.timeline > .timeline-item` | Linha vertical com pontos laranja, data em mono |
 | Passo a passo | `ol.numbered-list` | Número em círculo `--accent-soft`, divisória entre passos |
 | Colunas, comparações | `.table-scroll > table` | Cabeçalho `--ink`, linhas zebradas, rolagem horizontal na tela |
+| Arquitetura, fluxo entre serviços | `figure.diagram` | Moldura `--line`, SVG com as classes `d-*`, legenda `--muted` abaixo |
 | Código, comandos | `.book-content pre` | Fundo `--surface`, borda esquerda `--teal`, mono 0,8rem (7,6pt no PDF, com quebra de linha) |
 | Separador (`---`) | `.book-content hr` | Linha `--line` na tela; some no PDF |
 | Pergunta aberta | `details.flashcard` | Borda esquerda laranja, resposta em `--surface` |
@@ -218,6 +219,39 @@ Use o componente pelo formato do conteúdo, não para variar o visual.
 </details>
 ```
 
+### Diagramas
+
+Um diagrama entra no Markdown como uma imagem sozinha no parágrafo, com a legenda entre colchetes:
+
+```markdown
+![Leitura e escrita com DAX: o cache responde aos hits e consulta a tabela nos misses.](diagramas/dax-leitura.svg)
+```
+
+O `gerar_ebook.py` troca o parágrafo por `figure.diagram` e embute o arquivo no HTML, que continua sem dependências externas: SVG entra inline, e PNG, JPG ou WebP entram em base64. A legenda vira o `figcaption` e o texto alternativo. O gerador falha se o arquivo não existir, se faltar a legenda, se a imagem dividir o parágrafo com texto ou se o SVG tiver script. Os `id` de cada SVG ganham o nome do arquivo como prefixo, para dois diagramas na mesma página não colidirem.
+
+Os arquivos ficam em `<pasta>/diagramas/`. Prefira SVG desenhado no padrão abaixo, porque ele segue os tokens do e-book. Use PNG só para imagens que não dá para redesenhar, como prints de console.
+
+| Classe | Uso | No e-book |
+| --- | --- | --- |
+| `d-box` | Serviço ou componente | Fundo `--paper`, contorno `--ink` |
+| `d-box-accent` | O componente que o diagrama explica (um por diagrama) | Fundo `--accent-soft`, contorno `--accent` |
+| `d-zone` | Região, VPC, on-premises, caminho antigo | Fundo `--surface`, contorno `--line` |
+| `d-line`, `d-line-muted` | Setas do fluxo; `muted` com tracejado para o caminho alternativo | Traço `--ink` / `--muted` |
+| `d-head` | Ponta da seta (`marker`) | `--ink` |
+| `d-step` + `d-num` | Círculo com o número do passo, ligado à lista numerada do texto | Fundo `--accent-soft`, número mono `--accent-ink` |
+| `d-title`, `d-text` | Nome do serviço (15px, 600) e detalhe (11–12px) | `--ink` / `--muted`, IBM Plex Sans |
+| `d-label` | Rótulo de zona (`us-west-2`, `AWS`) | Mono 700 `--accent-ink` |
+
+Regras dos SVGs:
+
+- `viewBox` com 760 de largura (a coluna de texto do A4), sem `width`/`height` fixos. Altura só a necessária.
+- Cada elemento leva a classe **e** os atributos de cor equivalentes (`fill`, `stroke`, `font-family`). Fora do e-book, no Obsidian ou no navegador, valem os atributos; dentro do e-book, o CSS do template troca pelos tokens.
+- Os números dos passos (`d-step`) correspondem a uma lista numerada logo abaixo do diagrama, que explica cada passo. O diagrama não substitui o texto.
+- Nada de ícones de marca, sombras, gradientes ou cores fora dos tokens. O nome do serviço vai escrito na caixa.
+- Na tela, o diagrama tem largura mínima de 560px e rola na horizontal, como as tabelas. No PDF, ocupa a largura da coluna e não quebra entre páginas; o parágrafo que o apresenta fica na mesma página.
+
+Modelos: os SVGs de [`aws-saa-c03/diagramas/`](../aws-saa-c03/diagramas/).
+
 ---
 
 ## Impressão (PDF)
@@ -227,7 +261,7 @@ Use o componente pelo formato do conteúdo, não para variar o visual.
 | Papel | A4 |
 | Margens | 19mm topo · 17mm laterais · 21mm base |
 | Quebras de página | Depois da capa, depois do sumário, antes de cada capítulo |
-| Evitar quebra dentro de | Cards, callouts, blockquotes, flashcards, itens da timeline, linhas de tabela |
+| Evitar quebra dentro de | Cards, callouts, blockquotes, flashcards, itens da timeline, linhas de tabela, diagramas |
 | Evitar quebra logo após | Faixas do sumário, títulos de capítulo, seção e tópico |
 | Tabelas | Cabeçalho repetido em cada página (`thead { display: table-header-group }`) |
 | `details` | Todos abertos (CSS + script `beforeprint`/`afterprint`) |

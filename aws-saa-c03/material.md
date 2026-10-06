@@ -5,12 +5,11 @@
 - Use os **Padrões recorrentes consolidados** (seção 11) para revisar as pegadinhas que mais se repetem entre os 6 simulados (390 questões).
 - Use o **Mapa de Domínios** (seção 12) para priorizar revisão conforme o peso de cada domínio na nota final.
 - Use as tabelas **Números de…** dentro de cada tópico para revisar limites e números exatos que costumam confundir entre serviços — mas veja a ressalva em **Números e limites**, logo abaixo.
-- Use o **Autoteste** (seção 13) para revisão ativa: os flashcards em callout do Obsidian escondem a resposta até você clicar, forçando recall em vez de releitura passiva.
-- Use os **Cartões Flash Adicionais** (seção 14) como um segundo banco de revisão ativa, organizado pelos quatro domínios oficiais do exame, com cenários de decisão ao fim de cada domínio.
-- Use o **Mapa de cobertura e questões de múltipla resposta** (seção 15) para conferir as 14 tarefas oficiais e praticar a seleção da quantidade de alternativas pedida no enunciado.
-- Nos cartões de cenário da seção 14, identifique primeiro o **requisito decisivo**, escolha o serviço e explique por que as outras opções não atendem ao mesmo requisito.
+- Use os **Flashcards de revisão** (seção 13) para revisão ativa: os flashcards em callout do Obsidian escondem a resposta até você clicar, forçando recall em vez de releitura passiva. O primeiro bloco segue as áreas dos capítulos 1 a 10; o segundo, os quatro domínios oficiais do exame, com cenários de decisão ao fim de cada domínio.
+- Use o **Mapa de cobertura e questões de múltipla resposta** (seção 14) para conferir as 14 tarefas oficiais e praticar a seleção da quantidade de alternativas pedida no enunciado.
+- Nos cenários de decisão da seção 13, identifique primeiro o **requisito decisivo**, escolha o serviço e explique por que as outras opções não atendem ao mesmo requisito.
 - Para cotas, preços e disponibilidade de recursos, confira os links da documentação oficial antes da prova. As tabelas de números separam valores atuais dos números antigos ainda presentes em simulados.
-- O guia oficial enumera conhecimentos e serviços **sem esgotar** todos os cenários possíveis da prova. O mapa da seção 15 cobre explicitamente as tarefas publicadas; revise também os princípios de arquitetura e as atualizações dos serviços na documentação oficial.
+- O guia oficial enumera conhecimentos e serviços **sem esgotar** todos os cenários possíveis da prova. O mapa da seção 14 cobre explicitamente as tarefas publicadas; revise também os princípios de arquitetura e as atualizações dos serviços na documentação oficial.
 
 ### Números e limites
 
@@ -112,6 +111,28 @@ Os limites e valores numéricos ficam em tabelas **Números de…** dentro do t�
 - **Dedicated Instances**: rodam em hardware dedicado à sua conta, mas **sem visibilidade nem controle do host físico**. A cobrança é por instância, com uma taxa adicional por Região. Atendem a requisitos de isolamento físico sem licenciamento por núcleo.
 - **Palavra-chave**: "licença existente vinculada a núcleos/sockets" leva a **Dedicated Hosts**. "Não compartilhar hardware com outros clientes", sem requisito de licença, leva a **Dedicated Instances**, a opção mais barata entre as duas.
 
+#### Produção 24 horas e dev/teste intermitente
+Cenário típico: o checkout de produção roda 24 horas e não pode ser interrompido. O pipeline de build e testes roda cerca de 8 horas por dia, tolera interrupção e deve ser desligado automaticamente quando fica ocioso. O requisito pede o menor custo que atenda aos dois perfis.
+
+![Produção em Auto Scaling On-Demand coberta por Savings Plan ou RI, e dev/teste em Auto Scaling Spot com ações agendadas.](diagramas/ondemand-spot-ambientes.svg)
+
+1. **Produção**: um Auto Scaling group com instâncias **On-Demand** em várias AZs atende o checkout. Instâncias On-Demand não são retomadas pela AWS, então o serviço não corre risco de interrupção por preço ou capacidade.
+2. **Desconto na produção**: a base que roda 24 horas é estável e previsível. Um **Savings Plan** ou **Reserved Instances** cobrem esse uso com até cerca de 72% de desconto. Eles são um desconto na cobrança: as instâncias continuam sendo On-Demand, com a mesma disponibilidade.
+3. **Dev e teste**: os builds rodam num Auto Scaling group com **Spot**, de vários tipos de instância e estratégia *price-capacity-optimized*. Se a AWS precisar da capacidade, avisa com **2 minutos** de antecedência; o pipeline salva o progresso ou repete o job.
+4. **Desligamento automático**: **ações agendadas** do Auto Scaling sobem o grupo de manhã e o devolvem a **zero** à noite e nos fins de semana. Instâncias fora de um grupo podem ser desligadas com EventBridge Scheduler e Lambda. Veja [Ligar e desligar EC2 e RDS fora do horário](#ligar-e-desligar-ec2-e-rds-fora-do-horario).
+
+- **Spot não se para e religa como On-Demand**: uma instância Spot avulsa só pode ser encerrada. Para um ambiente que liga e desliga todo dia, deixe o Auto Scaling group lançar instâncias novas a cada manhã.
+- **Por que não RI em dev/teste**: um compromisso de 24 horas para algo que roda 8 horas paga por 16 horas ociosas. Se o dev/teste não tolerar interrupção, a escolha passa a ser On-Demand com desligamento agendado.
+
+| Opção | Interrupção | Custo para o perfil | Onde usar |
+|---|---|---|---|
+| **On-Demand** | Não é interrompida | O preço cheio, sem compromisso | Produção sem compromisso possível ou com carga imprevisível |
+| **Savings Plans ou Reserved Instances** | Não é interrompida (são desconto, não outro tipo de instância) | Até cerca de 72% menor com compromisso de 1 ou 3 anos | Base de produção que roda 24 horas |
+| **Spot** | Pode ser retomada, com aviso de 2 minutos | Até cerca de 90% menor | Dev, teste, CI e lote tolerantes a interrupção |
+| **RI em dev/teste de 8 horas** | Não é interrompida | Paga o compromisso nas horas ociosas | Não compensa |
+
+*Na prova, "produção contínua sem interrupção" descarta Spot, e "dev/teste por poucas horas, tolerante a falhas e desligado quando ocioso" aponta para Spot com desligamento automático. Se uma alternativa colocar a produção 24 horas em Savings Plans ou RI, ela costuma ser ainda mais barata que On-Demand, com a mesma disponibilidade.*
+
 #### Padrões e pegadinhas de prova
 - **Menor custo recorrente**: Savings Plans/Reserved Instances para a **carga base** + Spot para **picos tolerantes a interrupção** + On-Demand para o restante imprevisível. É repetido em praticamente todos os simulados.
 - "Carga 24/7 por 3 anos, sem mudanças": **Standard RI ou EC2 Instance Savings Plan, 3 anos, All Upfront**.
@@ -149,6 +170,27 @@ Os limites e valores numéricos ficam em tabelas **Números de…** dentro do t�
 - **Scheduled vs. predictive**: se o padrão é fixo e 100% conhecido, scheduled basta e é mais simples. Se é recorrente mas varia em amplitude ou horário, predictive é a resposta.
 - Ajustar apenas a **capacidade desejada** (não min/max) via ação agendada elimina a lentidão em horários de pico sem manter custo elevado o dia todo. Ajustar o `min` também funciona e impede que uma política dinâmica reduza abaixo do necessário durante o evento.
 
+#### Scheduled scaling para um pico em data conhecida
+Cenário típico: um job em lote roda à meia-noite do primeiro dia de cada mês nas instâncias de um Auto Scaling group. A CPU dispara no início do job e os usuários sentem lentidão até a política dinâmica reagir.
+
+![Linha do tempo da capacidade: uma ação agendada sobe a capacidade antes do job e outra a devolve depois.](diagramas/scheduled-scaling.svg)
+
+1. **Antes do job**: uma ação agendada aumenta o `min` e o `desired` alguns minutos antes do horário (no diagrama, T − 20 min). A margem cobre o lançamento das instâncias, o bootstrap e os health checks. A própria ação pode atrasar até dois minutos.
+2. **Durante o job**: o job começa com a capacidade pronta, e a CPU por instância fica no nível esperado. Uma política de target tracking pode continuar ativa para o imprevisto, mas só atua dentro do `min`/`max` definido pela ação. Por isso, suba também o `min`: com só o `desired` maior e a CPU ainda baixa antes do job, a política dinâmica pode começar a remover as instâncias extras.
+3. **Depois do job**: uma segunda ação agendada devolve `min` e `desired` aos valores normais, para não pagar a capacidade extra pelo resto do mês.
+
+- **Agendamento**: ações recorrentes usam cron de cinco campos e, por padrão, o fuso **UTC**. É possível informar um fuso IANA (ex.: `America/Sao_Paulo`), que acompanha o horário de verão.
+
+| Opção | Tipo de resposta | Quando adiciona capacidade | Resolve o pico do job mensal? |
+|---|---|---|---|
+| **Scheduled scaling** | Proativa | Em data e hora definidas com antecedência | Sim: a capacidade já está pronta quando o job começa |
+| **Dynamic scaling** (simple, step ou target tracking por CPU) | Reativa | Depois que a métrica passa do limite e as instâncias sobem | Não: a lentidão acontece antes da resposta |
+| **Predictive scaling** | Proativa | Antes de picos previstos a partir de padrões **diários ou semanais** | Não é a escolha: um evento mensal fica fora do padrão que ele aprende |
+| **ElastiCache** | Não escala EC2 | Não se aplica | Não: reduz a latência de leitura de dados, não a carga de CPU do job |
+| **CloudFront** | Não escala EC2 | Não se aplica | Não: acelera a entrega de conteúdo aos usuários, não a CPU do job |
+
+*Na prova, um pico em data e hora **conhecidas e recorrentes** aponta para scheduled scaling, que adiciona capacidade antes da carga em vez de reagir a ela. Se o padrão é diário ou semanal e varia em amplitude, a resposta passa a ser predictive scaling.*
+
 #### Métricas de scaling
 - **CPU média** (`CPUUtilization`): a mais comum, para cargas limitadas por CPU.
 - **`ALBRequestCountPerTarget`**: requisições por instância no ALB. É a melhor métrica quando a carga é de requisições web cujo custo não aparece bem na CPU.
@@ -171,6 +213,30 @@ Os limites e valores numéricos ficam em tabelas **Números de…** dentro do t�
 - **Health checks personalizados**: a aplicação ou um script marca a instância como unhealthy via API `SetInstanceHealth`. O grupo também pode usar health checks do **VPC Lattice** e do **EBS** (volumes com I/O prejudicado).
 - **Health check grace period**: tempo após o lançamento em que as falhas de health check são ignoradas. Se for curto demais, o grupo encerra instâncias que ainda estão inicializando e entra em loop de substituição.
 - **Instância unhealthy é encerrada e substituída**, não reiniciada. Para reiniciar/recuperar a mesma instância (mantendo IP, EBS e ID), use **EC2 auto recovery** ou um alarme do CloudWatch com a ação *recover*, fora do Auto Scaling.
+
+#### Health check HTTP e substituição automática
+Cenário típico: o serviço de checkout de uma loja on-line roda em EC2 atrás de um NLB com health check TCP. Quando o serviço falha, a aplicação passa a responder HTTP 500, mas a porta continua aberta: o load balancer segue mandando tráfego e ninguém substitui a instância. O requisito pede detecção e substituição automáticas, sem scripts.
+
+![ALB com health check HTTP no target group e Auto Scaling usando o health check do ELB para substituir a instância com falha.](diagramas/alb-health-check-asg.svg)
+
+1. **Tráfego**: os usuários chegam por um **ALB**, que entende HTTP e roteia para o target group das instâncias.
+2. **Health check HTTP**: o target group chama `GET /health` em cada instância, em intervalos configuráveis. Uma resposta fora dos códigos de sucesso (por exemplo, 500), ou nenhuma resposta, depois do número de falhas configurado, marca a instância como **unhealthy**, e o ALB para de mandar tráfego para ela.
+3. **Auto Scaling**: com o health check do tipo **ELB** habilitado (`HealthCheckType=ELB`), o grupo passa a considerar o status do target group, e não só o status da instância.
+4. **Substituição**: o grupo encerra a instância unhealthy e lança outra no lugar, mantendo a capacidade desejada. O **grace period** evita que instâncias ainda inicializando sejam encerradas.
+
+- **O padrão do Auto Scaling é o health check EC2**: ele só olha o status da instância e do hardware. Sem habilitar o tipo ELB, a instância que responde 500 continua "saudável" para o grupo e nunca é substituída.
+- **O problema é o protocolo do health check, não o NLB em si**: o target group de um NLB também aceita health check **HTTP ou HTTPS**, e o Auto Scaling também usa esse resultado. Para uma aplicação HTTP, o ALB acrescenta roteamento por caminho e host e integração com o WAF.
+- **O que o `/health` verifica**: ele deve refletir se a instância consegue atender, sem depender de cada sistema externo. Se o endpoint falhar sempre que o banco ficar lento, todas as instâncias ficam unhealthy ao mesmo tempo e o grupo entra em ciclo de substituição.
+
+| Opção | Health check | Detecta o HTTP 500? | Substitui sem script? |
+|---|---|---|---|
+| **ALB + target group HTTP + Auto Scaling com health check ELB** | HTTP no `/health` | Sim | Sim |
+| **NLB com health check TCP + Auto Scaling** | Conexão TCP | Não: a porta continua aberta | Não |
+| **NLB com health check HTTP + Auto Scaling com health check ELB** | HTTP no `/health` | Sim | Sim, mas sem os recursos de camada 7 do ALB |
+| **Auto Scaling só com o health check EC2 (padrão)** | Status da instância | Não | Só quando a instância ou o hardware falha |
+| **Script ou cron que lê logs e chama `SetInstanceHealth`** | Personalizado | Sim | Sim, mas com código para manter |
+
+*Na prova, "o load balancer não detecta erros HTTP" e "sem scripts nem código" apontam para health check HTTP no target group, de preferência num ALB, com o Auto Scaling usando o health check do **ELB**. Sem esse ajuste no grupo, nada é substituído.*
 
 #### Lifecycle hooks
 - Pausam a instância em **`Pending:Wait`** (antes de entrar em serviço) ou **`Terminating:Wait`** (antes de ser encerrada) para executar uma ação personalizada.
@@ -426,6 +492,54 @@ Os limites e valores numéricos ficam em tabelas **Números de…** dentro do t�
   - **EKS Hybrid Nodes** conecta servidores on-premises como nós de um cluster EKS com control plane na AWS.
   - [Opções de implantação](https://docs.aws.amazon.com/eks/latest/userguide/eks-deployment-options.html).
 
+#### Migração lift-and-shift: Kubernetes e MongoDB
+Cenário típico: uma aplicação roda em um cluster Kubernetes on-premises com MongoDB, e a empresa quer levá-la para a AWS sem reescrever manifests nem código e sem gerenciar servidores.
+
+![Migração de um cluster Kubernetes com MongoDB para EKS com Fargate e DocumentDB.](diagramas/eks-fargate-documentdb.svg)
+
+1. **Manifests no EKS**: o EKS é Kubernetes certificado, então os mesmos manifests e charts Helm são aplicados com `kubectl`. Os ajustes costumam ser de infraestrutura: imagens no ECR, StorageClass e anotações de `Service`/`Ingress` para o AWS Load Balancer Controller.
+2. **Pods no Fargate**: um **Fargate profile** seleciona os pods por namespace e labels e os executa sem nós EC2. Pods que precisam de **DaemonSet**, modo **privilegiado**, `hostNetwork`/`hostPort` ou **GPU** não rodam no Fargate. Volume persistente, só com **EFS**.
+3. **Dados no DocumentDB**: o **AWS DMS** migra do MongoDB para o DocumentDB com carga completa mais CDC, o que reduz a janela de corte. Para volumes pequenos, `mongodump`/`mongorestore` também atende.
+4. **Aplicação**: o código continua usando o **driver do MongoDB**. Muda a connection string (endpoint do cluster, TLS). Confira se as APIs e os operadores usados existem na versão do DocumentDB.
+
+| Opção | Manifests Kubernetes | Servidores a gerenciar | MongoDB | Resultado |
+|---|---|---|---|---|
+| **EKS + Fargate + DocumentDB** | Mesmos manifests | Nenhum nó | Compatível com a API do MongoDB | Atende a todos os requisitos |
+| **EKS + EC2 + DocumentDB** | Mesmos manifests | Nós EC2 (AMI, patch, capacidade), mesmo com managed node groups | Compatível | Mais operação que o Fargate |
+| **ECS + Fargate + DynamoDB** | Não executa manifests: reescrever como task definitions | Nenhum | API própria: reescrever a camada de dados | Exige refatoração |
+| **ECS + EC2 + DynamoDB** | Reescrever como task definitions | Instâncias EC2 | API própria | Refatoração e mais operação |
+
+*Na prova, "já usa Kubernetes" e "sem alterar manifests" apontam para o EKS; "sem gerenciar servidores", para o Fargate; "MongoDB sem mudar o código", para o DocumentDB. O ECS não executa manifests Kubernetes, e o DynamoDB não fala a API do MongoDB. Se algum pod exigir DaemonSet, GPU ou modo privilegiado, use nós EC2 (managed node groups, Karpenter ou EKS Auto Mode) para esses pods.*
+
+#### Contêineres on-premises para ECS no Fargate
+Cenário típico: uma varejista roda a aplicação de estoque em contêineres on-premises, sem Kubernetes, e os picos de promoção sobrecarregam os servidores. O requisito pede para escalar no pico com **alterações mínimas de código** e o **menor overhead operacional**.
+
+![Imagens levadas ao ECR e executadas como tasks do ECS no Fargate, atrás de um ALB, com Service Auto Scaling.](diagramas/ecs-fargate-migracao.svg)
+
+1. **Imagens**: as mesmas imagens de contêiner vão para o **Amazon ECR**. A **task definition** descreve CPU, memória, portas, variáveis e a **task role** de cada contêiner.
+2. **Tráfego**: um **ALB** recebe as requisições e distribui entre as tasks. No Fargate, o modo de rede é sempre **`awsvpc`**: cada task tem a própria interface de rede, então o target group do ALB é do tipo **ip**.
+3. **Execução**: o **serviço ECS** mantém o número desejado de tasks no **Fargate**, que puxa as imagens do ECR e roda os contêineres sem instâncias EC2 para provisionar, corrigir ou escalar. A **task execution role** dá permissão para puxar a imagem e enviar os logs.
+4. **Escala**: o **Service Auto Scaling**, feito pelo Application Auto Scaling e não pelo EC2 Auto Scaling, ajusta o número de tasks por target tracking (CPU, memória ou `ALBRequestCountPerTarget`), com alarmes do CloudWatch criados pela própria política. Para uma promoção com data marcada, uma **ação agendada** sobe o mínimo de tasks antes do evento, porque cada task leva alguns segundos para iniciar.
+
+- **Mesmo padrão, outro exemplo**: um microsserviço de transcodificação de vídeo com picos imprevisíveis em eventos ao vivo, mantido por uma equipe pequena que não pode aplicar patches nem escalar servidores à mão. A resposta é a mesma: ECS no Fargate com target tracking.
+- **Quem puxa a imagem**: as tasks do Fargate puxam as imagens do ECR com a **task execution role**. O load balancer só distribui o tráfego entre as tasks.
+- **Trabalho assíncrono**: quando cada pedido é um job, como transcodificar um arquivo, coloque uma fila **SQS** na frente e escale pelo **backlog por task**, em vez de requisições no ALB.
+- **Quando o Fargate não serve**: GPU, contêineres privilegiados ou acesso ao host exigem ECS com capacidade em **EC2**. Cada task do Fargate vai até 16 vCPU e 120 GB de memória. Veja [AWS Fargate](#aws-fargate).
+- **Transcodificação sem contêiner próprio**: para converter arquivos de vídeo, o **AWS Elemental MediaConvert** é um serviço gerenciado e dispensa até a imagem de contêiner.
+- **Estado**: as tasks são descartáveis. Sessões vão para ElastiCache ou DynamoDB, arquivos compartilhados para EFS, e dados para um banco gerenciado.
+- **Se a aplicação já usa Kubernetes**: o caminho é o EKS. Veja [Migração lift-and-shift: Kubernetes e MongoDB](#migracao-lift-and-shift-kubernetes-e-mongodb).
+
+| Opção | Servidores para gerenciar | Reescrita de código | Escala | No requisito |
+|---|---|---|---|---|
+| **ECS no Fargate + ALB + Service Auto Scaling** | Nenhum | Mínima: mesmas imagens | Automática, por task | Atende |
+| **ECS com capacidade em EC2** | Instâncias do cluster (AMI, patches, capacidade) | Mínima | Tasks e instâncias, em duas camadas | Funciona, com mais operação |
+| **EC2 autogerenciado com Docker e Auto Scaling** | Instâncias e orquestração própria | Baixa, mas a orquestração fica com você | Por instância | Mais operação |
+| **EKS no Fargate** | Nenhum nó | Exige manifests Kubernetes, que a aplicação não tem | Por pod | Acrescenta Kubernetes sem necessidade |
+| **AWS Lambda** | Nenhum | Alta: reescrever como funções | Por invocação | Não serve para manter os contêineres como estão |
+| **AWS ParallelCluster** | Cluster HPC | Não se aplica a aplicações web | Voltado a HPC | Fora do cenário |
+
+*Na prova, "aplicação em contêineres", "alterações mínimas de código" e "menor overhead operacional" apontam para ECS no Fargate com ALB e Service Auto Scaling. EC2 autogerenciado acrescenta servidores, Lambda exige reescrita, e EKS só faz sentido se a aplicação já usa Kubernetes.*
+
 #### Amazon ECR
 - Registry gerenciado de imagens OCI/Docker, **privado** (por conta e Região) ou **público** (ECR Public). Imagens são criptografadas em repouso (AES-256 ou **KMS**).
 - **Isolamento**: repositórios separados por ambiente (dev/test/prod), com IAM roles e **repository policies** específicas por repositório. É o padrão de isolamento e controle de custo/segurança. Repository policies também permitem pull **entre contas**.
@@ -526,6 +640,29 @@ Os limites e valores numéricos ficam em tabelas **Números de…** dentro do t�
 - **Configuração e segredos**: variáveis de ambiente são criptografadas com KMS. Segredos devem vir do **Secrets Manager** ou do **Parameter Store**, de preferência com a extensão de cache, e não de variáveis em texto puro.
 - **Observabilidade**: logs no CloudWatch Logs, métricas (Invocations, Errors, Throttles, Duration, ConcurrentExecutions, IteratorAge) e tracing com **X-Ray**.
 
+#### Quem invoca e o que a função acessa: política de recurso e execution role
+Cenário típico: uma regra do EventBridge aciona toda noite uma Lambda que gera relatórios de vendas. O requisito pede a configuração de **menor privilégio** para que só essa regra consiga invocar a função.
+
+![Regra do EventBridge passando pela política baseada em recurso da Lambda; outra regra ou conta recebe AccessDenied; a execution role define o que a função acessa.](diagramas/lambda-resource-policy.svg)
+
+1. **Entrada**: a regra do EventBridge tenta invocar a função. Quem decide se ela pode é a **política baseada em recurso** da Lambda.
+2. **Política mínima**: a política permite só a ação `lambda:InvokeFunction`, só ao principal de serviço `events.amazonaws.com`, e com a condição **`aws:SourceArn`** igual ao ARN da regra. Ao escolher a Lambda como alvo da regra no console, essa permissão é criada automaticamente.
+3. **Saída**: a **execution role** define o que a função pode acessar durante a execução, como o S3 e o DynamoDB. Ela não tem nenhum papel em autorizar quem invoca.
+4. **Qualquer outro**: outra regra, outra conta ou outro serviço não satisfaz a condição e recebe `AccessDenied`.
+
+- **Por que o `aws:SourceArn`**: sem ele, a permissão vale para o serviço EventBridge como um todo, e uma regra de **outra conta** poderia invocar a função apontando para o ARN dela. É o problema do *confused deputy*. O `aws:SourceAccount` restringe pelo menos à sua conta.
+- **EventBridge Scheduler é diferente**: o Scheduler não usa a política da função. Ele **assume uma role do IAM** que você informa na agenda, e essa role é que precisa de `lambda:InvokeFunction`.
+- **O mesmo vale para outros gatilhos**: S3, SNS e API Gateway invocam a Lambda pela política baseada em recurso, cada um com o próprio principal de serviço e o ARN de origem na condição.
+
+| Política | Controla | Configuração | Menor privilégio para a regra? |
+|---|---|---|---|
+| **Política baseada em recurso na função** | Quem pode invocar (entrada) | `events.amazonaws.com`, `lambda:InvokeFunction`, `aws:SourceArn` da regra | Sim |
+| **Política baseada em recurso sem condição de origem** | Quem pode invocar | Só o principal de serviço | Parcial: qualquer regra do EventBridge, inclusive de outra conta |
+| **Execution role da função** | O que a função acessa (saída) | Permissões para S3, DynamoDB etc. | Não controla quem invoca |
+| **Política baseada em recurso com principal `*`** | Quem pode invocar | Qualquer principal | Não: qualquer um invoca a função |
+
+*Na prova, "a regra do EventBridge invoca a Lambda" com "menor privilégio" aponta para a política baseada em recurso com o principal `events.amazonaws.com` e a ação `lambda:InvokeFunction`, restrita ao ARN da regra. A execution role responde a outra pergunta: o que a função pode acessar.*
+
 #### Números do Lambda
 
 | Métrica | Valor | Observação |
@@ -552,6 +689,30 @@ Os limites e valores numéricos ficam em tabelas **Números de…** dentro do t�
   - *immutable*: novas instâncias em um ASG temporário, com rollback seguro;
   - *traffic splitting*: canary.
 - Costuma ser a resposta para "levar uma aplicação web tradicional para a AWS rapidamente, sem gerenciar a infraestrutura em detalhe". Costuma ser descartado quando existe alternativa serverless mais simples (S3 + Lambda) ou quando se pede controle de orquestração de contêineres.
+
+#### Venda relâmpago: pico imprevisível com serverless
+Cenário típico: uma loja faz uma venda relâmpago de 24 horas para um único produto, e o tráfego pode saltar de centenas para dezenas de milhares de requisições por minuto, sem aviso. O requisito pede latência baixa no pico e o **menor esforço operacional**, sem provisionar servidores antes nem gerenciar cluster durante o evento.
+
+![Loja serverless: CloudFront na frente do S3 para o site e do API Gateway para os pedidos, com Lambda e DynamoDB.](diagramas/serverless-venda-relampago.svg)
+
+1. **Borda**: o **CloudFront** recebe todas as requisições. O site e as respostas cacheáveis saem da borda, e o **AWS WAF** com regras de taxa segura bots antes que cheguem à origem.
+2. **Conteúdo estático**: páginas, imagens e scripts vêm do **S3**, que não tem servidor para escalar.
+3. **API**: as chamadas de pedido vão ao **API Gateway**, que autentica e aplica **throttling** por estágio, método ou cliente. Acima do limite, o cliente recebe `429`, em vez de derrubar o backend.
+4. **Processamento**: cada requisição invoca uma **Lambda**, que escala por requisição até o limite de concorrência da conta. Para absorver um pico maior que o processamento, a API pode gravar o pedido numa fila **SQS** e responder na hora, deixando a Lambda consumir no ritmo dela.
+5. **Dados**: os pedidos vão para o **DynamoDB** em modo **on-demand**, que dispensa planejar capacidade.
+
+- **On-demand não é ilimitado na hora**: a tabela acompanha até o dobro do pico anterior. Para um salto de 10x ou 100x, faça **pre-warm** com o *warm throughput* antes do evento. Veja [Capacidade e custo do DynamoDB](#capacidade-e-custo-do-dynamodb).
+- **Um produto, uma chave quente**: se cada pedido atualizar o mesmo item (por exemplo, o estoque do produto em promoção), todas as escritas caem numa só partição, que tem limite próprio. Grave cada pedido como um item separado e distribua o contador de estoque em várias chaves (*write sharding*).
+- **Cotas**: a concorrência da Lambda e o throttling do API Gateway têm limites por conta e por Região. Peça o aumento antes do evento, e use **provisioned concurrency** se o cold start pesar na latência.
+
+| Opção | Servidores ou cluster para gerenciar | Escala no pico imprevisível | No requisito |
+|---|---|---|---|
+| **S3 + CloudFront + API Gateway + Lambda + DynamoDB** | Nenhum | Por requisição, dentro das cotas | Atende: menor esforço operacional |
+| **EC2 com Auto Scaling atrás de ALB + RDS** | Instâncias, AMIs, ALB e banco | Reage a métricas, com atraso para subir instâncias | Escala, mas com mais operação e risco de lentidão no salto |
+| **ECS ou EKS em EC2 + Aurora** | Cluster, nós e banco | Depende da capacidade dos nós | Mais operação que o serverless |
+| **EC2 superdimensionado para o pico** | Instâncias ligadas o tempo todo | Fixa | Caro e ainda pode não bastar para um pico imprevisível |
+
+*Na prova, "menor esforço operacional", "milhões de requisições por hora" e "pico imprevisível" apontam para a arquitetura totalmente serverless. Elimine primeiro qualquer opção que exija gerenciar servidores, clusters ou load balancers, mesmo que ela escale tecnicamente.*
 
 #### Padrões e pegadinhas de serverless
 - "Processamento dura mais de 15 minutos": não é Lambda. Use **Batch**, **Fargate** ou **Step Functions** dividindo o trabalho em etapas.
@@ -735,6 +896,59 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - **S3 Inventory**: relatório diário ou semanal (CSV, ORC ou Parquet) com a lista de objetos e seus metadados (classe, criptografia, replicação). Serve de base para auditoria e para o S3 Batch Operations.
 - **S3 Requester Pays**: o solicitante autorizado paga as solicitações e a transferência de dados correspondentes, e o dono do bucket continua pagando o armazenamento. Compare com distribuição via CloudFront quando houver público amplo. [Requester Pays](https://docs.aws.amazon.com/AmazonS3/latest/userguide/RequesterPaysBuckets.html).
 
+#### Lifecycle por padrão de acesso
+Cenário típico: uma aplicação grava arquivos críticos no S3. Eles são acessados com frequência nos primeiros 30 dias, depois raramente, mas precisam continuar disponíveis na hora durante quatro anos. Depois disso, podem ser excluídos.
+
+![Regra de lifecycle: Standard nos primeiros 30 dias, Standard-IA até quatro anos e expiração.](diagramas/s3-lifecycle.svg)
+
+1. **Upload**: os objetos chegam em **S3 Standard**, que atende o período de acesso frequente.
+2. **Transição aos 30 dias**: uma regra de lifecycle move os objetos para **S3 Standard-IA**. O acesso continua em milissegundos, com armazenamento mais barato e cobrança por GB recuperado. Trinta dias é também o mínimo que um objeto precisa ficar em Standard antes dessa transição.
+3. **Expiração aos 1.460 dias**: a mesma regra exclui os objetos depois de quatro anos. Os dias da transição e da expiração contam a partir da criação do objeto. Em bucket versionado, a expiração cria um *delete marker*: inclua a expiração de **versões não atuais** para apagar os dados de fato.
+
+- **Mesmo padrão, outro exemplo**: uma empresa de mídia guarda vídeos que são muito vistos no primeiro mês de lançamento e quase esquecidos depois, mas que precisam abrir na hora se alguém pedir. A resposta é a mesma regra de Standard para Standard-IA aos 30 dias.
+- **Idade, não inatividade**: o lifecycle conta dias desde a **criação** do objeto, não desde o último acesso. "Mover depois de 30 dias **sem acesso**" é o comportamento do **S3 Intelligent-Tiering**, que leva o objeto para a camada de acesso infrequente após 30 dias seguidos sem acesso e o traz de volta quando ele é lido, sem cobrança de recuperação.
+- **Variação: arquivamento longo, acesso quase nunca**: se os dados com mais de 30 dias quase nunca voltam a ser abertos e precisam ficar guardados por anos (vídeos brutos ou logs retidos por 10 anos, por exemplo), a regra de lifecycle os leva direto para o **S3 Glacier Deep Archive**, a classe mais barata. A leitura passa a exigir uma restauração de até 12 horas (Standard) ou 48 horas (Bulk). Cuidados:
+  - a duração mínima cobrada é de **180 dias**;
+  - cada objeto arquivado ganha **40 KB** de overhead cobrado (8 KB na tarifa do Standard e 32 KB na do Deep Archive), então **agrupe arquivos pequenos**, como logs, antes de arquivar;
+  - por padrão, objetos menores que **128 KB não são transicionados**;
+  - para retenção regulatória, combine com **Object Lock** e uma regra de **expiração** ao fim do prazo.
+  - o prazo de transição segue o requisito: por exemplo, gravações que precisam de acesso rápido por 2 anos e retenção de 25 anos ficam em Standard até o dia 730 e vão direto para o Deep Archive, com expiração ao fim dos 25 anos. One Zone-IA fica de fora por não resistir à perda de uma AZ, e Intelligent-Tiering, por ser feito para acesso imprevisível, não para prazos fixos;
+  - se recuperações ocasionais precisarem sair em minutos, use o **Glacier Flexible Retrieval**, que tem a opção Expedited (1 a 5 minutos).
+- **Logs não ficam no CloudWatch Logs por anos**: ele serve para busca e alarmes recentes, e reter grandes volumes por muito tempo sai caro. Exporte para o S3 ou envie por subscription com o Data Firehose, e aplique o lifecycle lá. O **AWS Backup** protege buckets S3, mas não substitui o lifecycle para mudar a classe dos objetos.
+- **Resiliência igual, disponibilidade um pouco menor**: o Standard-IA guarda os dados em várias AZs, com a mesma durabilidade do Standard, mas é projetado para **99,9%** de disponibilidade, contra **99,99%** do Standard. O One Zone-IA fica em **99,5%**.
+
+| Classe | Acesso | Resiliência | No cenário |
+|---|---|---|---|
+| **S3 Standard** | Milissegundos | 3 ou mais AZs, 11 noves de durabilidade, disponibilidade de 99,99% | Os primeiros 30 dias, com acesso frequente |
+| **S3 Standard-IA** | Milissegundos, com cobrança por GB recuperado | 3 ou mais AZs, 11 noves de durabilidade, disponibilidade de 99,9% | De 30 dias a quatro anos: acesso imediato com menor custo de armazenamento |
+| **S3 Intelligent-Tiering** | Milissegundos nas camadas de acesso frequente, infrequente e Archive Instant | 3 ou mais AZs, disponibilidade de 99,9% | Alternativa quando a queda de acesso não tem data previsível; cobra monitoramento por objeto |
+| **S3 One Zone-IA** | Milissegundos | Uma AZ: a durabilidade projetada é a mesma, mas a perda da AZ leva os dados (disponibilidade de 99,5%) | Não serve: os dados são críticos |
+| **S3 Glacier Instant Retrieval** | Milissegundos, com recuperação mais cara e mínimo de 90 dias | 3 ou mais AZs | Alternativa quando o acesso cai para cerca de uma vez por trimestre |
+| **S3 Glacier Flexible Retrieval / Deep Archive** | Minutos a horas, depois de uma restauração | 3 ou mais AZs | Não serve: o cenário exige acesso imediato |
+
+*Na prova, "acesso frequente por 30 dias, depois raro, mas imediato" aponta para lifecycle de Standard para Standard-IA. "Dados críticos" ou "não podem ser perdidos" descartam o One Zone-IA, e "acesso imediato" descarta as classes Glacier que exigem restauração. Se o enunciado disser que o acesso é imprevisível, a resposta passa a ser Intelligent-Tiering.*
+
+#### Storage Lens: uploads multipart incompletos em várias contas
+Cenário típico: a empresa tem buckets em muitas contas e Regiões da organização e precisa de um relatório central, com pouca operação, de quanto armazenamento está preso em uploads multipart incompletos. Essas partes são cobradas e não aparecem na listagem de objetos.
+
+![S3 Storage Lens com escopo de organização, reunindo as métricas de multipart incompleto de todas as contas e Regiões.](diagramas/s3-storage-lens.svg)
+
+1. **Organização**: a conta de gerenciamento ativa o **trusted access** do Storage Lens no AWS Organizations. O dashboard da organização é criado por ela ou por uma conta registrada como **administrador delegado**.
+2. **Coleta**: o Storage Lens reúne as métricas de todas as contas e Regiões no escopo, uma vez por dia. As métricas de multipart incompleto (bytes, contagem e a parte com **mais de 7 dias**) estão no nível **gratuito**, na categoria de otimização de custo.
+3. **Relatório**: o dashboard mostra os números por conta, Região, bucket e classe. A **exportação diária** em CSV ou Parquet vai para um bucket S3 na home Region do dashboard, para consulta com Athena ou outra ferramenta.
+4. **Ação**: nos buckets apontados, uma regra de lifecycle **`AbortIncompleteMultipartUpload`** remove as partes órfãs depois de alguns dias. O Storage Lens mede; ele não apaga nada.
+
+| Serviço | Escopo | Mostra multipart incompleto? | Uso |
+|---|---|---|---|
+| **S3 Storage Lens** | Organização inteira: contas, Regiões, buckets e prefixos | Sim, no nível gratuito | Relatório central de uso e custo do armazenamento, com pouca operação |
+| **S3 Multi-Region Access Points** | Roteamento de acesso entre buckets de várias Regiões | Não | Endpoint global para a aplicação, não relatório |
+| **SCP do AWS Organizations** | Limite de permissões das contas | Não | Restringe ações; não gera métricas |
+| **AWS Config** | Configuração dos recursos e conformidade com regras | Não | Verifica se um bucket tem determinada configuração, não o uso do armazenamento |
+
+- **Níveis**: as métricas gratuitas ficam disponíveis para consulta por **14 dias**. O nível avançado (pago) amplia para **15 meses** e acrescenta métricas de atividade, agregação por prefixo, recomendações e publicação no **CloudWatch**.
+
+*Na prova, "métricas de uso ou custo de armazenamento centralizadas, em muitas contas e Regiões", incluindo uploads multipart incompletos, aponta para o S3 Storage Lens com escopo de organização. Para resolver o problema, e não só medir, a resposta é a regra de lifecycle que aborta os uploads incompletos.*
+
 #### Proteção de dados: versionamento, Object Lock e replicação
 - **S3 Versioning + MFA Delete**: protege contra exclusão **acidental**. Um DELETE sem versão cria um *delete marker*, e a versão anterior pode ser restaurada. **MFA Delete** só pode ser habilitado pelo **usuário root** via CLI/API. Não é solução para retenção regulatória (isso é Object Lock). O versionamento, uma vez habilitado, só pode ser **suspenso**, nunca desabilitado.
 - **S3 Object Lock (WORM)**: exige versionamento habilitado. **Governance Mode** (permissão especial `s3:BypassGovernanceRetention` pode sobrepor) vs. **Compliance Mode** (imutável mesmo para a conta raiz durante a retenção). Compliance Mode é sempre a resposta quando o requisito é imutabilidade absoluta/regulatória. **Legal Hold** é uma trava sem data de expiração definida, usada quando a liberação depende de decisão futura/indefinida (ex.: processos judiciais), diferente de um período de retenção fixo.
@@ -753,6 +967,51 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
   - Em uma interrupção regional, os **controles de failover** permitem alterar quais Regiões recebem tráfego. Não presuma que o MRAP detecta a falha e muda sozinho a configuração ativo/passivo.
   - [Roteamento e failover](https://docs.aws.amazon.com/AmazonS3/latest/userguide/MultiRegionAccessPoints.html) · [Replicação](https://docs.aws.amazon.com/AmazonS3/latest/userguide/MultiRegionAccessPointBucketReplication.html).
 - **AWS Backup para S3**: backups contínuos (restauração point-in-time de até 35 dias) e periódicos de buckets, centralizados com os demais recursos. Veja [Backup](#backup).
+
+#### Object Lock em modo Governance com exceção autorizada
+Cenário típico: uma empresa financeira precisa manter registros de transações inalterados por 7 anos, mas a equipe de compliance deve conseguir excluir registros específicos antes do prazo quando uma revisão jurídica aprovar a exceção.
+
+![Bucket com versionamento e Object Lock em Governance: só a role de compliance, com permissão de bypass, apaga uma versão travada.](diagramas/s3-object-lock-governance.svg)
+
+1. **Configurar antes de gravar**: o bucket tem **versionamento** e **Object Lock** ativados, com **retenção padrão** em modo **Governance** por 7 anos. A ordem importa: objetos gravados antes da retenção padrão ficam sem trava, a menos que recebam uma retenção própria.
+2. **Herança**: cada versão nova herda a retenção e fica travada até a data calculada. Ninguém sem permissão especial consegue apagá-la, sobrescrevê-la ou encurtar o prazo.
+3. **Exceção autorizada**: só a role da equipe de compliance recebe `s3:BypassGovernanceRetention`. Para apagar uma versão travada, ela precisa ter a permissão **e** enviar o header `x-amz-bypass-governance-retention: true` na requisição.
+4. **Tentativa sem permissão**: qualquer outro usuário, mesmo administrador, recebe `AccessDenied` ao tentar apagar a versão ou mudar a retenção. Uma política de bucket pode negar o bypass a todos, menos à role de compliance.
+
+- **DELETE sem versão não é bloqueado**: ele só cria um *delete marker*, e a versão travada continua no bucket, recuperável. A proteção vale para **versões**.
+- **Legal Hold é independente**: uma versão pode ter retenção e legal hold ao mesmo tempo. O legal hold não tem data de fim e só sai com `s3:PutObjectLegalHold`.
+
+| Recurso | Imutabilidade | Exceção por usuário | Prazo | Uso |
+|---|---|---|---|---|
+| **Object Lock — Governance** | Impede apagar e alterar versões | Sim, com `s3:BypassGovernanceRetention` e o header de bypass | Data de retenção configurável | Retenção com exceção controlada |
+| **Object Lock — Compliance** | Ninguém apaga nem encurta o prazo, nem o root | Não | Data de retenção configurável, só pode ser estendida | Retenção regulatória rígida, sem exceções |
+| **Legal Hold** | Impede apagar e alterar enquanto estiver ativo | Quem tem `s3:PutObjectLegalHold` remove a trava | Sem data de fim | Litígio ou investigação de prazo indefinido |
+| **S3 Glacier Vault Lock** | Política WORM no vault inteiro | Não é por usuário nem por objeto | Definido na política | Vaults do S3 Glacier antigo, não buckets |
+| **AWS Backup Vault Lock** | Impede apagar backups e encurtar a retenção | Em modo compliance, não | Definido no vault | Backups imutáveis de vários serviços |
+
+*Na prova, "imutável por um período definido" com "só usuários autorizados podem modificar ou excluir" aponta para Object Lock em modo Governance com versionamento. "Ninguém, nem o root" aponta para Compliance, e "sem data de expiração" aponta para Legal Hold.*
+
+#### Cópia criptografada em outra Região: CRR com SSE-KMS e Athena
+Cenário típico: uma empresa guarda grandes volumes de clickstream no S3, precisa de uma cópia criptografada em outra Região para DR, usando a mesma chave nas duas Regiões, e quer relatórios SQL ad hoc sem operar banco de dados.
+
+![Bucket de origem com SSE-KMS replicado por CRR para outra Região, onde a réplica da chave multirregional protege as cópias e o Athena as consulta.](diagramas/s3-crr-kms-mrk.svg)
+
+1. **Criptografia na origem**: os objetos são gravados com **SSE-KMS** usando a **primária** de uma chave multirregional do KMS. Os dois buckets têm **versionamento**, exigido pela replicação.
+2. **Replicação**: a regra de **CRR** precisa **ativar explicitamente** a replicação de objetos SSE-KMS (`SseKmsEncryptedObjects`), porque eles não são replicados por padrão. A role de replicação recebe `kms:Decrypt` na chave de origem e `kms:Encrypt` na chave de destino.
+3. **Chave no destino**: a regra indica a chave da Região de DR (`ReplicaKmsKeyID`), aqui a **réplica** da chave multirregional, com o mesmo ID e o mesmo material. O S3 trata chaves multirregionais como chaves de uma Região só: ele **descriptografa e criptografa de novo** com a chave de destino. O ganho da chave multirregional é a aplicação ou o auditor usarem a mesma chave nas duas Regiões, com o mesmo ID e políticas consistentes.
+4. **Consulta**: o **Athena**, na Região de DR, consulta as réplicas com SQL a partir de uma tabela no Glue Data Catalog. Quem executa as consultas precisa de `kms:Decrypt` na chave de destino.
+
+- **Objetos que já existiam**: a CRR vale só para gravações novas. Para copiar o histórico, use o **S3 Batch Replication**.
+- **Custo e limite do KMS**: cada objeto replicado gera chamadas ao KMS, que podem sofrer throttling em grandes volumes. As **S3 Bucket Keys** reduzem essas chamadas.
+
+| Opção | Criptografia | Mesma chave nas duas Regiões | Consulta | Overhead | No requisito |
+|---|---|---|---|---|---|
+| **SSE-KMS com chave multirregional + CRR + Athena** | SSE-KMS | Sim, primária e réplica com o mesmo ID e material | Athena | Mínimo | Atende |
+| **SSE-S3 + CRR + Athena** | SSE-S3 | Não: chaves gerenciadas pelo S3, sem controle do cliente | Athena | Mínimo | Não atende à chave compartilhada |
+| **SSE-KMS com uma chave diferente em cada Região** | SSE-KMS | Não | Athena | Mínimo | Funciona para DR, mas não é a mesma chave |
+| **SSE-KMS com chave multirregional + RDS** | SSE-KMS | Sim | RDS | Alto: banco para provisionar e carregar | Não atende ao mínimo de operação |
+
+*Na prova, "a mesma chave nas duas Regiões" aponta para chave multirregional do KMS, e "consultar com SQL e o mínimo de operação" aponta para o Athena. Lembre que objetos SSE-KMS só replicam com a opção ativada e com a chave de destino indicada.*
 
 #### Segurança e criptografia do S3
 - **Segurança de bucket**: **Block Public Access** (nível de conta) + política de bucket restritiva + IAM é a combinação padrão de proteção. Novos buckets já vêm com Block Public Access ativado e **ACLs desabilitadas** (*Object Ownership: bucket owner enforced*). Use políticas, não ACLs.
@@ -790,6 +1049,33 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - **EventBridge**: com a integração ativada no bucket, oferece mais flexibilidade que as notificações tradicionais: filtros avançados por metadados, **vários destinos**, arquivamento e replay de eventos.
 - **Cuidado com loops**: uma Lambda que grava no **mesmo bucket/prefixo** que a dispara cria recursão. Use outro bucket ou prefixo de saída.
 - **S3 Batch Operations**: executa uma ação sobre **milhões ou bilhões de objetos** a partir de um manifesto (S3 Inventory ou CSV): copiar, alterar a classe, tags, ACLs, Object Lock, restaurar do Glacier, invocar uma Lambda por objeto, ou replicar objetos existentes. Rastreia o progresso e gera um relatório de conclusão.
+
+#### Upload direto com URL pré-assinada e processamento por evento
+Cenário típico: usuários enviam fotos pelo navegador ou pelo celular, e o upload passa pelo servidor web em EC2, que também redimensiona as imagens. Em picos de upload, a aplicação fica lenta. O requisito pede para **reduzir o acoplamento** e melhorar o desempenho.
+
+![Upload direto do cliente para o S3 com URL pré-assinada e miniaturas geradas por uma Lambda acionada por evento.](diagramas/s3-upload-presigned.svg)
+
+1. **URL pré-assinada**: o cliente pede ao backend uma URL de upload. A aplicação em EC2 a assina com a própria role, para um objeto e um prazo curto, sem expor credenciais. Os prazos máximos estão em [Números do S3](#numeros-do-s3).
+2. **Upload direto**: o cliente envia o arquivo com `PUT` direto para o S3. O servidor web sai do caminho dos dados e fica livre para as outras requisições.
+3. **Evento**: a criação do objeto dispara uma **S3 Event Notification** que invoca a Lambda na hora, sem agendamento nem polling.
+4. **Processamento**: a Lambda gera as miniaturas e as grava em **outro bucket**, ou em outro prefixo fora do filtro do evento. Gravar no mesmo bucket e prefixo que dispara a função cria um loop.
+
+- **Mesmo padrão, outro exemplo**: converter cada PDF enviado em JPG, ou gerar uma cópia redimensionada de cada miniatura de vídeo. Cada upload aciona a Lambda, e não há servidor ocioso nos períodos de pouco movimento. Filtre a notificação por **sufixo** (por exemplo, `.pdf`) para a função só rodar com o tipo de arquivo certo.
+- **Arquivos grandes na Lambda**: a função tem até 15 minutos de execução e até 10 GB de memória e de armazenamento em `/tmp`. Bibliotecas de conversão grandes vão numa layer ou numa imagem de contêiner. Jobs que passam desses limites vão para Fargate ou AWS Batch, acionados pelo mesmo evento via EventBridge.
+- **Arquivo no S3, metadados no banco**: um item do DynamoDB tem no máximo 400 KB. Arquivos grandes ficam no S3, e o banco guarda só a chave do objeto e os metadados.
+- **Configuração do bucket**: uploads pelo navegador exigem uma regra de **CORS** no bucket. Para limitar o tamanho e o tipo do arquivo, use um **POST pré-assinado**, cuja política aceita condições como `content-length-range`.
+- **Arquivos grandes e usuários distantes**: o upload **multipart** usa uma URL pré-assinada por parte. O **Transfer Acceleration** leva o upload pela edge mais próxima.
+- **Picos de volume**: para absorver rajadas e controlar a concorrência da Lambda, coloque uma fila **SQS** entre a notificação e a função.
+- **Alternativa à URL pré-assinada**: credenciais temporárias de um **Cognito Identity Pool**, com permissão só na pasta de cada usuário.
+
+| Opção | Upload passa pelo servidor? | Processamento | No requisito |
+|---|---|---|---|
+| **URL pré-assinada + S3 Event Notification + Lambda** | Não | Imediato, orientado a evento | Atende: desacopla e tira a carga do servidor |
+| **Upload pelo EC2, que grava no S3** | Sim | No próprio servidor ou depois | Não atende: o servidor continua no caminho dos dados |
+| **Upload direto + job agendado que redimensiona** | Não | Em lote, com atraso | Parcial: desacopla o upload, mas as miniaturas atrasam |
+| **Upload pelo EC2 + fila SQS para workers** | Sim | Assíncrono | Parcial: desacopla o processamento, não o upload |
+
+*Na prova, "reduzir o acoplamento" com "lentidão durante os uploads" pede tirar o servidor web do caminho dos dados: o cliente envia direto ao S3 com URL pré-assinada, e um evento do S3 aciona a Lambda. Qualquer opção em que o arquivo ainda passe pelo EC2, ou em que o processamento seja agendado, fica atrás.*
 
 #### Números do S3
 
@@ -938,6 +1224,75 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - **FSx for OpenZFS**: sistema de arquivos gerenciado compatível com OpenZFS, acessado por NFS, com snapshots e clones rápidos. É indicado para migrar workloads ZFS/Linux que exigem baixa latência e semântica de sistema de arquivos, não SMB/Windows.
 - **Backups do FSx**: automáticos e manuais, armazenados no S3, e integrados ao AWS Backup.
 
+#### Migração gradual com acesso local: FSx File Gateway
+Cenário típico: uma organização de saúde guarda prontuários em servidores de arquivos Windows no data center e quer migrar para a AWS aos poucos. A equipe clínica local precisa continuar com o acesso rápido de hoje, sem mudar o jeito de abrir os arquivos, e as aplicações novas na nuvem precisam ler os mesmos arquivos.
+
+![Equipe local acessando um FSx File Gateway com cache, ligado por Direct Connect ou VPN ao FSx for Windows, que também atende as aplicações na nuvem.](diagramas/fsx-file-gateway.svg)
+
+1. **Acesso local**: a equipe usa o mesmo tipo de caminho SMB de antes, agora servido pelo **FSx File Gateway**, uma VM ou appliance no data center. Os arquivos mais usados ficam em **cache local**, com a latência de uma rede interna.
+2. **Ligação com a AWS**: o gateway conversa com o **FSx for Windows File Server** por **Direct Connect** ou **VPN**. O FSx guarda a cópia única dos arquivos, e o gateway mapeia cada compartilhamento do FSx para um compartilhamento local.
+3. **Mesmo domínio**: o gateway e o FSx entram no mesmo **Active Directory**, e as permissões NTFS continuam valendo dos dois lados.
+4. **Nuvem**: as aplicações novas na AWS acessam o FSx direto por SMB, nos mesmos arquivos que a equipe usa no data center.
+
+- **Disponibilidade para quem começa agora**: o **FSx File Gateway não está mais disponível para novos clientes**; quem já usa continua normalmente. Num projeto novo, os clientes do data center acessam o FSx for Windows direto, por Direct Connect ou VPN, e a latência passa a depender do link. Na prova, o FSx File Gateway continua sendo a resposta quando o enunciado pede acesso local de baixa latência a um FSx na nuvem.
+- **Para migrar os dados**: o **DataSync** copia os servidores de arquivos antigos para o FSx preservando as ACLs.
+
+| Opção | Acesso local de baixa latência | Mesmo padrão de acesso (SMB, AD) | Dados também na nuvem | No requisito |
+|---|---|---|---|---|
+| **FSx File Gateway + FSx for Windows** | Sim, pelo cache local | Sim | Sim, no FSx | Atende |
+| **Acesso direto ao FSx for Windows por Direct Connect ou VPN** | Depende do link | Sim | Sim | Funciona; é o caminho para clientes novos |
+| **S3 File Gateway** | Sim, com cache | Parcial: grava objetos no S3, sem a semântica completa de ACLs do Windows | Sim, como objetos | Exige mudar como as aplicações tratam os arquivos |
+| **Migrar tudo para o S3 de uma vez** | Não | Não: acesso por objetos | Sim | Exige reescrever aplicações |
+| **Amazon EFS** | Não | Não: NFS, sem SMB nem AD | Sim | Não serve para clientes Windows |
+
+*Na prova, "migração gradual", "acesso local com latência mínima" e "sem mudar o padrão de acesso a arquivos Windows" apontam para FSx for Windows File Server com FSx File Gateway no data center. Armazenamento de objetos e serviços só de nuvem ficam de fora.*
+
+#### Compartilhamento SMB para servidores IIS em várias AZs
+Cenário típico: uma aplicação legada de estoque roda em servidores Windows com IIS, e as imagens de produto e os arquivos de configuração ficam num NAS on-premises. A empresa leva a aplicação para EC2 em várias AZs e precisa de um compartilhamento de arquivos que os servidores Windows usem como antes, sem mudar o código.
+
+![ALB distribuindo para servidores IIS em duas AZs, que montam o FSx for Windows Multi-AZ por SMB; o AD autentica e o DataSync migra o NAS.](diagramas/fsx-windows-iis.svg)
+
+1. **Entrada**: os usuários chegam pelo ALB.
+2. **Servidores web**: o ALB distribui entre instâncias EC2 com IIS em duas AZs, num Auto Scaling group.
+3. **Compartilhamento**: as instâncias montam o **FSx for Windows File Server** por **SMB**, com o mesmo caminho UNC que usavam no NAS, sem alterar o código. O load balancer não acessa o FSx: quem monta o compartilhamento são as instâncias.
+4. **Alta disponibilidade**: na implantação **Multi-AZ**, o FSx tem um servidor preferido numa AZ e um standby na outra, com **replicação síncrona** e failover automático sob o mesmo nome DNS. A implantação Single-AZ é mais barata, mas não resiste à perda da AZ.
+5. **Domínio e migração**: o FSx e as instâncias entram no mesmo **Active Directory** (AWS Managed Microsoft AD ou o AD on-premises), e as permissões NTFS valem como antes. O **DataSync** copia os arquivos do NAS preservando as ACLs.
+
+- **Proteção dos arquivos**: backups automáticos diários e *shadow copies* para o usuário recuperar versões anteriores.
+
+| Serviço | Protocolo | Clientes | No cenário |
+|---|---|---|---|
+| **FSx for Windows File Server (Multi-AZ)** | SMB, com ACLs NTFS e AD | Windows | Atende: substitui o NAS sem mudar o código |
+| **Amazon EFS** | NFS | Linux; não é suportado em Windows | Não serve para IIS |
+| **FSx for NetApp ONTAP** | SMB e NFS | Windows e Linux | Funciona, com mais recursos e mais configuração; indicado quando há clientes dos dois sistemas |
+| **Storage Gateway (FSx File Gateway ou S3 File Gateway)** | SMB ou NFS num gateway | Clientes on-premises | Feito para acesso a partir do datacenter, não para instâncias EC2 |
+| **EBS compartilhado** | Bloco | Uma instância, ou Multi-Attach na mesma AZ | Não é compartilhamento de arquivos entre AZs |
+
+*Na prova, "Windows", "IIS" e "compartilhamento de arquivos" apontam para SMB e, portanto, para o FSx for Windows File Server, na implantação Multi-AZ quando o requisito é alta disponibilidade. O EFS sai primeiro, porque usa NFS.*
+
+#### Servidor de arquivos Windows com acesso remoto: FSx + Client VPN
+Cenário típico: uma organização de saúde guarda prontuários num servidor de arquivos Windows on-premises, sem espaço, com acesso restrito por grupos do Active Directory. A equipe passou a trabalhar remotamente, e os arquivos confidenciais só podem ser acessados por usuários autorizados, sem expor o compartilhamento à internet.
+
+![Funcionário remoto acessando o FSx for Windows pela Client VPN, com o FSx no domínio do AD on-premises e os dados migrados pelo DataSync.](diagramas/fsx-windows-client-vpn.svg)
+
+1. **Conexão remota**: o funcionário conecta pelo **AWS Client VPN**, com túnel criptografado. A autenticação usa o próprio AD, via **AD Connector** ou **AWS Managed Microsoft AD**, ou um IdP por SAML. **Regras de autorização** por grupo do AD definem quais redes cada grupo alcança.
+2. **Acesso SMB**: pela VPN, o tráfego chega às subnets privadas da VPC, e o usuário abre o compartilhamento por **SMB**. O **security group** do FSx libera a porta **445** só a partir da VPN, e o compartilhamento não tem endpoint público.
+3. **Permissões do AD**: o **FSx for Windows File Server** entra no domínio do **AD on-premises**, alcançado por **Direct Connect** ou **VPN site-to-site**, ou num AWS Managed Microsoft AD. As **ACLs NTFS** e os grupos por departamento continuam valendo como antes.
+4. **Migração**: o **AWS DataSync**, com um agente on-premises, copia os arquivos para o FSx **preservando as ACLs NTFS** e pode sincronizar de novo até o dia da virada.
+
+- **Disponibilidade e proteção**: use a implantação **Multi-AZ** para failover automático. Backups automáticos e **shadow copies** permitem que o próprio usuário recupere versões anteriores. A criptografia em repouso usa KMS, e a criptografia SMB pode ser exigida em trânsito.
+- **Escritórios on-premises que continuam acessando**: o acesso vai pelo Direct Connect ou pela VPN site-to-site, sem passar pela internet.
+
+| Opção | Permissões do Windows e AD | Acesso remoto seguro | No requisito |
+|---|---|---|---|
+| **FSx for Windows + Client VPN + AD** | Nativas: SMB, ACLs NTFS e grupos do AD | Túnel criptografado com autenticação no AD | Atende |
+| **Compartilhamento exposto na internet com allowlist de IPs** | Até podem existir | Não: endpoint público, e IP não identifica usuário | Não atende: arquivos confidenciais expostos |
+| **S3 com URLs pré-assinadas ou política por IP** | Não: sem ACLs NTFS nem SMB | Por link ou endereço, não por usuário do AD | Não preserva as permissões |
+| **Amazon EFS** | Não: NFS para Linux, sem SMB nem AD | Depende de VPN | Não serve para clientes Windows |
+| **S3 File Gateway** | Parcial: grava objetos no S3, sem a semântica completa de ACLs do Windows | Depende do gateway on-premises | Não substitui um servidor de arquivos Windows |
+
+*Na prova, "servidor de arquivos Windows", "permissões do Active Directory" e "arquivos confidenciais acessados por equipe remota" apontam para FSx for Windows File Server com acesso pelo Client VPN. Qualquer opção com endpoint público ou controle por endereço IP fica descartada.*
+
 #### Padrões e pegadinhas de FSx
 - "Compartilhamento SMB com permissões do AD e alta disponibilidade": **FSx for Windows Multi-AZ**. EFS não atende Windows/SMB.
 - "Processar dados do S3 com sistema de arquivos paralelo de alta performance": **FSx for Lustre** vinculado ao bucket.
@@ -1064,6 +1419,53 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
   - Também **reduz o tempo de failover** (mantém as conexões da aplicação e redireciona para a nova principal) e suporta **autenticação IAM** com credenciais no Secrets Manager.
   - Não resolve indisponibilidade total durante updates.
 
+#### Separar leitura e escrita com read replicas
+Cenário típico: o catálogo de uma loja roda numa única instância RDS for MySQL. Numa promoção, as buscas de produto disparam, e a instância não dá conta de leituras e escritas ao mesmo tempo. O requisito pede para separar o tráfego de leitura do de escrita, sem trocar de engine.
+
+![Aplicação enviando escritas ao RDS primário e leituras a duas read replicas, que recebem a replicação assíncrona.](diagramas/rds-read-replicas.svg)
+
+1. **Escritas**: pedidos e atualizações de estoque continuam indo para a instância **primária**.
+2. **Replicação**: duas **read replicas** recebem as mudanças da primária por replicação **assíncrona**. Para criá-las, os **backups automáticos** precisam estar ativos na origem. Dimensione as réplicas como a primária: elas atendem as buscas e ainda precisam aplicar todas as escritas, então uma réplica pequena vira o novo gargalo e acumula lag.
+3. **Leituras**: as buscas de produto vão para as réplicas. No RDS, cada réplica tem **endpoint próprio** e não existe um reader endpoint como no Aurora: a aplicação, ou a camada de acesso a dados, decide para onde vai cada consulta e distribui entre as réplicas.
+
+- **Lag**: como a replicação é assíncrona, uma leitura feita logo depois de uma escrita (por exemplo, mostrar o pedido recém-criado) deve ir à primária.
+- **Junto com o CloudFront**: se as páginas também carregam devagar para clientes em outros continentes, o CloudFront na frente dos servidores web guarda imagens e páginas de produto perto de cada cliente. Cada página servida pela borda nem chega ao banco, o que também alivia as leituras. As duas medidas se somam: o CloudFront reduz a latência global, e a read replica absorve as consultas que chegam à origem. Veja [CloudFront na frente de uma aplicação dinâmica](#cloudfront-na-frente-de-uma-aplicacao-dinamica).
+- **Multi-AZ resolve outro problema**: no **Multi-AZ DB instance**, o standby existe só para failover e não atende leituras. A exceção é o **Multi-AZ DB cluster** (MySQL e PostgreSQL), cujas duas instâncias leitoras também atendem leituras. Os dois recursos podem ser combinados: Multi-AZ para disponibilidade e read replicas para leitura.
+
+| Opção | Atende leituras? | Mudança | No requisito |
+|---|---|---|---|
+| **Read replicas do RDS for MySQL** | Sim, com lag assíncrono | A aplicação separa as conexões de leitura e escrita | Atende, sem trocar de engine |
+| **Multi-AZ DB instance** | Não: o standby só serve para failover | Nenhuma | Não resolve a carga de leitura |
+| **Multi-AZ DB cluster** | Sim, nas duas leitoras | Endpoint de leitura do cluster | Alternativa válida, também com mais disponibilidade |
+| **Instância maior (escala vertical)** | Na mesma instância | Troca de classe, com reinício | Paliativo: tem limite e não separa o tráfego |
+| **ElastiCache na frente do banco** | Do cache, não do banco | Lógica de cache na aplicação | Complementa, mas não separa leitura e escrita no banco |
+| **Amazon Redshift** | Sim, para consultas analíticas | Migrar os dados para um data warehouse | Não serve: é OLAP, feito para análise, não para as transações (OLTP) da loja |
+
+*Na prova, "separar o tráfego de leitura do de escrita" e "alto volume de consultas de leitura" apontam para read replicas. O Multi-AZ DB instance é para disponibilidade: o standby nunca atende consultas.*
+
+#### Publicar mudanças do RDS para vários sistemas
+Cenário típico: num marketplace, cada venda concluída precisa tirar o item dos anúncios e também atualizar o índice de busca, o pipeline de detecção de fraude e os relatórios de parceiros. O RDS for MySQL não emite eventos de mudança de dados, e o requisito pede um desenho desacoplado e escalável.
+
+![Mudanças do RDS capturadas por trigger com tabela de eventos ou pelo DMS com CDC, publicadas num tópico SNS que distribui para uma fila SQS por sistema.](diagramas/rds-cdc-fanout.svg)
+
+1. **Captura**: como o banco não avisa sozinho, um mecanismo precisa detectar a venda. Há duas opções principais, a seguir.
+2. **Opção A, padrão outbox**: um **trigger** grava cada venda numa **tabela de eventos** separada, na mesma transação. Uma **Lambda**, agendada pelo EventBridge Scheduler, lê só as linhas novas, publica e marca o que já foi enviado. Exige poder alterar o esquema.
+3. **Opção B, AWS DMS com CDC**: uma tarefa do **DMS** lê o binlog (que precisa estar ativo, com backups automáticos ligados) e grava cada mudança no **Kinesis Data Streams**, quase em tempo real e sem mexer no esquema. O **SQS não é destino do DMS**: um consumidor, como uma Lambda, leva os eventos do stream adiante.
+4. **Fan-out**: os eventos vão para um tópico **SNS**, que entrega uma cópia a **uma fila SQS por sistema**. Cada sistema (busca, fraude, relatórios) consome a própria fila no seu ritmo, e a falha de um não afeta os outros.
+
+- **Uma fila só não faz fan-out**: numa fila SQS, cada mensagem é processada por um consumidor e depois apagada. Vários sistemas lendo a mesma fila disputariam as mensagens, e cada sistema veria só uma parte das vendas. O EventBridge, com uma regra por destino, também faz esse papel.
+- **Alternativa mais simples**: uma Lambda que consulta a **tabela principal** periodicamente, procurando vendas novas por data. Funciona quando nem trigger nem DMS são possíveis, mas gera carga no banco e pode perder ou repetir mudanças sem um controle cuidadoso.
+- **Exceção nos engines**: o **RDS for PostgreSQL** e o **Aurora** conseguem invocar uma Lambda a partir do banco (extensão `aws_lambda` no PostgreSQL, funções nativas no Aurora MySQL). O RDS for MySQL não tem esse recurso.
+
+| Abordagem | Captura | Eficiência | Quando usar |
+|---|---|---|---|
+| **Trigger + tabela de eventos (outbox) + Lambda** | Na mesma transação da venda | Alta: lê só eventos novos | O esquema pode ser alterado e uma solução própria é aceitável |
+| **AWS DMS com CDC + Kinesis Data Streams** | Pelo log de transações, quase em tempo real | Alta, gerenciada | Sem mudar o esquema, com replicação gerenciada |
+| **Lambda consultando a tabela principal** | Por consulta periódica | Menor, com carga no banco | Quando trigger e DMS não podem ser usados |
+| **RDS Event Notifications via SNS** | Eventos de gerenciamento (failover, backup, manutenção) | Não captura dados | Não serve para detectar vendas |
+
+*Na prova, "o banco relacional não envia notificações de mudança" e "vários sistemas downstream" pedem um mecanismo de captura (trigger com tabela de eventos ou DMS com CDC) e um fan-out com SNS e uma fila SQS por sistema. Desconfie de opções que fazem o RDS publicar sozinho no SNS, EventBridge ou Lambda, ou que ligam o DMS direto ao SQS.*
+
 #### Backups e restauração do RDS
 - **Backups automáticos (PITR)**: snapshot diário + logs de transação, com retenção de 1 a 35 dias. Restauram a qualquer ponto dentro do período de retenção, normalmente até cerca de 5 minutos antes do momento atual. É a resposta padrão para "restaurar a X minutos antes de uma alteração".
 - **Snapshots manuais**: persistem até serem apagados, inclusive após a exclusão da instância. Podem ser **copiados entre Regiões** e **compartilhados entre contas** (se criptografados, compartilhe também a chave KMS gerenciada pelo cliente). A **replicação de backups automáticos cross-Region** permite PITR em outra Região para DR.
@@ -1130,11 +1532,79 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - **Instance endpoints**: para diagnóstico. Evite usá-los na aplicação.
 - **Aurora Auto Scaling com Aurora Replicas**: escala automaticamente réplicas de leitura conforme a demanda (CPU ou conexões), mantendo HA multi-AZ. É a resposta padrão para cargas de leitura imprevisíveis.
 
+#### Checkout resistente à perda de uma AZ: Aurora com réplica e RDS Proxy
+Cenário típico: o checkout de uma loja roda em EC2 atrás de um ALB, e o banco hoje está numa única AZ. O requisito pede continuar disponível se um data center falhar, com o mínimo de tempo parado e de perda de dados e com o menor esforço operacional.
+
+![ALB e Auto Scaling em duas AZs, conexões pelo RDS Proxy até o writer do Aurora, com uma Aurora Replica na outra AZ como alvo de failover.](diagramas/aurora-multi-az-rds-proxy.svg)
+
+1. **Entrada**: o ALB atende em várias AZs e para de enviar tráfego para a AZ que falhar.
+2. **Computação**: o Auto Scaling group distribui as instâncias entre pelo menos duas AZs. Se uma AZ cair, o grupo lança substitutas nas que restaram.
+3. **Conexões**: a aplicação conecta no endpoint do **RDS Proxy**, que mantém um pool de conexões com o banco e também é Multi-AZ.
+4. **Banco**: o **writer** do Aurora atende as escritas. O armazenamento do Aurora já guarda **6 cópias em 3 AZs** num volume compartilhado, então a perda de uma AZ não perde dados confirmados.
+5. **Failover**: com uma **Aurora Replica em outra AZ**, o Aurora a promove a writer quando o writer falha, tipicamente em **menos de 30 segundos**. O RDS Proxy detecta a troca e redireciona as conexões, sem depender da propagação do DNS na aplicação, o que encurta a interrupção percebida.
+
+- **Aurora não tem "standby síncrono"**: esse é o modelo do **RDS Multi-AZ DB instance**, em que a standby recebe replicação síncrona e não atende leituras. No Aurora, a alta disponibilidade vem do volume compartilhado mais uma réplica em outra AZ, que também atende leituras.
+- **Se o banco for RDS, não Aurora**: o menor esforço é **ativar o Multi-AZ** na instância, uma alteração sem mudar o engine.
+
+| Opção | Protege contra | RPO / RTO | Esforço | No requisito |
+|---|---|---|---|---|
+| **Aurora com réplica em outra AZ + RDS Proxy + ASG e ALB em várias AZs** | Perda de uma AZ | Sem perda de dados confirmados; failover em segundos | Baixo: recursos gerenciados | Atende |
+| **RDS Multi-AZ** (se o banco for RDS) | Perda de uma AZ | Sem perda de dados confirmados; failover em 1 a 2 minutos | Baixo | Atende para RDS |
+| **Aurora Global Database ou réplica em outra Região** | Perda de uma Região | Segundos de RPO; minutos de RTO | Maior | Além do necessário para falha de AZ |
+| **Snapshots e restauração** | Corrupção e exclusão | Horas | Médio | Não atende ao mínimo de tempo parado |
+| **Banco numa única AZ** | Nada no nível de AZ | Indisponível até a AZ voltar | Nenhum | Não atende |
+
+*Na prova, "o banco está numa única AZ" com "minimizar tempo parado e perda de dados com o menor esforço" aponta para recursos **Multi-AZ** (réplica do Aurora em outra AZ, ou Multi-AZ no RDS), e o RDS Proxy ajuda a aplicação a atravessar o failover. Opções entre Regiões ou baseadas em snapshot resolvem outro problema.*
+
+#### Lag de réplica no pico: de RDS for MySQL para Aurora
+Cenário típico: uma plataforma de ingressos usa RDS for MySQL com read replicas. Nas vendas de alta demanda, o lag das réplicas cresce e os usuários leem dados desatualizados. O requisito pede lag baixo, mudanças mínimas no código (a aplicação usa stored procedures) e pouca operação contínua.
+
+![Antes, read replicas do RDS for MySQL aplicando o binlog; depois, réplicas do Aurora lendo o mesmo volume de cluster, com Auto Scaling.](diagramas/aurora-replicas-autoscaling.svg)
+
+1. **Migração**: crie uma **réplica Aurora do RDS for MySQL**, espere o lag zerar e promova o cluster Aurora, com uma janela de corte curta. Restaurar um snapshot também funciona, com parada maior. O Aurora MySQL é compatível com o MySQL: consultas e stored procedures continuam iguais. Tabelas MyISAM precisam ser convertidas para InnoDB antes.
+2. **Escrita**: a instância writer grava no **volume de cluster compartilhado**, replicado em 6 cópias e 3 AZs pela camada de armazenamento.
+3. **Leitura**: as **Aurora Replicas** leem o **mesmo volume**, sem reaplicar log como no binlog do MySQL. Por isso o lag fica normalmente **bem abaixo de 100 ms**, e só cresce em períodos de escrita muito intensa. A aplicação lê pelo **reader endpoint**, que distribui as conexões entre as réplicas.
+4. **Escala**: o **Aurora Auto Scaling** acrescenta ou remove réplicas (até 15) com base em CPU ou conexões. Ele ajusta a **capacidade de leitura** ao pico; o lag baixo vem da arquitetura de armazenamento, não do Auto Scaling.
+
+- **Leitura que precisa do dado mais recente**: as réplicas continuam assíncronas, ainda que com lag pequeno. A leitura que vem logo depois de uma compra, como confirmar o ingresso, deve ir ao **cluster endpoint** (writer).
+
+| Opção | Replicação | Lag sob carga | Mudanças no código | No requisito |
+|---|---|---|---|---|
+| **Aurora MySQL com Aurora Replicas e Auto Scaling** | Volume de armazenamento compartilhado | Normalmente bem abaixo de 100 ms | Mínimas: mesmo engine e stored procedures | Atende |
+| **RDS for MySQL com mais read replicas** | Binlog assíncrono, reaplicado em cada réplica | Cresce com a carga de escrita | Nenhuma | Não resolve: mais réplicas não reduzem o lag |
+| **ElastiCache na frente do RDS** | Não replica: guarda leituras em cache | Não se aplica; o cache pode servir dado antigo | Moderadas: lógica de cache na aplicação | Alivia leituras, mas não corrige o lag |
+| **DynamoDB** | Modelo NoSQL próprio | Baixo, em outro paradigma | Extensas: redesenhar o acesso aos dados e abandonar as stored procedures | Fora do requisito |
+| **MySQL em EC2 com replicação própria** | Binlog, operado por você | Igual ao RDS | Nenhuma | Mais operação, mesmo problema |
+
+*Na prova, "reduzir o lag de réplica", "compatível com MySQL", "mudanças mínimas" e "pouca operação" apontam para Aurora MySQL com Aurora Replicas e Aurora Auto Scaling. Mais read replicas no RDS for MySQL não resolvem, porque o lag vem do binlog assíncrono.*
+
 #### Aurora Global Database
 - Replicação em nível de armazenamento para **Regiões secundárias somente leitura**, com lag tipicamente **abaixo de 1 segundo** e sem impacto no desempenho da Região primária.
 - **Switchover** (planejado, sem perda de dados) e **failover** gerenciado (desastre, RPO de segundos) promovem uma Região secundária em cerca de um minuto. **Write forwarding** permite que aplicações na Região secundária enviem escritas, encaminhadas à primária.
 - Replica quase em tempo real entre Regiões com baixíssima latência. Combinado com estratégia *pilot light*, atinge RTO baixo com menor custo que warm standby ou ativo-ativo.
 - **Global Database vs. Read Replica cross-Region (RDS)**: Global Database tem lag menor, failover gerenciado e é a resposta para "RPO de segundos e RTO de minutos entre Regiões" em bancos relacionais.
+
+#### Failover multi-Região com Aurora Global Database e Route 53
+Cenário típico: uma aplicação global roda em EC2 Auto Scaling com Aurora em uma Região e precisa continuar no ar, com pouca perda de dados, se a Região inteira falhar.
+
+![Route 53 com política de failover na frente de duas Regiões, com Aurora Global Database replicando da primária para a secundária.](diagramas/aurora-global-route53.svg)
+
+1. **DNS**: o Route 53 usa uma **política de failover**. Enquanto o health check do registro primário estiver saudável, ele responde com o endpoint da Região primária.
+2. **Região primária**: o Auto Scaling group atende as requisições e grava no cluster primário do Aurora.
+3. **Replicação**: o Aurora Global Database replica no nível do armazenamento para o cluster da Região secundária, que fica **somente leitura**, com lag tipicamente **abaixo de 1 segundo**. A secundária pode atender leituras locais.
+4. **Failover**: se o health check falhar, o Route 53 passa a responder com a Região secundária **automaticamente**. O banco **não** troca de Região sozinho: alguém, ou uma automação (alarme do CloudWatch, EventBridge e Lambda, ou o Route 53 ARC), precisa disparar o **failover gerenciado** (`failover-global-cluster --allow-data-loss`), que promove o cluster secundário a primário em minutos. Com o **global writer endpoint**, a aplicação continua usando o mesmo nome de conexão depois da troca.
+
+- **RPO e RTO**: o failover não espera a replicação terminar, então o RPO é de **segundos** (o lag no momento da falha), e o RTO é de minutos. O **switchover** planejado sincroniza antes de trocar e tem **RPO zero**, mas só funciona com as duas Regiões saudáveis. Ele também serve para voltar à Região original depois da recuperação.
+- **A Região secundária precisa estar pronta**: o Auto Scaling group de lá deve estar rodando, mesmo que com capacidade mínima, ou o RTO inclui o tempo de subir a aplicação.
+
+| Opção | Lag de replicação | Failover | Esforço operacional | Uso |
+|---|---|---|---|---|
+| **Aurora Global Database** | Tipicamente abaixo de 1 s | Gerenciado: uma chamada promove a secundária em minutos, disparada por você ou por automação | Baixo | DR multi-Região com RPO de segundos e RTO de minutos, mais leituras locais |
+| **Read Replica cross-Region** (RDS) | Segundos a minutos (assíncrona) | Manual: promover a réplica a instância independente e reconfigurar a aplicação | Moderado | DR menos sensível a tempo ou escala de leitura em outra Região |
+| **AWS DMS** | Depende da tarefa | Não foi feito para failover | Alto: tarefas de replicação para manter | Migração e replicação contínua entre engines |
+| **Auto Scaling group "multi-Região"** | Não se aplica | Não existe: um ASG é regional | Não se aplica | Use um ASG por Região, com o Route 53 na frente |
+
+*Na prova, "DR entre Regiões com RPO de segundos e RTO de minutos" em banco relacional aponta para Aurora Global Database, e "redirecionar os usuários para a outra Região quando a primária falhar" aponta para a política de failover do Route 53 com health check. Se o enunciado disser que o failover precisa ser automático de ponta a ponta, a promoção do banco também precisa de automação.*
 
 #### Aurora Serverless v2
 - Modo sem servidor do Aurora que escala a capacidade de computação automaticamente em segundos, em incrementos finos de **ACU** (Aurora Capacity Unit), conforme a demanda. A cobrança é pela capacidade efetivamente consumida, e a escala pode ir **até 0 ACU com pausa automática** em períodos ociosos.
@@ -1182,16 +1652,62 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - **DynamoDB Standard-IA**: classe de tabela com armazenamento cerca de 60% mais barato e leitura/escrita mais caras, para tabelas grandes com acesso pouco frequente. Combinável com capacidade provisionada para cargas estáveis.
 - **TTL**: exclui automaticamente itens expirados via atributo de timestamp (epoch), sem consumir WCU. É a solução nativa e gratuita para expurgo de dados antigos. As exclusões aparecem no Streams, o que permite arquivá-las no S3.
 
-#### Global Tables, cache e streams
+#### Global Tables e streams
 - **DynamoDB Global Tables**: réplicas ativas automáticas e bidirecionais entre Regiões (**multi-active**: escrita em qualquer Região). Servem para DR/replicação multi-Região e latência local para usuários globais, não para absorver picos de tráfego local.
   - Com consistência eventual (padrão), conflitos são resolvidos por **last writer wins**, e a replicação costuma levar cerca de 1 segundo.
   - A opção **multi-Region strong consistency** permite RPO zero, com maior latência de escrita.
+- **Streams**: captura ordenada de alterações por item (retenção de 24 horas), usada para auditoria, triggers **Lambda**, replicação e agregações. **Kinesis Data Streams for DynamoDB** é a alternativa quando se precisa de retenção maior ou de vários consumidores via Kinesis.
+
+#### DynamoDB Accelerator (DAX)
 - **DAX**: cache em memória compatível com operações do DynamoDB para leituras repetidas com latência de **microssegundos**.
   - Exige usar o **cliente DAX e o endpoint do cluster** na aplicação, embora as alterações costumem ser pequenas.
   - Leituras fortemente consistentes passam ao DynamoDB **sem usar o cache**. DAX não substitui modelagem de chaves e índices.
   - Compare com ElastiCache quando a aplicação não se limita ao DynamoDB.
   - [Cliente DAX](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.client.html) · [Consistência](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.consistency.html).
-- **Streams**: captura ordenada de alterações por item (retenção de 24 horas), usada para auditoria, triggers **Lambda**, replicação e agregações. **Kinesis Data Streams for DynamoDB** é a alternativa quando se precisa de retenção maior ou de vários consumidores via Kinesis.
+
+Fluxo de uma leitura com DAX, por exemplo a partir de uma aplicação em EC2:
+
+![Leitura e escrita com DAX: o cache responde aos hits e consulta a tabela nos misses.](diagramas/dax-leitura.svg)
+
+1. **Requisição**: a aplicação envia a leitura (`GetItem`, `Query`, `Scan`) ao **endpoint do cluster DAX**, usando o cliente DAX.
+2. **Cache hit**: se o item ou o resultado já está em cache, o DAX responde em **microssegundos**, sem consultar a tabela.
+3. **Cache miss**: o DAX busca o dado no DynamoDB (*read-through*), grava o resultado no cache e devolve a resposta. A próxima leitura igual vira um hit.
+4. **Escritas**: passam pelo DAX até a tabela (*write-through*). O DAX só confirma depois que o DynamoDB confirma e então atualiza o item em cache.
+5. **Leituras fortemente consistentes e transacionais**: vão direto ao DynamoDB, sem cache, com a latência normal da tabela.
+
+| Opção | Gerenciamento | Mudança no código | Efeito na leitura | Quando escolher |
+|---|---|---|---|---|
+| **DAX** | Totalmente gerenciado | Pequena: cliente DAX e endpoint do cluster, mesma API do DynamoDB | Leituras repetidas em **microssegundos** | Cache de leitura intensiva específico do DynamoDB, com consistência eventual |
+| **ElastiCache** (Valkey/Redis OSS/Memcached) | Gerenciado | Significativa: a aplicação implementa a lógica de cache (ex.: *cache-aside*) | Submilissegundo | Cache compartilhado entre várias fontes de dados, sessões ou estruturas avançadas |
+| **Global Tables** | Totalmente gerenciado | Nenhuma para ler na Região local | Latência local para usuários em **outras Regiões** | Multi-Região e DR; não acelera leituras repetidas na mesma Região |
+| **Mais RCU** ou auto scaling | Ajuste de capacidade | Nenhuma | Reduz throttling, mas não baixa a latência de milissegundos de um dígito | Throttling por falta de capacidade, não latência |
+
+*Na prova, "latência de microssegundos" e "sem reescrever a aplicação" em um cenário de leitura intensiva no DynamoDB apontam para o DAX. Se o cenário exige leitura fortemente consistente, cache de outras fontes ou carga de escrita pesada, o DAX não é a resposta.*
+
+#### Sessão em microssegundos com DAX e histórico no S3 com Athena
+Cenário típico: um jogo multiplayer guarda no DynamoDB o estado da sessão de cada jogador (posição, pontuação, inventário), e os servidores de jogo precisam ler esse estado em menos de um milissegundo durante a partida. A empresa também quer analisar meses de histórico de sessões com SQL, com o menor overhead operacional.
+
+![Servidores de jogo lendo pelo DAX; um export diário do DynamoDB, agendado no EventBridge Scheduler, leva o histórico ao S3 para consultas no Athena.](diagramas/dynamodb-dax-export.svg)
+
+1. **Leitura da partida**: os servidores de jogo leem o estado pelo **DAX**, que responde em **microssegundos** às leituras eventualmente consistentes. Veja [DynamoDB Accelerator (DAX)](#dynamodb-accelerator-dax).
+2. **Escrita**: as atualizações passam pelo DAX até a tabela (*write-through*), que mantém o item em cache atualizado.
+3. **Agenda**: o export do DynamoDB é uma chamada de API (`ExportTableToPointInTime`). Para rodar todo dia sem script, o **EventBridge Scheduler** chama essa API diretamente.
+4. **Export para o S3**: o export usa o **PITR**, que precisa estar ativo, e **não consome RCU** nem afeta a partida. Ele leva a **tabela inteira** num instante, ou só as **mudanças** de uma janela de tempo (export incremental), em DynamoDB JSON ou Ion. O export não filtra registros: separar as sessões concluídas é trabalho da consulta.
+5. **Análise**: o **Athena** consulta os arquivos exportados com SQL, sem banco de dados para operar. Para consultas frequentes, converta para Parquet particionado com CTAS ou Glue.
+
+- **Limpeza da tabela**: o **TTL** apaga as sessões antigas da tabela sem consumir WCU, e o histórico continua no S3.
+- **Não consulte a tabela ao vivo para análise**: uma *federated query* do Athena ou um Scan direto leem a tabela de produção e consomem a capacidade da partida.
+
+| Opção | Latência de leitura | Análise histórica | Overhead | No requisito |
+|---|---|---|---|---|
+| **DAX + export para o S3 + Athena** | Microssegundos | SQL sobre arquivos no S3 | Baixo: recursos nativos e uma agenda | Atende |
+| **Só DynamoDB, sem DAX** | Milissegundos de um dígito | Depende do export | Baixo | Não atende à latência abaixo de 1 ms |
+| **ElastiCache na frente do DynamoDB** | Submilissegundo | Depende do export | Lógica de cache própria na aplicação | Funciona, com mais código que o DAX |
+| **DynamoDB Streams ou Kinesis + Lambda gravando no S3** | Não muda | Quase em tempo real | Pipeline e código para manter | Excesso para uma análise diária |
+| **Script em EC2 fazendo Scan diário** | Não muda | Sim | Servidor e script, e consome a capacidade da tabela | Não atende ao menor overhead |
+| **Zero-ETL para o Redshift** | Não muda | Data warehouse sempre atualizado | Um cluster ou workgroup do Redshift | Válido para BI contínuo; mais que consultas pontuais |
+
+*Na prova, "leitura abaixo de 1 milissegundo" no DynamoDB aponta para o DAX, e "análise histórica com SQL e menor overhead" aponta para o export nativo para o S3 consultado pelo Athena. Pipelines de streaming e scripts próprios ficam atrás.*
 
 #### Backup e segurança do DynamoDB
 - **PITR**: restaura a qualquer ponto da janela configurada (até 35 dias, veja [Números do DynamoDB](#numeros-do-dynamodb)). Como no RDS, **a restauração cria uma nova tabela**.
@@ -1335,6 +1851,30 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - **NAT privado**: traduz endereços para comunicação com outras redes privadas (VPCs ou on-premises com **CIDRs sobrepostos**), via Transit Gateway ou VGW, sem acesso à internet.
 - **NAT instance (legado)**: EC2 que você gerencia (desabilitar *source/destination check*, HA e patches por sua conta). Só é resposta quando o enunciado pede controle total ou custo mínimo em ambiente pequeno.
 
+#### Saída para a internet em várias AZs: NAT Gateway por AZ
+Cenário típico: uma varejista roda servidores de aplicação em subnets privadas de três AZs. Eles precisam baixar patches e atualizações da internet, nunca podem receber conexões vindas de fora, e a saída precisa continuar se uma AZ cair.
+
+![Três subnets privadas, cada uma roteada para o NAT Gateway da própria AZ, que sai pelo único Internet Gateway da VPC.](diagramas/nat-gateway-por-az.svg)
+
+1. **Rota por AZ**: cada subnet privada tem a **própria route table**, com a rota `0.0.0.0/0` apontando para o **NAT Gateway da mesma AZ**.
+2. **NAT na subnet pública**: cada NAT Gateway fica na subnet pública da sua AZ, com um Elastic IP, e encaminha o tráfego para o **Internet Gateway**, que é **um só por VPC**.
+3. **Somente saída**: as instâncias iniciam conexões e recebem as respostas, mas nada de fora consegue abrir uma conexão com elas. Elas não têm IP público.
+
+- **Por que um NAT por AZ**: o NAT Gateway zonal é redundante só dentro da própria AZ. Com um NAT único, a perda daquela AZ corta a saída das outras, e o tráfego entre AZs ainda é cobrado. A AWS escala e corrige o NAT Gateway; não há instância para manter.
+- **NAT Gateway regional**: o tipo regional se estende sozinho pelas AZs e simplifica as rotas. Compare com o modelo por AZ, conforme a seção [NAT](#nat).
+- **Menos tráfego pelo NAT**: patches e pacotes que estão no S3 ou em repositórios da AWS podem sair por **VPC endpoints**, que custam menos por GB que o NAT.
+- **IPv6**: para saída só de dentro para fora em IPv6, o equivalente é o **egress-only Internet Gateway**.
+
+| Opção | Saída da subnet privada | Entrada da internet | Falha de uma AZ | Operação |
+|---|---|---|---|---|
+| **Um NAT Gateway por AZ** | Sim | Bloqueada | As outras AZs continuam saindo | Gerenciada |
+| **Um único NAT Gateway** | Sim | Bloqueada | A saída de todas as AZs depende daquela AZ | Gerenciada, mais barata |
+| **Rota da subnet privada direto para o Internet Gateway** | Só com IP público | Possível: a subnet vira pública | Não se aplica | Expõe as instâncias |
+| **Um segundo Internet Gateway** | Não se aplica | Não se aplica | Não se aplica | Inválido: só um por VPC |
+| **NAT instance** | Sim | Bloqueada | Depende do failover que você montar | Patches, escala e HA por sua conta |
+
+*Na prova, "subnets privadas em várias AZs precisam de internet só para saída" com "alta disponibilidade" aponta para um NAT Gateway por AZ, cada route table privada apontando para o NAT da própria AZ. Rotear a subnet privada para o Internet Gateway ou criar um segundo Internet Gateway fica descartado.*
+
 #### VPC endpoints e PrivateLink
 - **VPC Gateway Endpoint (S3 e DynamoDB)**: adiciona rotas por prefix list às route tables, mantém o tráfego na rede AWS e não tem cobrança adicional do endpoint. Para workloads dentro de uma VPC acessando S3/DynamoDB, costuma ser a opção mais simples e econômica. Funciona só para tráfego originado **na própria VPC**, não de on-premises nem de VPCs pareadas.
 - **VPC Interface Endpoint (via AWS PrivateLink)**: cria ENIs com IPs privados e security groups, com cobrança por hora e por dados. É usado para a maioria dos serviços gerenciados (Comprehend, Translate, Step Functions, KMS, Secrets Manager, ECR, SSM etc.). Com **private DNS** habilitado, o nome padrão do serviço resolve para o IP do endpoint, sem mudar o código.
@@ -1345,12 +1885,59 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
   - O acesso é **unidirecional** (consumidor → serviço), funciona **entre contas** e **com CIDRs sobrepostos**, e não expõe a VPC inteira.
   - É o padrão de SaaS privado.
 
+#### Serviço gerenciado só pela rede privada: interface endpoint
+Cenário típico: uma empresa de saúde analisa o texto de feedback dos pacientes com o Amazon Comprehend e precisa provar aos auditores que esse texto nunca sai da rede privada da AWS, e que só instâncias EC2 específicas da VPC conseguem chamar o serviço.
+
+![Instâncias autorizadas chamando o Comprehend por um interface endpoint protegido por security group; outra instância é bloqueada.](diagramas/comprehend-interface-endpoint.svg)
+
+1. **Chamada autorizada**: a VPC tem um **interface endpoint** do Comprehend (`com.amazonaws.<região>.comprehend`), com **DNS privado**: o SDK continua usando o nome padrão do serviço, que passa a resolver para os IPs privados do endpoint. O **security group do endpoint** aceita HTTPS (443) só do security group das instâncias autorizadas (`sg-app`), referenciado pelo ID e não por IP.
+2. **Outras instâncias**: qualquer instância fora do `sg-app` é recusada pelo security group do endpoint.
+3. **PrivateLink**: do endpoint até o Comprehend, o tráfego fica na rede da AWS, sem Internet Gateway nem NAT.
+4. **Dados no S3**: nos jobs assíncronos, o Comprehend lê e grava no S3 com uma **data access role** do IAM. O job pode receber uma configuração de VPC para fazer esse acesso pela própria VPC, com um gateway endpoint do S3.
+
+- **O security group do endpoint não basta sozinho**: ele controla quem usa o endpoint, mas uma instância que tenha rota para a internet ainda poderia chamar o **endpoint público** do Comprehend. Para fechar o caminho, deixe as subnets **sem NAT nem Internet Gateway** e negue no IAM, ou numa SCP, as chamadas ao Comprehend que não venham do endpoint (condição `aws:SourceVpce`).
+- **Endpoint policy**: limita quais ações e quais principais podem usar o endpoint, como uma camada a mais.
+- **Por que não só IAM**: o IAM restringe **quem** chama, não **por onde** a chamada passa. O requisito é de localização de rede, e por isso pede endpoint e security group, com o IAM como complemento.
+
+| Opção | Mantém o tráfego na rede da AWS | Restringe a instâncias específicas | No requisito |
+|---|---|---|---|
+| **Interface endpoint + security group + `aws:SourceVpce` no IAM** | Sim, por PrivateLink | Sim: pelo SG e pela condição de rede | Atende |
+| **Só políticas do IAM nas roles** | Não: a chamada pode sair pela internet | Por identidade, não por rede | Não comprova que o texto não sai da rede privada |
+| **NAT Gateway com security group nas instâncias** | Não: usa o endpoint público | Parcial | O tráfego passa pela internet |
+| **Gateway endpoint** | Não se aplica | Não se aplica | Só existe para S3 e DynamoDB |
+| **Política de bucket do S3** | Só para o S3 | Não alcança o Comprehend | Protege o bucket, não a chamada ao serviço |
+
+*Na prova, "apenas instâncias específicas dentro da VPC" e "o tráfego não pode sair da rede privada" pedem um **interface endpoint** com security group, uma restrição por rede. Opções só com IAM ou com política de bucket restringem identidade, não o caminho do tráfego.*
+
 #### Acesso administrativo e remoto
 - **Bastion Host**: ponto único de acesso administrativo em subnet pública. Instâncias privadas devem aceitar SSH apenas do IP **privado** do bastion (nunca do público), idealmente referenciando o security group do bastion.
 - **AWS Systems Manager Session Manager**: resposta padrão para "eliminar chaves SSH compartilhadas" mantendo acesso seguro, auditável (logs de sessão no S3/CloudWatch) e escalável. Combinado com VPC Endpoints (`ssm`, `ssmmessages`, `ec2messages`), gerencia EC2 totalmente privado, sem bastion hosts e sem portas de entrada abertas.
 - **EC2 Instance Connect Endpoint**: SSH/RDP para instâncias em subnets privadas **sem IP público e sem bastion**, com autorização IAM e registro no CloudTrail.
 - **AWS Client VPN**: acesso remoto seguro (OpenVPN) de usuários a recursos em VPC, com autenticação por certificado, AD ou SAML. Habilite logs de conexão no **CloudWatch Logs**, ajuste a retenção conforme a auditoria e acompanhe as cobranças de endpoint, associações e logs. Se precisar de arquivo de longo prazo, exporte/entregue os logs ao S3 por um fluxo separado. [Logs de conexão](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/connection-logging.html).
 - **AWS Verified Access**: acesso **zero trust** a aplicações internas sem VPN, avaliando identidade e postura do dispositivo a cada requisição.
+
+#### Acesso sem chaves SSH e com trilha de auditoria: Session Manager
+Cenário típico: numa empresa regulada, os auditores exigem provar exatamente **quem** acessou cada servidor de produção e **quando**. A equipe usa chaves SSH compartilhadas e quer eliminá-las, com o mínimo de esforço administrativo.
+
+![Administrador autorizado pelo IAM abre uma sessão no Session Manager; o SSM Agent na instância privada conecta pelos endpoints da VPC, e a sessão fica registrada no CloudTrail e nos logs.](diagramas/session-manager.svg)
+
+1. **Autorização**: cada administrador entra com a **própria identidade**, pelo IAM Identity Center ou por uma role. Uma política do IAM define em quais instâncias, por tag, ele pode abrir sessão e com qual usuário do sistema operacional.
+2. **Agente**: o **SSM Agent**, já instalado nas AMIs da AWS mais comuns, roda dentro da instância e **só abre conexões de saída** para o Systems Manager. A instância precisa de um **instance profile** com a política `AmazonSSMManagedInstanceCore`.
+3. **Canal privado**: numa subnet privada sem NAT, o agente alcança o serviço pelos **interface endpoints** `ssm`, `ssmmessages` e `ec2messages`. A sessão abre sem porta 22 de entrada, sem IP público e sem bastion.
+4. **Registro da sessão**: os comandos e a saída de cada sessão vão para o **CloudWatch Logs** ou para o **S3**, com criptografia pelo KMS.
+5. **Quem e quando**: o **CloudTrail** registra cada `StartSession`, com a identidade, a hora e a instância.
+
+- **Chaves SSH somem por completo**: não há chave para gerar, distribuir, trocar ou revogar. Remover alguém é tirar a permissão no IAM.
+- **EC2 Instance Connect não elimina chaves**: ele envia uma chave SSH temporária, válida por 60 segundos, e ainda usa SSH na porta 22 (ou um EC2 Instance Connect Endpoint). Se o requisito é "nenhuma chave SSH", ele fica de fora.
+
+| Opção | Chaves SSH | Porta de entrada | Auditoria por pessoa | Esforço |
+|---|---|---|---|---|
+| **Session Manager** | Nenhuma | Nenhuma | Sim: CloudTrail e log da sessão | Mínimo |
+| **EC2 Instance Connect** | Temporárias, enviadas a cada acesso | 22, ou um Instance Connect Endpoint | Sim, pelo CloudTrail | Baixo, mas ainda com SSH |
+| **Bastion host com chaves individuais** | Uma por pessoa, para distribuir e revogar | 22 no bastion | Depende dos logs do bastion | Alto: servidor e chaves para manter |
+| **Chaves SSH compartilhadas** | Compartilhadas | 22 | Não: não identifica quem acessou | Não atende |
+
+*Na prova, "remover todas as chaves SSH", "auditoria de quem acessou" e "menor esforço administrativo" apontam para o Systems Manager Session Manager. Qualquer opção que ainda gere ou distribua chaves SSH, mesmo temporárias, fica atrás.*
 
 #### Monitoramento e diagnóstico de rede
 - **VPC Flow Logs**: registram **metadados** do tráfego IP (origem, destino, portas, bytes, `ACCEPT`/`REJECT`) no nível de VPC, subnet ou ENI, com destino no CloudWatch Logs, S3 ou Firehose. **Não capturam o conteúdo** dos pacotes. É a resposta para "descobrir por que a conexão é rejeitada" ou para auditoria de tráfego.
@@ -1403,6 +1990,51 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - **AWS Cloud WAN**: rede global gerenciada por uma **política central** que conecta VPCs, VPNs e Direct Connect em várias Regiões, com segmentação. É indicado quando o Transit Gateway por Região + peering fica difícil de operar.
 - **AWS VPC Lattice**: serviço de application networking (camada 7) que conecta, monitora e protege a comunicação **entre serviços** (não entre redes inteiras) através de múltiplas VPCs e contas, sem exigir gerenciamento manual de peering/rotas. É diferente do **Transit Gateway** (camada 3, conecta VPCs/redes inteiras via rotas IP): o VPC Lattice entende HTTP/HTTPS/gRPC e permite políticas de acesso granulares por serviço (via IAM). É a resposta padrão quando o requisito é service-to-service networking e observabilidade em arquiteturas de microsserviços multi-conta, não conectividade de rede em larga escala.
 
+#### Poucas VPCs conectadas: VPC Peering e suas regras
+Cenário típico: uma empresa tem três VPCs. A **VPC A** (10.0.0.0/16) roda a aplicação na conta de produção; a **VPC B** (10.1.0.0/16), numa conta de serviços compartilhados, hospeda o Active Directory e o monitoramento; a **VPC C** (10.2.0.0/16) roda analytics em outra Região. A aplicação e o analytics precisam usar os serviços compartilhados, com tráfego privado e o menor custo.
+
+![Peering entre A e B e entre B e C; A não alcança C através de B, e A não pode usar o NAT nem o Internet Gateway da VPC B.](diagramas/vpc-peering.svg)
+
+1. **Peering A–B**: a conta de produção solicita o peering e a conta de serviços aceita. Funciona **entre contas** e não precisa de gateway nem de appliance: o tráfego segue pela rede da AWS. Depois de aceitar, **as duas route tables** precisam de rota: em A, `10.1.0.0/16 → pcx-ab`; em B, `10.0.0.0/16 → pcx-ab`. Os security groups também precisam liberar o tráfego; **na mesma Região**, um SG pode referenciar o SG da VPC pareada.
+2. **Peering B–C**: o mesmo, agora **entre Regiões**. O tráfego vai criptografado pelo backbone da AWS, e não é possível referenciar SGs da outra Região: as regras usam o CIDR.
+3. **Não transitivo**: com A–B e B–C, a VPC A **não** alcança a C passando pela B. Se A precisar falar com C, crie um peering A–C direto, com rotas nos dois lados. É por isso que o peering não escala: n VPCs totalmente ligadas exigem n × (n − 1) ÷ 2 conexões.
+4. **Sem roteamento edge-to-edge**: a VPC A não pode usar o **NAT Gateway**, o **Internet Gateway**, a **VPN** nem o **Direct Connect** da VPC B. Cada VPC tem a própria saída, ou o roteamento central passa a ser um caso para o Transit Gateway.
+
+- **CIDRs não podem se sobrepor**: uma VPC 10.0.0.0/16 não faz peering com outra 10.0.0.0/16. Planeje os blocos de IP antes; se a sobreposição já existir, use **PrivateLink** para expor só o serviço necessário.
+- **Custo**: o peering não cobra por hora nem por conexão. Paga-se a transferência de dados entre AZs ou entre Regiões. Na mesma AZ, o tráfego pelo peering não tem cobrança. Para volumes altos entre poucas VPCs, sai mais barato que o Transit Gateway, que cobra por GB processado.
+- **DNS**: para que os nomes DNS públicos de instâncias da outra VPC resolvam para IPs privados, ative a resolução de DNS nas opções do peering.
+
+| Opção | Transitivo | CIDRs sobrepostos | Custo | Melhor uso |
+|---|---|---|---|---|
+| **VPC Peering** | Não | Não permite | Sem custo por hora; só transferência entre AZs ou Regiões | Poucas VPCs, muito tráfego entre elas |
+| **Transit Gateway** | Sim, controlado por route tables | Não permite | Por attachment-hora e por GB | Muitas VPCs e on-premises com gestão central. Veja [Transit Gateway central para centenas de contas](#transit-gateway-central-para-centenas-de-contas) |
+| **PrivateLink** | Não se aplica: expõe um serviço, não a rede | Permite | Por endpoint-hora e por GB | Expor um serviço a outras VPCs ou contas |
+| **VPC compartilhada (RAM)** | Não se aplica: é a mesma VPC | Não se aplica | Sem custo extra | Contas que só precisam lançar recursos numa rede central |
+
+*Na prova, "conectar duas ou três VPCs com o menor custo" aponta para VPC Peering. "A VPC A precisa chegar à C através da B" ou "usar o NAT da outra VPC" são pegadinhas: o peering não é transitivo nem permite roteamento edge-to-edge. CIDRs sobrepostos descartam o peering.*
+
+#### Transit Gateway central para centenas de contas
+Cenário típico: uma empresa de serviços financeiros tem centenas de contas, uma VPC por unidade de negócio, e quer que a equipe central de rede gerencie a conectividade e as rotas num só lugar, com a solução mais eficiente operacionalmente.
+
+![Transit Gateway na conta de rede, compartilhado via RAM, com VPCs de várias contas e o on-premises anexados.](diagramas/transit-gateway-hub.svg)
+
+1. **Hub na conta de rede**: a equipe de rede cria o **Transit Gateway** numa conta central e o compartilha com a organização pelo **AWS RAM**. Dentro do AWS Organizations, o compartilhamento é aceito automaticamente pelas contas.
+2. **Attachments**: cada conta anexa a própria VPC ao Transit Gateway compartilhado, com uma interface em subnets de cada AZ usada. Os CIDRs das VPCs **não podem se sobrepor**.
+3. **Rotas**: as VPCs **propagam** os próprios CIDRs para as route tables do Transit Gateway, e a equipe de rede decide quem fala com quem pela **associação e propagação** em route tables separadas (por exemplo, produção e desenvolvimento isolados, ambos alcançando serviços compartilhados). A route table de **cada VPC** também precisa de uma rota para o Transit Gateway, como `10.0.0.0/8`. Essa parte não é automática e costuma ser padronizada com IaC.
+4. **On-premises**: uma VPN site-to-site ou o Direct Connect (por um Direct Connect gateway) se anexa ao mesmo hub, e todas as VPCs alcançam o datacenter por ele.
+
+- **Escala e custo**: um Transit Gateway aceita milhares de attachments e é regional. Entre Regiões, use **TGW peering** ou o **AWS Cloud WAN**. A cobrança é por attachment-hora e por GB processado, então duas VPCs com muito tráfego entre si saem mais baratas com **VPC Peering**.
+- **Inspeção central**: o tráfego entre VPCs pode passar por uma VPC de inspeção com o **AWS Network Firewall**, ligada ao mesmo Transit Gateway.
+
+| Solução | Modelo | Centenas de VPCs | Operação |
+|---|---|---|---|
+| **Transit Gateway numa conta central** | Hub and spoke transitivo | Alta: milhares de attachments | Central, com segmentação por route table |
+| **VPC Peering entre todas as VPCs** | Ponto a ponto, não transitivo | Baixa: o número de conexões cresce com o quadrado de VPCs (n × (n − 1) ÷ 2) | Alta: cada peering e cada rota à mão |
+| **Transit VPC com appliances de VPN** | Hub com túneis VPN e roteamento em EC2 | Média, com operação crescente | Alta: túneis, appliances e failover para manter |
+| **Tráfego entre VPCs pela internet (NAT e Internet Gateway)** | Público | Baixa | Inseguro e sem controle central |
+
+*Na prova, "centenas de contas", "conta de rede centralizada" e "mais eficiente operacionalmente" apontam para o Transit Gateway compartilhado via RAM. VPC Peering serve para poucas VPCs; Transit VPC é o padrão antigo que o Transit Gateway substituiu.*
+
 #### Conectividade híbrida: VPN e Direct Connect
 - **AWS VPN Site-to-Site**: túnel IPsec sobre a internet pública, usado como conexão principal de baixo custo ou como backup do Direct Connect.
   - Cada conexão tem **2 túneis**, em endpoints diferentes da AWS, para alta disponibilidade.
@@ -1427,6 +2059,28 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
   - Para alta disponibilidade, planeje túneis/links redundantes e o failover.
   - Se o fluxo concorre com tráfego crítico, limite ou agende o volume de transferência (por exemplo, com o controle de banda do DataSync) e teste a vazão fim a fim.
   - Para migração offline de novos clientes, avalie o Data Transfer Terminal. [Controle de banda do DataSync](https://docs.aws.amazon.com/datasync/latest/userguide/configure-bandwidth.html).
+
+#### Direct Connect principal com VPN de backup
+Cenário típico: uma empresa financeira envia dados em tempo real de uma aplicação de negociação on-premises para a AWS, com o menor atraso possível. O link precisa ser confiável e de baixa latência, mas, numa falha, a empresa **aceita latência maior por pouco tempo** em vez de pagar uma segunda conexão dedicada.
+
+![Data center ligado à VPC pelo Direct Connect como caminho principal e por uma VPN Site-to-Site como backup, com troca automática por BGP.](diagramas/dx-vpn-backup.svg)
+
+1. **Caminho principal**: o **Direct Connect** leva o tráfego por um link privado, com latência baixa e estável. O roteador do data center anuncia as rotas por BGP.
+2. **Caminho de backup**: uma **VPN Site-to-Site** com **roteamento dinâmico (BGP)** termina no mesmo virtual private gateway ou Transit Gateway. Os dois túneis IPsec ficam ativos pela internet, prontos para assumir.
+3. **Failover automático**: para o mesmo prefixo, a AWS prefere a rota aprendida pelo Direct Connect; do lado on-premises, a preferência é configurada no roteador (*local preference* ou *AS path*). Se o Direct Connect cai, o **BFD** detecta a falha em segundos, o BGP retira as rotas e o tráfego segue pela VPN. Quando o link volta, o tráfego retorna sozinho.
+
+- **Capacidade do backup**: cada túnel da VPN tem cerca de 1,25 Gbps. Se o tráfego normal for maior, o backup vai saturar. No Transit Gateway, várias VPNs com **ECMP** somam banda.
+- **Teste o failover**: derrube o Direct Connect numa janela planejada para confirmar que as rotas trocam e que a aplicação tolera a latência da VPN.
+- **Criptografia**: o Direct Connect não é criptografado por padrão. Se o requisito pedir, use MACsec ou VPN sobre o Direct Connect.
+
+| Opção | Latência | Custo | Disponibilidade | Uso |
+|---|---|---|---|---|
+| **Direct Connect + VPN Site-to-Site de backup** | Baixa no caminho principal; maior só durante o failover | Moderado: uma porta dedicada e uma VPN barata | Alta, com failover automático por BGP | Workload crítico que tolera degradação temporária |
+| **Duas conexões Direct Connect em locais diferentes** | Baixa nos dois caminhos | Alto: porta e circuito em dobro | Muito alta, sem perda de desempenho no failover | Quando nem a degradação temporária é aceitável |
+| **Um único Direct Connect, sem backup** | Baixa enquanto funciona | O menor com link dedicado | Baixa: a falha do link para tudo | Ambientes não críticos |
+| **Só VPN Site-to-Site** | Variável, depende da internet | O menor | Moderada, sem latência garantida | Testes ou cargas que não dependem de latência |
+
+*Na prova, "aceita latência maior no backup" descarta a segunda conexão Direct Connect por custo, e "baixa latência confiável no caminho principal" descarta usar só VPN. A resposta é Direct Connect como principal e VPN Site-to-Site como backup.*
 
 #### Padrões e pegadinhas de interconexão
 - "Dezenas de VPCs em várias contas + on-premises, com gestão central": **Transit Gateway** (compartilhado via RAM).
@@ -1549,11 +2203,51 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - **Custo**: **price classes** limitam os pontos de presença usados, com custo menor e latência maior em algumas regiões. A transferência da origem AWS para o CloudFront não é cobrada.
 - **Computação na borda**: CloudFront Functions e Lambda@Edge. Veja [Computação na borda do CloudFront](#computacao-na-borda-do-cloudfront).
 
+#### CloudFront na frente de uma aplicação dinâmica
+Cenário típico: uma aplicação dinâmica roda atrás de um ALB em uma única Região (ex.: us-west-1), usuários de outros continentes reclamam de latência, e o conteúdo é localizado pelo idioma do navegador. A empresa não quer duplicar a infraestrutura em outras Regiões.
+
+![CloudFront com o ALB existente como origem e cache separado por idioma.](diagramas/cloudfront-alb.svg)
+
+1. **Requisição na borda**: o usuário é atendido pela edge location mais próxima, que termina a conexão TLS perto dele.
+2. **Cache hit**: o cache behavior usa uma *cache policy* que inclui o cabeçalho `Accept-Language` na cache key. Cada idioma tem a própria cópia em cache, e a borda responde sem consultar a origem.
+3. **Cache miss**: a borda busca a resposta no **ALB existente**, definido como origem, pela rede da AWS e com conexões persistentes. As respostas cacheáveis ficam na borda até o TTL vencer. As que não podem ir para o cache (dados do usuário, `POST`) também ganham velocidade, pela borda e pelo backbone, mas sempre consultam a origem.
+4. **Origem**: o ALB distribui entre as instâncias EC2 do Auto Scaling group, sem mudança na aplicação.
+
+- **Normalize o idioma**: o `Accept-Language` bruto tem muitas variações (`pt-BR,pt;q=0.9,en;q=0.8`), o que fragmenta o cache e derruba a taxa de acerto. Uma **CloudFront Function** no *viewer request* reduz o valor aos idiomas suportados (ex.: `pt`, `en`, `es`) antes de ele entrar na cache key.
+- **Proteja a origem**: o ALB deve aceitar só o CloudFront, com **VPC origins** (ALB em subnet privada) ou com a *prefix list* gerenciada do CloudFront no security group mais um header secreto validado no listener.
+
+| Opção | Latência global | Nova infraestrutura | Conteúdo localizado |
+|---|---|---|---|
+| **CloudFront com o ALB como origem** | Menor: cache na borda e rede da AWS até a origem | Nenhuma além da distribuição | Sim, com `Accept-Language` (normalizado) na cache key |
+| **Stack completa em outras Regiões + Route 53 latency** | Menor, mas com custo e operação multiplicados | Aplicação e dados replicados por Região | Sim, mas com duplicação |
+| **Global Accelerator na frente do ALB** | Melhora o caminho de rede, sem cache | Nenhuma além do accelerator | Toda requisição vai à origem |
+| **Instâncias maiores ou mais instâncias no ASG** | Não resolve a distância até os usuários | Mais capacidade na mesma Região | Não muda |
+
+*Na prova, "reduzir a latência global de uma aplicação dinâmica existente sem duplicar a infraestrutura" aponta para o CloudFront na frente da origem atual. "Conteúdo por idioma" ou "por dispositivo" indica incluir o cabeçalho correspondente na cache key, e não criar distribuições separadas.*
+
 #### AWS Global Accelerator
 - **AWS Global Accelerator**: usa **2 IPs anycast estáticos** e a rede backbone da AWS para rotear tráfego TCP/UDP ao endpoint mais próximo e saudável, com failover automático em segundos. Não faz cache de conteúdo (diferente do CloudFront). É ideal para aplicações multi-Região não-HTTP ou que precisam de IP estático (combinado com NLB/ALB como endpoints).
 - **Endpoints**: ALB, NLB, instâncias EC2 e Elastic IPs, organizados em **endpoint groups por Região**. O **traffic dial** controla a porcentagem de tráfego por Região (ex.: para manutenção ou blue/green regional), e **pesos** distribuem entre endpoints. Há **client affinity** opcional.
 - **vs. Route 53**: o failover do DNS depende do **TTL e do cache dos clientes**. O Global Accelerator muda o roteamento **sem trocar o IP**, então o failover é mais rápido e previsível.
 - **Custom routing accelerator**: mapeia usuários para instâncias/portas específicas (ex.: salas de jogo multiplayer).
+
+Fluxo com NLBs em duas Regiões, por exemplo servidores DNS em EC2 atendendo usuários nos EUA e na Europa:
+
+![Global Accelerator na frente de NLBs em duas Regiões, com failover pelo backbone da AWS.](diagramas/global-accelerator-nlb.svg)
+
+1. **IP anycast**: os usuários se conectam a um dos IPs estáticos do accelerator. O anúncio anycast leva cada conexão à edge location da AWS mais próxima.
+2. **Backbone da AWS**: a partir da edge, o tráfego segue pela rede da AWS até o **endpoint group** da Região mais próxima e saudável (us-west-2 para os EUA, eu-west-1 para a Europa), respeitando o traffic dial e os pesos.
+3. **NLB regional**: em cada Região, o NLB distribui o tráfego TCP/UDP entre as instâncias EC2.
+4. **Failover**: se os health checks indicarem falha em uma Região, o Global Accelerator desvia o tráfego para a outra em segundos. Os IPs não mudam, então os clientes não dependem de nova resolução DNS.
+
+| Opção | Camada de roteamento | Health checks | Tráfego não HTTP | Melhor uso |
+|---|---|---|---|---|
+| **Global Accelerator** | Rede (IP anycast) e backbone da AWS | Contínuos por endpoint; o desvio vale para as conexões novas em segundos | Sim (TCP/UDP) | Failover rápido e rota otimizada entre NLBs/ALBs multi-Região, com IP estático |
+| **Route 53 — latency** | Resolução DNS | Contínuos, mas o cliente só troca de Região quando a resposta em cache (TTL) expira | Sim: o DNS não depende do protocolo | Escolher a Região de menor latência no momento da consulta |
+| **Route 53 — geolocation** | Resolução DNS | Iguais aos do latency, com a mesma dependência do TTL | Sim | Direcionar usuários pela localização, por conformidade ou idioma |
+| **ALB** | Aplicação (HTTP/HTTPS), dentro de uma Região | Sim, por target group, com HTTP/HTTPS | Não | Aplicação web regional; sozinho, não distribui entre Regiões |
+
+*Na prova, "IP estático", "TCP/UDP" e "failover multi-Região em segundos sem depender do TTL do DNS" apontam para o Global Accelerator na frente de NLBs. Se o requisito é só escolher a Região por latência ou localização, sem IP fixo, o Route 53 resolve com menor custo.*
 
 #### CloudFront vs. Global Accelerator vs. Route 53
 
@@ -1661,6 +2355,30 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - Para S3 e outros serviços compatíveis, uma política baseada em recurso pode autorizar um principal externo diretamente. Se houver SSE-KMS, a política da chave e as permissões KMS também precisam permitir a operação. SCP, permissions boundary e deny explícito continuam limitando o acesso. [Acesso entre contas](https://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html).
 - **Terceiros e *confused deputy***: quando um fornecedor externo assume uma role na sua conta, exija um **External ID** na trust policy. Para serviços AWS agindo em seu nome, restrinja com `aws:SourceArn`/`aws:SourceAccount`.
 
+#### Bucket para toda a organização: aws:PrincipalOrgID
+Cenário típico: uma empresa centraliza num bucket S3 os ativos de design, e todas as contas de departamento da organização precisam lê-lo. Só contas da organização podem acessar, e a política não pode exigir manutenção a cada conta que entra ou sai.
+
+![Contas da organização lendo um bucket cuja política usa aws:PrincipalOrgID; uma conta externa recebe AccessDenied.](diagramas/s3-principal-org-id.svg)
+
+1. **Política do bucket**: a política permite `s3:GetObject` com `Principal` amplo e a condição `aws:PrincipalOrgID` igual ao ID da organização (`o-a1b2c3d4e5`). A AWS preenche essa chave em cada requisição com a organização de quem chama.
+2. **Contas que entram depois**: uma conta nova na organização ganha o acesso sem nenhuma alteração na política, e uma conta que sai o perde automaticamente.
+3. **Fora da organização**: a condição não é satisfeita, nenhum `Allow` se aplica, e a conta externa recebe `AccessDenied`.
+
+- **Os dois lados precisam permitir**: no acesso entre contas, a política do bucket libera a organização, mas a role ou o usuário em cada conta-membro também precisa de `s3:GetObject` na política do próprio IAM.
+- **Bucket com SSE-KMS**: se a chave for do cliente, a **key policy** também precisa permitir `kms:Decrypt` com a mesma condição de organização.
+- **Onde fica o bucket**: evite a **conta de gerenciamento** da organização, que não deve abrigar workloads nem é limitada por SCPs. Prefira uma conta de serviços compartilhados.
+- **Escopos relacionados**: `aws:PrincipalOrgPaths` restringe a OUs específicas. `aws:ResourceOrgID` faz o caminho inverso, limitando quais recursos as identidades da organização podem acessar. Uma **RCP** aplica a restrição de organização a todos os buckets de uma vez.
+
+| Mecanismo | Escopo | Quando as contas mudam | Overhead |
+|---|---|---|---|
+| **`aws:PrincipalOrgID` na política do bucket** | Toda a organização | Automático | Mínimo |
+| **`aws:PrincipalOrgPaths`** | OUs específicas | Automático dentro das OUs | Baixo, mas mais restrito que o pedido |
+| **Lista de IDs de conta na política** | As contas listadas | Editar a política a cada mudança | Alto |
+| **`aws:PrincipalTag`** | Principais com a tag | Depende de marcar cada principal | Alto |
+| **CloudTrail para monitorar acessos** | Nenhum: só registra | Não se aplica | Não restringe nada |
+
+*Na prova, "apenas contas da organização" com "menor overhead" aponta para `aws:PrincipalOrgID` na política do bucket. Lista de contas exige manutenção, e o CloudTrail só audita.*
+
 #### Ferramentas de análise do IAM
 - **IAM Access Analyzer**:
   - identifica recursos compartilhados com **entidades externas** à conta ou organização (buckets, roles, chaves KMS, filas);
@@ -1703,6 +2421,53 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - **Estratégias de SCP**: *deny list* (manter `FullAWSAccess` e negar o que for proibido, a mais comum) ou *allow list* (permitir só o listado).
 - **Resource Control Policies (RCPs)**: teto centralizado sobre **recursos** (ex.: impedir que qualquer bucket S3 ou chave KMS da organização seja acessado por principais de fora da organização), independentemente das políticas de recurso que cada conta escreva.
 - **Perímetro de dados**: combinação de SCP (identidades só acessam recursos confiáveis), RCP (recursos só aceitam identidades confiáveis) e endpoint policies (acesso só por redes esperadas), usando `aws:PrincipalOrgID`, `aws:ResourceOrgID` e `aws:SourceVpce`.
+
+#### Buckets sempre privados: Block Public Access + SCP
+Cenário típico: a empresa exige que os objetos do S3 **nunca** fiquem públicos, em todas as contas da organização, sem depender de alguém perceber um bucket exposto. A questão testa a diferença entre um controle **preventivo** e um de **detectar e corrigir**.
+
+![Block Public Access no nível da conta, protegido por uma SCP que nega a desativação.](diagramas/s3-bpa-scp.svg)
+
+1. **Tentativa**: um usuário ou administrador da conta-membro tenta desativar o Block Public Access, por engano ou de propósito.
+2. **SCP**: uma SCP na OU nega `s3:PutAccountPublicAccessBlock` (e, se quiser travar também o nível do bucket, `s3:PutBucketPublicAccessBlock`). A negação vale para todos os usuários e roles da conta-membro, **inclusive o root**. Uma condição em `aws:PrincipalArn` pode abrir exceção para uma role de emergência.
+3. **Block Public Access**: ativado no nível da **conta**, ele vale para todos os buckets, atuais e futuros. Bucket policies e ACLs que concederiam acesso público são rejeitadas ou ignoradas, independentemente do que cada equipe configurar.
+
+- **Limite da SCP**: ela não se aplica à **conta de gerenciamento** da organização, então evite buckets de workload nessa conta.
+- **Camada adicional**: uma **RCP** que nega acesso a principais de fora da organização protege os buckets mesmo se alguém escrever uma bucket policy aberta.
+
+| Abordagem | Tipo de controle | Quando age | Impede a desativação? | No requisito |
+|---|---|---|---|---|
+| **Block Public Access (conta) + SCP** | Preventivo | Antes da exposição | Sim: a SCP nega a alteração | Atende: os objetos ficam privados o tempo todo |
+| **Block Public Access (conta) sem SCP** | Preventivo | Antes da exposição | Não: quem tem permissão no IAM pode desativar | Parcial: risco de desativação acidental ou maliciosa |
+| **AWS Config + remediação automática** | Detectar e corrigir | Depois que o bucket fica público | Não | Não atende: existe uma janela de exposição |
+| **Trusted Advisor ou GuardDuty + Lambda** | Detectar e corrigir | Depois da verificação ou do achado | Não | Não atende: existe uma janela de exposição |
+| **AWS Resource Access Manager** | Nenhum: compartilha recursos entre contas | Não verifica nada | Não | Distrator: não detecta nem impede acesso público |
+
+*Na prova, "garantir que nunca", "o tempo todo" ou "impedir" pedem um controle **preventivo**: Block Public Access no nível da conta, com uma SCP impedindo a desativação. Config, GuardDuty e Trusted Advisor com remediação sempre deixam uma janela entre a exposição e a correção.*
+
+#### Uma única Região e nenhum Internet Gateway: controles em camadas
+Cenário típico: uma organização de saúde, que está migrando o data center, só pode processar dados de pacientes em **ap-northeast-3** (Osaka), e nenhum administrador pode criar Internet Gateways nem expor sistemas internos à internet. O requisito pede controles que impeçam o desvio, e não só que o detectem.
+
+![SCP e declarative policy na OU restringindo Região e Internet Gateway; VPC sem saída para a internet, ligada ao data center por rede privada, e AWS Config verificando a conformidade.](diagramas/scp-regiao-sem-igw.svg)
+
+1. **Políticas na OU**: a OU das contas recebe as políticas do **AWS Organizations**, herdadas por todas as contas, inclusive as que entrarem depois.
+2. **Região**: uma **SCP** nega as ações quando `aws:RequestedRegion` for diferente de `ap-northeast-3`. Ela precisa deixar de fora, com `NotAction`, os serviços globais (IAM, Organizations, STS, CloudFront, Route 53, Support), ou eles param de funcionar. O Control Tower oferece esse controle pronto, como *Region deny*.
+3. **Sem caminho para a internet**: a mesma SCP nega `ec2:CreateInternetGateway`, `ec2:AttachInternetGateway` e a criação de NAT Gateway público. As VPCs são construídas sem Internet Gateway nem NAT. Uma **declarative policy** de EC2 pode ainda ativar o **VPC Block Public Access** em toda a organização. Ela atua na configuração do serviço e vale até para service-linked roles, que as SCPs não alcançam.
+4. **Detecção**: o **AWS Config**, com um agregador na conta de segurança, verifica continuamente as contas, por exemplo com a regra gerenciada que aponta Internet Gateways fora das VPCs autorizadas. Ele não fica no caminho do tráfego: detecta e alerta o que escapar dos controles preventivos.
+5. **Ligação com o data center**: a VPC fala com o data center por **Direct Connect** ou **VPN site-to-site**, que usam o virtual private gateway ou o Transit Gateway, e não o Internet Gateway.
+
+- **Security groups e NACLs filtram, não removem o caminho**: com um Internet Gateway e uma rota para ele, uma regra mal configurada expõe o recurso. O que elimina a saída é a VPC sem Internet Gateway nem NAT, garantida pela SCP.
+- **Limite das SCPs**: elas não se aplicam à conta de gerenciamento da organização, então não rode workloads nela.
+
+| Controle | Tipo | O que impõe | Quando atua |
+|---|---|---|---|
+| **SCP com `aws:RequestedRegion` e negação de Internet Gateway** | Preventivo | Bloqueia ações fora de ap-northeast-3 e a criação de Internet Gateways | Antes de o recurso existir |
+| **Declarative policy (VPC Block Public Access)** | Preventivo | Bloqueia o tráfego de internet das VPCs em toda a organização | Continuamente, na configuração do serviço |
+| **VPC sem Internet Gateway + security groups e NACLs** | Preventivo (rede) | Não existe caminho de saída; SG e NACL limitam o tráfego interno | Continuamente |
+| **AWS Config** | Detectivo | Aponta recursos fora da regra e alerta | Depois de o recurso existir |
+| **AWS WAF** | Preventivo de aplicação | Filtra requisições HTTP | Não restringe Região nem impede Internet Gateway |
+| **Route 53 Resolver DNS Firewall** | Preventivo de DNS | Bloqueia a resolução de domínios | Não remove o caminho de rede |
+
+*Na prova, "só pode usar a Região X" aponta para SCP com `aws:RequestedRegion`, e "administradores não podem criar Internet Gateways" aponta para negar essa ação na SCP e construir VPCs sem Internet Gateway. O AWS Config complementa como controle detectivo; WAF e DNS Firewall atuam em outra camada.*
 
 #### Compartilhamento e proteção centralizada
 - **AWS RAM (Resource Access Manager)**: compartilha recursos AWS (subnets de uma VPC, Transit Gateway attachments, licenças, regras do Route 53 Resolver) entre múltiplas contas de uma AWS Organization, sem duplicar o recurso nem usar peering/replicação. É a resposta padrão para "compartilhar centralmente um recurso caro ou de infraestrutura compartilhada (ex.: Transit Gateway, subnet) entre várias contas sem replicar infraestrutura", reduzindo o custo e a complexidade de gerenciamento multi-conta.
@@ -1752,6 +2517,27 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - **Em trânsito**: TLS em todos os endpoints. Exija-o com `aws:SecureTransport` em políticas de recurso, parâmetros do engine no RDS e viewer protocol policy no CloudFront.
 - **Compartilhar AMI criptografada entre contas**: ajuste a `launchPermission` da AMI **e** a política da CMK do KMS para permitir `kms:Decrypt` pela conta de destino. Nunca torne a AMI pública. Chaves AWS managed não podem ser compartilhadas: re-criptografe a AMI com uma customer managed key.
 
+#### KMS e S3 para certificados da aplicação
+Cenário típico: uma aplicação em contêiner, rodando em EC2, precisa criptografar e descriptografar certificados em tempo real e guardá-los em armazenamento durável e altamente disponível, com o menor overhead operacional.
+
+![Aplicação em EC2 usando o KMS para criptografar certificados e o S3 para guardá-los.](diagramas/kms-s3-certificados.svg)
+
+1. **Credenciais**: a aplicação chama o KMS e o S3 com as credenciais temporárias de uma role do IAM, sem chaves de acesso no código. Em EC2 puro, é o **instance profile**. No ECS, prefira a **task role**, que dá a cada task só as permissões dela.
+2. **KMS**: a aplicação chama `Encrypt` e `Decrypt` com uma **chave gerenciada pelo cliente**, e a key policy define quem pode usá-la. O `Encrypt` aceita até **4 KB**: um certificado com a cadeia completa pode passar disso, e aí entra a **envelope encryption** (`GenerateDataKey`, ou o AWS Encryption SDK, que faz isso pela aplicação).
+3. **S3**: o certificado criptografado vai para o bucket, que é regional, replicado em várias AZs e não depende de uma instância. Na leitura, a aplicação faz `GetObject` e `Decrypt`.
+
+- **Alternativa sem código de criptografia**: com **SSE-KMS** no bucket, o próprio S3 criptografa e descriptografa com a chave do KMS. A role precisa de permissão no S3 e na chave. Use criptografia no cliente, como no fluxo acima, quando o dado precisa sair da aplicação já criptografado.
+- **Certificado só para TLS** em ALB, CloudFront ou API Gateway: o **ACM** emite, guarda e renova o certificado, sem arquivo para a aplicação gerenciar.
+
+| Opção | Chaves | Armazenamento | Overhead operacional |
+|---|---|---|---|
+| **KMS + S3** | Gerenciadas e altamente disponíveis, com auditoria no CloudTrail | Regional, durável, várias AZs | Baixo: dois serviços gerenciados e uma role |
+| **CloudHSM + S3** | HSM dedicado: o cliente opera o cluster, os usuários e o client | Igual ao S3 | Alto: só se justifica com exigência de HSM single-tenant |
+| **KMS + EBS** | Iguais às do KMS | Volume em uma AZ, anexado a uma instância | Maior: snapshots e reanexação para sobreviver a falhas |
+| **Chaves no código ou no disco** | Sem rotação, auditoria nem controle de acesso | Depende do disco | Alto e inseguro |
+
+*Na prova, "criptografar e descriptografar em tempo real" com "menor overhead operacional" aponta para o KMS com a role da instância ou da task, e "armazenamento durável e altamente disponível" aponta para o S3. EBS fica preso a uma AZ, e CloudHSM só entra quando o enunciado exige HSM dedicado.*
+
 #### AWS CloudHSM
 - **AWS CloudHSM**: HSM dedicado (**single-tenant**, validado FIPS 140-3 nível 3), em que **só o cliente** controla as chaves. A AWS não tem acesso a elas. APIs padrão (PKCS#11, JCE, CNG).
 - **Casos**: requisito regulatório de HSM dedicado, **offload de SSL/TLS**, Oracle TDE, assinatura de código, CA privada, ou **custom key store do KMS** (integração do KMS com chaves no seu HSM).
@@ -1765,6 +2551,28 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - **Escopo regional**: o certificado precisa estar **na mesma Região** do ALB/API Gateway regional. Para o **CloudFront**, precisa estar em **us-east-1**.
 - **Monitorar expiração**: eventos do ACM no **EventBridge** (dias até expirar) e a regra gerenciada do Config `acm-certificate-expiration-check`. O Trusted Advisor não é a resposta.
 - **Certificado em EC2/servidor próprio**: use certificados **exportáveis** do ACM (opção paga) ou ACM Private CA. Para um site comum, prefira terminar o TLS no load balancer ou no CloudFront.
+
+#### Certificado de CA externa no ALB: importar no ACM e monitorar a expiração
+Cenário típico: uma varejista comprou um certificado TLS wildcard de uma CA externa, por marca e conformidade, e precisa continuar usando esse certificado no Application Load Balancer, renovando-o todo ano antes de expirar.
+
+![Certificado da CA externa importado no ACM e usado no ALB; o evento de expiração do ACM no EventBridge alerta a equipe pelo SNS, que renova na CA e reimporta.](diagramas/acm-importado-eventbridge.svg)
+
+1. **Importação**: a equipe importa no **ACM** o certificado, a chave privada e a cadeia da CA. O ACM não emite esse certificado; só o guarda e o disponibiliza.
+2. **Uso no ALB**: o listener HTTPS do ALB usa o certificado importado, que precisa estar **na mesma Região** do ALB.
+3. **Evento de expiração**: o ACM publica no **EventBridge**, todo dia, o evento *ACM Certificate Approaching Expiration*, a partir de **45 dias** antes do vencimento para certificados importados. O prazo é ajustável na configuração da conta do ACM.
+4. **Alerta**: uma regra do EventBridge envia o evento a um tópico **SNS**, que avisa a equipe.
+5. **Renovação manual**: a equipe obtém o certificado renovado na CA e o **reimporta no mesmo ARN**. Assim, o ALB passa a usar o novo certificado sem mudar a configuração do listener.
+
+- **O ACM não renova certificados importados**: a renovação gerenciada vale só para os certificados que o ACM emite, públicos ou privados (ACM com AWS Private CA). Para importados, quem renova é você.
+- **Alternativa ao evento**: a regra gerenciada do AWS Config `acm-certificate-expiration-check` também aponta certificados perto do vencimento.
+
+| Origem do certificado | Renovação gerenciada pelo ACM | Monitoramento | Ação |
+|---|---|---|---|
+| **Emitido pelo ACM (público)** | Sim, automática | Opcional | Nenhuma, desde que a validação por DNS continue válida |
+| **Privado, do ACM com AWS Private CA** | Sim, automática | Opcional | Nenhuma nos serviços integrados |
+| **Importado de CA externa** | Não | Necessário | Alertar pelo EventBridge, renovar na CA e reimportar |
+
+*Na prova, "certificado emitido por uma CA externa" descarta opções em que o ACM emite o certificado, e "precisa ser renovado antes de expirar" aponta para importar no ACM, monitorar a expiração pelo EventBridge (ou Config) e reimportar à mão.*
 
 #### Números do ACM
 
@@ -1796,6 +2604,31 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - **AWS Secrets Manager**: resposta padrão para rotação **automática** de credenciais de banco de dados (RDS/Aurora), com replicação multi-Região de segredos. Sempre vence alternativas que envolvam Lambda customizada para rotacionar segredos em S3/EFS/Parameter Store. O RDS e o Aurora também oferecem a **senha mestre gerenciada pelo Secrets Manager**, com rotação sem configurar a função.
 - **AWS Systems Manager Parameter Store**: armazena parâmetros em hierarquia (`/app/prod/db-host`), em texto ou **SecureString** criptografado via KMS, mas **sem rotação automática nativa** (a diferença chave frente ao Secrets Manager). O acesso requer IAM role com permissão de leitura do parâmetro + `kms:Decrypt`. Parâmetros **Advanced** suportam políticas como expiração e notificação. O Parameter Store também pode **referenciar segredos do Secrets Manager**.
 - **Onde não guardar segredos**: código, repositório, AMI, **user data**, variáveis de ambiente em texto puro ou arquivos no S3 sem controle. Injete segredos em tempo de execução (campo `secrets` da task ECS, extensão do Lambda, SDK).
+
+#### Rotação e replicação multi-Região de credenciais
+Cenário típico: uma empresa de serviços financeiros usa RDS for MySQL em várias Regiões, precisa rotacionar as credenciais do banco a cada 30 dias e tem uma equipe pequena, que não consegue manter scripts de rotação por Região.
+
+![Secrets Manager rotacionando a credencial na Região primária e replicando o segredo para a Região do read replica.](diagramas/secrets-manager-replicacao.svg)
+
+1. **Rotação agendada**: o segredo primário tem uma regra de rotação a cada 30 dias. Para o usuário master do RDS, a **rotação gerenciada** dispensa Lambda: o próprio RDS cuida da troca. Para outros usuários, o Secrets Manager usa uma função de rotação criada a partir dos **templates da AWS**, sem código próprio para manter.
+2. **Troca no banco**: a rotação gera a nova senha, aplica no banco de origem e só então marca a versão nova como atual (`AWSCURRENT`). Para aplicações que não toleram nem uma falha de login durante a troca, a estratégia de **usuários alternados** mantém dois usuários válidos.
+3. **Replicação do segredo**: o Secrets Manager replica o segredo para as outras Regiões. A réplica é **só leitura**: a rotação acontece no primário, e o valor novo se propaga para as réplicas, sem rotação separada por Região.
+4. **Replicação do banco**: a réplica do segredo carrega a **mesma** conexão e a **mesma** senha do banco de origem. Isso funciona quando o banco da outra Região é um **read replica cross-Region** da origem, porque a senha nova chega até ele pela replicação do MySQL.
+
+- **Bancos independentes por Região**: se cada Região tem o próprio RDS, não replicado, a senha de cada um é diferente, e uma réplica do segredo da origem não serve. Nesse caso, crie um segredo por Região, cada um com a própria rotação gerenciada, e implante tudo com CloudFormation StackSets. Continua sem código próprio.
+- **Leitura pela aplicação**: as aplicações leem o segredo na própria Região pelo SDK e nunca guardam a senha em código ou variável de ambiente. Quem conecta no banco é a aplicação, com a credencial que obteve: o Secrets Manager não fica no caminho da conexão.
+- **Mesmo padrão numa Região só**: uma aplicação legada com usuário e senha fixos passa a ler a credencial do Secrets Manager, e a rotação nativa troca a senha a cada 30 dias, com uma mudança pequena no código e nenhum código de rotação.
+- **Não leia o segredo só na inicialização**: depois da rotação, a aplicação que guardou a senha antiga falha na próxima conexão. Busque o segredo de novo quando o login falhar, use os clientes de cache do Secrets Manager com tempo de expiração, ou conecte pelo **RDS Proxy**, que lê o segredo e acompanha a rotação sozinho.
+
+| Opção | Rotação | Várias Regiões | Overhead operacional |
+|---|---|---|---|
+| **Secrets Manager com rotação nativa e replicação** | Agendada e nativa (gerenciada ou por template da AWS) | Replicação nativa do segredo | Baixo: nada a manter |
+| **Secrets Manager com Lambda de rotação própria em cada Região** | Agendada, mas com código seu | Uma função por Região | Médio: código e deploys para manter |
+| **Parameter Store SecureString + Lambda + EventBridge** | Não tem rotação nativa: tudo escrito à mão | Sem replicação nativa | Alto |
+| **Autenticação do IAM no banco** | Não há senha: a aplicação gera um token de 15 minutos a cada conexão | Funciona em cada Região | Exige reescrever a lógica de conexão; não atende a "mínimo esforço de desenvolvimento" |
+| **Arquivo no S3 criptografado com KMS + Lambda** | Escrita à mão | Replicação do bucket mais o código | Alto e frágil |
+
+*Na prova, "rotacionar credenciais regularmente", "menor overhead operacional" e "várias Regiões" apontam para o Secrets Manager com rotação nativa e replicação multi-Região. Qualquer opção montada com armazenamento, criptografia e Lambda separados fica atrás.*
 
 #### Padrões e pegadinhas de segredos
 - "Rotacionar a senha do RDS automaticamente a cada 30 dias": **Secrets Manager**.
@@ -1835,6 +2668,80 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - **AWS Network Firewall**: firewall de rede gerenciado com filtragem stateful em nível de VPC (regras baseadas em domínio, IPS/IDS compatível com Suricata, inspeção de payload, inspeção TLS). É diferente do AWS WAF (camada 7, HTTP, aplicado a ALB/API Gateway/CloudFront) e do AWS Firewall Manager (gerencia centralmente regras de WAF/Shield/security groups em várias contas, mas não é ele mesmo um firewall de rede). É a resposta padrão para "inspecionar e filtrar tráfego de rede genérico (não só HTTP/HTTPS) dentro de uma VPC".
   - Implante em **subnets dedicadas** e direcione o tráfego pelas route tables.
   - Em multi-conta, use uma **VPC de inspeção central** ligada ao Transit Gateway.
+
+#### DDoS em grande escala: CloudFront com Shield Advanced
+Cenário típico: uma plataforma de streaming roda em servidores Windows no EC2 e sofre ataques DDoS de botnets, vindos de milhares de endereços IP. A indisponibilidade não é aceitável, e o requisito pede mitigação automática com apoio especializado.
+
+![Tráfego entrando pelo CloudFront, protegido por Shield Advanced e WAF, chegando a uma origem que só aceita o CloudFront.](diagramas/cloudfront-shield-advanced.svg)
+
+1. **Absorção na borda**: todo o tráfego entra pelo **CloudFront**, cuja rede global de edge locations absorve o volume do ataque longe da origem. O **Shield Standard** já protege a borda contra ataques comuns de camadas 3 e 4, sem custo.
+2. **Proteções aplicadas**: o **Shield Advanced** não é um salto no caminho do tráfego. Ele é uma proteção **associada** à distribuição do CloudFront, e também ao ALB, ao Route 53 e aos Elastic IPs. Ele acrescenta detecção e mitigação automáticas de ataques maiores, inclusive de **camada 7** com regras do **AWS WAF**, e o apoio 24x7 do **Shield Response Team (SRT)**, que exige plano de suporte Business ou superior. O WAF com regras **rate-based** bloqueia os IPs que passam do limite de requisições.
+3. **Origem protegida**: só o tráfego legítimo segue para a origem. O ALB aceita apenas o CloudFront, com **VPC origins** ou *prefix list* do CloudFront mais header secreto, para que a botnet não contorne a borda indo direto ao endereço da origem.
+4. **Escala da origem**: as instâncias EC2 ficam em subnets privadas, num Auto Scaling group atrás do ALB, para absorver o que passar da borda.
+
+- **Proteção de custo**: com o Shield Advanced, a AWS credita o custo do scaling causado pelo ataque, como CloudFront, ELB e EC2 extras.
+- **Mesmo padrão, outro exemplo**: uma loja on-line com EC2 atrás de um ALB coloca o CloudFront na frente para servir conteúdo estático e dinâmico e contrata o Shield Advanced para atravessar ataques coordenados num evento de vendas.
+- **Camadas cobertas**: o Shield Advanced não se limita às camadas 3 e 4; ele também mitiga automaticamente ataques de **camada 7**, criando regras no WAF. As regras rate-based do WAF avaliam cada IP separadamente e funcionam com milhares de origens, mas não absorvem ataques volumétricos de rede e transporte.
+- **Várias contas**: o **Firewall Manager** aplica o Shield Advanced e as regras do WAF a todos os recursos da organização, inclusive aos novos.
+
+| Opção | Bloqueia automaticamente | Escala contra milhares de IPs | Apoio especializado | No cenário |
+|---|---|---|---|---|
+| **CloudFront** | Sim: absorve o volume na borda | Sim | Não | Necessário: tira a carga da origem |
+| **Shield Advanced** | Sim: mitigação automática, inclusive em camada 7 | Sim | Sim: Shield Response Team | Necessário: mitigação e resposta para indisponibilidade zero |
+| **WAF com regras rate-based** | Sim, por IP acima do limite | Sim | Não | Complementa contra HTTP flood |
+| **Shield Standard sozinho** | Sim, contra ataques comuns de camadas 3 e 4 | Parcial | Não | Insuficiente para ataques grandes e de camada 7 |
+| **GuardDuty** | Não: só detecta | Não se aplica | Não | Não bloqueia tráfego |
+| **Lambda atualizando Network ACLs** | Não: reage depois, com limite de regras por ACL | Não | Não | Inviável contra milhares de IPs |
+| **Instâncias Spot** | Não se aplica | Não se aplica | Não | Podem ser interrompidas: pioram a disponibilidade |
+
+*Na prova, "DDoS de grande escala vindo de milhares de IPs" com "indisponibilidade não é aceitável" aponta para CloudFront com Shield Advanced, e WAF quando o ataque é de camada 7. Serviços que só detectam, regras mantidas à mão e computação interrompível ficam de fora.*
+
+#### HTTP flood numa API Regional: WAF com regra rate-based
+Cenário típico: uma corretora expõe uma API pública de cotações num **endpoint Regional** do API Gateway. Em dias de mercado agitado, chega um pico que parece mais um ataque de inundação HTTP do que demanda real. O requisito pede bloqueio automático, com o menor esforço operacional.
+
+![Requisições passando por uma web ACL Regional do WAF com regra rate-based antes do API Gateway; IPs acima do limite recebem 403, e o CloudWatch só observa.](diagramas/waf-rate-based-api.svg)
+
+1. **Entrada**: todas as requisições passam pela **web ACL** do AWS WAF associada ao **stage** do API Gateway.
+2. **Regra rate-based**: a regra conta as requisições de cada IP numa janela de tempo e bloqueia (HTTP 403) os IPs que passam do limite enquanto durar o excesso. Quando a taxa cai, o bloqueio sai sozinho. A contagem pode ser por IP, por um header (como o IP real atrás de um proxy) ou por outras chaves, e pode valer só para um caminho, como `/cotacoes`.
+3. **Tráfego permitido**: o que está abaixo do limite segue para o API Gateway e para o backend.
+4. **Visibilidade**: o **CloudWatch** recebe as métricas da regra e do API Gateway, e um alarme avisa a equipe. Ele não bloqueia nada.
+
+- **Escopo da web ACL**: uma web ACL é **Regional** (API Gateway, ALB, AppSync, Cognito) ou **CloudFront** (criada em us-east-1). Para um stage do API Gateway, inclusive edge-optimized, a web ACL é Regional, na mesma Região da API.
+- **Throttling do API Gateway**: limites por stage, método ou chave de API (usage plans) protegem o backend, mas valem para todos os clientes juntos: num flood, os clientes legítimos também recebem `429`. A regra rate-based isola só os IPs abusivos.
+- **Ataques maiores**: para DDoS volumétrico, coloque o CloudFront na frente e avalie o Shield Advanced. Veja [DDoS em grande escala: CloudFront com Shield Advanced](#ddos-em-grande-escala-cloudfront-com-shield-advanced).
+
+| Opção | Bloqueia automaticamente | Atinge só os abusivos | Esforço |
+|---|---|---|---|
+| **WAF Regional com regra rate-based no stage** | Sim | Sim, por IP ou outra chave | Mínimo |
+| **Throttling do API Gateway** | Sim, com `429` | Não: limita todos juntos (ou por chave de API) | Baixo, mas afeta clientes legítimos |
+| **Alarme do CloudWatch** | Não: só avisa | Não se aplica | Alguém precisa agir |
+| **Lambda que lê logs e atualiza um IP set** | Sim, com atraso | Sim | Alto: código para manter |
+| **Network ACL** | Por IP, à mão | Sim | Não serve: o API Gateway não fica na sua VPC, e as NACLs têm poucas regras |
+
+*Na prova, "HTTP flood" com "menor esforço operacional" aponta para WAF com regra rate-based. "Endpoint Regional do API Gateway" indica uma web ACL Regional associada ao stage; a de escopo CloudFront é para distribuições.*
+
+#### Mesmas regras de WAF em várias Regiões: Firewall Manager
+Cenário típico: uma varejista roda a mesma API pública no API Gateway em duas Regiões, para clientes de continentes diferentes. A equipe de segurança quer aplicar o mesmo conjunto de regras contra **SQL injection e XSS** às duas implantações, com o menor esforço de gerenciamento, sem manter web ACLs separadas à mão.
+
+![Firewall Manager na conta administradora aplicando a mesma web ACL do WAF às APIs do API Gateway em duas Regiões.](diagramas/waf-firewall-manager.svg)
+
+1. **Política central**: na conta administradora do **AWS Firewall Manager**, a equipe cria uma política de WAF com os **managed rule groups** da AWS (por exemplo, o conjunto contra SQL injection e o conjunto comum, que cobre XSS). As políticas de WAF são **regionais**: o console é um só, mas há uma política para cada Região usada.
+2. **Proteção**: o Firewall Manager cria a web ACL em cada conta e Região e a associa aos estágios do API Gateway. É o **AWS WAF** que inspeciona as requisições e bloqueia SQL injection e XSS antes de chegarem à API.
+3. **Conformidade contínua**: APIs novas que entram no escopo, por conta, tag ou tipo de recurso, recebem a web ACL automaticamente, e o Firewall Manager aponta os recursos fora da política.
+
+- **Pré-requisitos**: AWS Organizations, uma conta administradora do Firewall Manager e o **AWS Config** ativo nas contas e Regiões cobertas.
+- **O Firewall Manager não fica no caminho do tráfego**: ele é o plano de gerenciamento. Quem filtra as requisições é o WAF.
+- **Alternativa com CloudFront**: se as duas APIs ficarem atrás de distribuições do CloudFront, uma web ACL global no CloudFront protege as duas no mesmo ponto.
+
+| Opção | Bloqueia SQLi e XSS | Gestão nas duas Regiões | No requisito |
+|---|---|---|---|
+| **AWS WAF + Firewall Manager** | Sim | Central, com aplicação automática a recursos novos | Atende com o menor esforço |
+| **AWS WAF configurado à mão em cada Região** | Sim | Duas web ACLs mantidas separadamente | Funciona, com mais trabalho e risco de divergência |
+| **AWS Shield Advanced** | Não: protege contra DDoS, inclusive em camada 7, mas não inspeciona SQLi e XSS | Também gerenciável pelo Firewall Manager | Não atende sozinho |
+| **Lambda própria que inspeciona e bloqueia** | Depende do código | Código e deploys em cada Região | Maior esforço |
+| **Security groups e NACLs** | Não: filtram IP e porta, não o conteúdo HTTP | Por VPC | Não atende |
+
+*Na prova, "SQL injection e XSS" apontam para o AWS WAF, e "várias Regiões ou contas com o menor esforço de gerenciamento" apontam para o Firewall Manager aplicando as regras de forma central. O Shield Advanced resolve DDoS, não injeção.*
 
 #### Números do WAF
 
@@ -1989,6 +2896,78 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - **Escalar consumidores**: Auto Scaling por **backlog por instância** (veja [Métricas de scaling](#metricas-de-scaling)), ECS Service Auto Scaling ou Lambda com event source mapping (veja [Modelos de invocação](#modelos-de-invocacao)). Monitore `ApproximateNumberOfMessagesVisible` e `ApproximateAgeOfOldestMessage`.
 - **SQS Temporary Queue Client**: cria filas virtuais leves, multiplexadas sobre uma única fila SQS, para padrões request-response com muitos destinos temporários de baixo tráfego. Reduz chamadas de API, tempo de desenvolvimento e o custo de criar/excluir filas físicas.
 
+#### Duplicatas: de SQS Standard para FIFO
+Cenário típico: um upload no S3 dispara uma notificação para uma fila Standard, uma Lambda processa a imagem e envia o resultado por e-mail, e alguns usuários recebem o e-mail duas vezes. A notificação do S3 e a fila Standard entregam *at-least-once*, então o mesmo evento pode chegar mais de uma vez à Lambda.
+
+![Upload no S3 levado a uma fila FIFO pelo EventBridge, com deduplicação antes da Lambda.](diagramas/sqs-fifo-deduplicacao.svg)
+
+1. **S3 → EventBridge**: com a integração do EventBridge ativada no bucket, o upload gera um evento `Object Created`. As notificações do S3 **não aceitam fila FIFO como destino**: para chegar a uma FIFO, o evento passa pelo EventBridge. [Destinos de notificação do S3](https://docs.aws.amazon.com/AmazonS3/latest/userguide/notification-how-to-event-types-and-destinations.html).
+2. **EventBridge → SQS FIFO**: a regra envia o evento a uma fila `.fifo` nova (uma fila Standard não pode ser convertida). O alvo informa o `MessageGroupId`, e a fila descarta envios com o mesmo ID de deduplicação dentro de **cinco minutos** (`MessageDeduplicationId` ou deduplicação baseada em conteúdo).
+3. **SQS FIFO → Lambda**: o event source mapping entrega as mensagens em ordem dentro de cada grupo. Grupos diferentes são processados em paralelo.
+4. **Lambda → SES**: a função processa a imagem e envia o e-mail. Se a função falhar ou o visibility timeout vencer, o lote volta para a fila e é processado de novo. Para nunca mandar dois e-mails, grave a chave do objeto como já processada (ex.: escrita condicional no DynamoDB) antes de enviar.
+
+| Opção | Entrega | Deduplicação | Efeito na Lambda |
+|---|---|---|---|
+| **SQS Standard** | *At-least-once* | Não tem | Pode ser invocada mais de uma vez para o mesmo evento |
+| **SQS FIFO** | Ordem por grupo e processamento *exactly-once* dos envios | Descarta envios com o mesmo ID de deduplicação em cinco minutos | Remove as duplicatas de envio; o reprocessamento depois de uma falha continua possível |
+| **Visibility timeout maior** (fila Standard) | Continua *at-least-once* | Não deduplica | Evita reprocessamento por timeout curto, mas não remove duplicatas da origem |
+
+*Na prova, "mensagens duplicadas" e "processar uma única vez" apontam para SQS FIFO com ID de deduplicação. Se uma alternativa liga a notificação do S3 direto a uma fila FIFO, ela descreve uma configuração que o S3 não aceita: o caminho correto passa pelo EventBridge. Visibility timeout só resolve reprocessamento causado por timeout curto, e a garantia completa ainda depende de um consumidor idempotente.*
+
+#### Reprocessamento automático: workers em Auto Scaling consumindo SQS
+Cenário típico: um varejista processa milhares de pedidos por hora em instâncias EC2. Se uma instância travar ou for encerrada no meio de um pedido, o pedido não pode se perder nem depender de reenvio manual pelo cliente.
+
+![Pedidos numa fila SQS consumidos por workers EC2 num Auto Scaling group; a mensagem de uma instância que falhou volta à fila, e o grupo escala pelo backlog.](diagramas/sqs-workers-asg.svg)
+
+1. **Fila durável**: o sistema de pedidos grava cada pedido numa fila **SQS**, em vez de enviá-lo direto às instâncias. A mensagem fica guardada, replicada em várias AZs, até ser apagada.
+2. **Consumo**: um worker recebe a mensagem com **long polling**. Enquanto ele processa, a mensagem fica invisível para os outros pelo **visibility timeout**.
+3. **Conclusão**: o worker grava o pedido no RDS e **só então** chama `DeleteMessage`.
+4. **Falha**: se a instância travar antes do delete, o visibility timeout vence e a mensagem **volta a ficar visível**. Outra instância a recebe e processa, sem intervenção. Se a mesma mensagem falhar várias vezes, ela vai para a [dead-letter queue](#isolar-mensagens-com-falha-sqs-com-dead-letter-queue).
+5. **Escala**: o Auto Scaling group não lê a fila diretamente. Ele escala por uma métrica do **CloudWatch**: o ideal é o **backlog por instância** (mensagens visíveis ÷ instâncias em serviço), com target tracking. Veja [Métricas de scaling](#metricas-de-scaling).
+
+- **Mesmo padrão, outro exemplo**: um pipeline de transcodificação recebe milhares de vídeos de uma vez num lançamento. A métrica da fila faz o grupo acrescentar workers até zerar o backlog e removê-los quando a fila esvazia. As instâncias saem de um **launch template** com a AMI da aplicação, e são elas, não o Auto Scaling group, que consomem a fila.
+- **Por que a métrica da fila e não a CPU**: a CPU mede o esforço das instâncias atuais, não o trabalho que está esperando. Com a fila bruta (`ApproximateNumberOfMessagesVisible`), o alvo não considera quantas instâncias já existem. Por isso o target tracking usa o **backlog por instância**.
+- **Escalar a partir de zero**: com o mínimo do grupo em 0, o backlog por instância não pode ser calculado. Uma política de step scaling sobre a fila bruta (mensagens visíveis maior que 0) liga a primeira instância, e o target tracking assume a partir daí.
+- **Gravação idempotente**: se a instância gravar no banco e cair antes do delete, o pedido é processado de novo. Use o ID do pedido como chave única, ou uma escrita condicional, para a segunda tentativa não duplicar o pedido.
+- **Visibility timeout maior que o processamento**: se for curto demais, outra instância pega a mensagem enquanto a primeira ainda trabalha. Para jobs longos, o worker estende o prazo com `ChangeMessageVisibility`.
+- **Scale-in sem perder trabalho**: a **proteção contra scale-in** da instância, ligada enquanto ela processa, evita que o grupo a encerre no meio de um pedido.
+
+| Opção | Guarda a requisição se o consumidor falhar? | Reentrega automática | No requisito |
+|---|---|---|---|
+| **SQS + workers em Auto Scaling** | Sim, até ser apagada | Sim, quando o visibility timeout vence | Atende |
+| **ALB direto para as instâncias** | Não: a requisição em andamento se perde com a instância | Não | O cliente precisa reenviar |
+| **SNS para as instâncias** | Não guarda para depois | Só tenta de novo a entrega por um tempo | Não garante o processamento |
+| **EventBridge para as instâncias** | Não é uma fila de trabalho | Tenta de novo a entrega, sem controle de consumo | Não substitui a fila |
+| **SQS com uma única instância consumidora** | Sim | Sim | Sem escala nem redundância no consumo |
+
+*Na prova, "reprocessar automaticamente em caso de falha" e "sem perder nenhuma solicitação" apontam para uma fila SQS consumida por instâncias num Auto Scaling group: a mensagem só sai da fila depois do processamento, e o visibility timeout cuida da reentrega. ALB, SNS e EventBridge não guardam o trabalho pendente.*
+
+#### Isolar mensagens com falha: SQS com dead-letter queue
+Cenário típico: o sistema de pedidos recebe pedidos mais rápido do que o serviço de inventário consegue processar. As mensagens podem levar até 2 dias para serem processadas, e um pedido que falha repetidamente na validação não pode travar os demais: ele precisa ficar separado para revisão manual, sem servidores para gerenciar.
+
+![Fila SQS entre o remetente e o consumidor, com dead-letter queue para mensagens que falham repetidamente e alarme no CloudWatch.](diagramas/sqs-dlq.svg)
+
+1. **Desacoplamento**: o remetente grava cada pedido numa fila **SQS**, que absorve a diferença de ritmo. A retenção padrão é de 4 dias e chega a **14 dias**, o que cobre a janela de 2 dias.
+2. **Consumo**: o serviço de inventário recebe as mensagens e chama `DeleteMessage` só depois de processar com sucesso. Se falhar, a mensagem volta a ficar visível quando o **visibility timeout** vence e é recebida de novo.
+3. **Isolamento**: a **redrive policy** define o `maxReceiveCount`. Uma mensagem recebida esse número de vezes sem ser apagada vai para a **dead-letter queue**, e o restante da fila segue normalmente. A DLQ fica na mesma conta e Região da fila e precisa ser do mesmo tipo (Standard ou FIFO).
+4. **Alerta**: um alarme do **CloudWatch** sobre as mensagens visíveis na DLQ avisa a equipe para a revisão manual.
+5. **Reprocessamento**: depois de corrigir a causa, o **DLQ redrive** devolve as mensagens à fila de origem.
+
+- **Retenção da DLQ maior que a da fila**: numa fila Standard, a mensagem leva para a DLQ o **carimbo de tempo original**. Se ela passou 3 dias na fila principal e a DLQ retém por 4, sobra só 1 dia para a análise. Na FIFO, o carimbo é zerado na DLQ.
+- **`maxReceiveCount` alto o bastante**: um valor como 1 manda para a DLQ mensagens que só tiveram um erro passageiro. Deixe espaço para algumas tentativas.
+- **Com Lambda como consumidor**: configure a DLQ na própria **fila SQS**. A DLQ da função vale só para invocações assíncronas, e o event source mapping do SQS não é uma delas. Ative também o `ReportBatchItemFailures`, para que só as mensagens com falha do lote voltem à fila.
+- **FIFO e ordem**: numa fila FIFO, a mensagem desviada para a DLQ quebra a sequência do grupo. Se a ordem exata for obrigatória, não use DLQ nesse fluxo.
+
+| Opção | Retém mensagens? | Isola as que falham? | No requisito |
+|---|---|---|---|
+| **SQS + dead-letter queue** | Sim, até 14 dias | Sim, depois de `maxReceiveCount` tentativas | Atende, sem servidores |
+| **SQS sem DLQ** | Sim | Não: a mensagem volta à fila até expirar | A falha repetida consome tentativas e esconde o problema |
+| **SNS** | Não: entrega na hora e não guarda para depois | Só uma DLQ para falhas de entrega ao assinante | Não atende à janela de 2 dias |
+| **Kinesis Data Streams** | Sim, por período configurável | Não por mensagem: um registro com falha trava o shard até ser tratado | Feito para streaming ordenado, não para fila de tarefas |
+| **Amazon MQ** | Sim | Sim, com configuração do broker | Funciona, mas com um broker para operar |
+
+*Na prova, "desacoplar remetente e destinatário", "processar em até X dias" e "mensagens com falha guardadas à parte, sem afetar as demais" apontam para SQS com dead-letter queue. Lembre-se de que a retenção da DLQ deve ser maior que a da fila de origem.*
+
 #### Números do SQS
 
 | Métrica | Valor | Observação |
@@ -2138,6 +3117,30 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - **Amazon Kinesis Video Streams**: ingestão de vídeo em tempo real de câmeras e dispositivos. Combinado com Rekognition Video (análise) + CloudWatch (alertas) + S3 (armazenamento), forma o pipeline padrão de monitoramento de vídeo.
 - **Transcodificação de mídia**: o Amazon Elastic Transcoder ainda consta da lista de serviços do guia de exame, mas **foi encerrado em novembro de 2025**. Em questões legadas, reconheça sua função histórica. Para uma arquitetura nova, consulte o AWS Elemental MediaConvert, embora esse serviço conste da lista oficial de serviços fora de escopo. A lista do exame é não exaustiva e pode atrasar mudanças no catálogo. [Fim do Elastic Transcoder](https://docs.aws.amazon.com/pt_br/elastictranscoder/latest/developerguide/introduction.html) · [Lista fora de escopo](https://docs.aws.amazon.com/pt_br/aws-certification/latest/solutions-architect-associate-03/saa-03-out-of-scope-services.html).
 
+#### Clickstream enriquecido em trânsito: Kinesis, Firehose e Lambda
+Cenário típico: uma loja coleta o clickstream do site e precisa enriquecer cada evento com metadados de produto antes de guardá-lo para análise. O tráfego dispara nas promoções, e o requisito pede transformar os dados **enquanto estão em trânsito**, com o **menor overhead operacional**.
+
+![Eventos do site entrando pelo API Gateway no Kinesis Data Streams, transformados por uma Lambda chamada pelo Data Firehose e entregues ao S3.](diagramas/kinesis-firehose-lambda.svg)
+
+1. **Entrada**: o site envia os eventos ao **API Gateway**, que autentica e aplica throttling.
+2. **Buffer em tempo real**: uma **integração de serviço** do API Gateway grava direto no **Kinesis Data Streams** (`PutRecord`), sem Lambda no meio. No modo **on-demand**, o stream acompanha o pico sem gerenciar shards e retém os eventos para replay e para outros consumidores.
+3. **Entrega**: um stream do **Amazon Data Firehose** (antigo Kinesis Data Firehose) lê o Data Streams como origem e agrupa os eventos por tamanho ou tempo.
+4. **Transformação**: o Firehose invoca uma **Lambda** de transformação com cada lote. Ela enriquece os eventos com os metadados do produto, por exemplo lidos do DynamoDB com cache, e devolve cada registro marcado como `Ok`, `Dropped` ou `ProcessingFailed`. Os que falham vão para um prefixo de erros no S3.
+5. **Armazenamento**: o Firehose grava no **S3**, se preciso já convertido para **Parquet** e com **particionamento dinâmico** por data, prontos para o Athena.
+
+- **Quando dispensar o Data Streams**: se não houver necessidade de replay nem de outros consumidores, o API Gateway pode gravar direto no Firehose.
+- **Quase tempo real**: o Firehose entrega com a latência do buffer (segundos a minutos). Para reagir em milissegundos, ou para janelas e agregações com estado, use uma Lambda ou o Managed Service for Apache Flink consumindo o Data Streams.
+
+| Opção | Transforma em trânsito? | Servidores para gerenciar | No requisito |
+|---|---|---|---|
+| **API Gateway + Data Streams + Firehose com Lambda + S3** | Sim, na Lambda de transformação do Firehose | Nenhum | Atende |
+| **Consumidor em EC2 (KCL ou script) gravando no S3** | Sim | Instâncias, escala e checkpoint | Mais operação |
+| **Amazon MSK com Kafka Connect** | Sim | Cluster Kafka, mesmo gerenciado | Mais operação, a não ser que a empresa já use Kafka |
+| **Gravar bruto no S3 e transformar depois com Glue em lote** | Não: transforma depois de armazenar | Nenhum | Não atende ao "em trânsito" |
+| **Managed Service for Apache Flink** | Sim, com estado e janelas | Nenhum servidor, mas uma aplicação Flink para manter | Excesso para um enriquecimento simples por evento |
+
+*Na prova, "transformar os dados enquanto estão em trânsito" com "menor overhead operacional" aponta para Data Firehose com transformação por Lambda, com o Kinesis Data Streams na frente quando é preciso buffer em tempo real. Qualquer opção com instância EC2 autogerenciada sai primeiro.*
+
 #### Padrões e pegadinhas de streaming
 - "Ingerir clickstream em tempo real para vários consumidores independentes, com replay": **Kinesis Data Streams**.
 - "Levar os dados do stream ao S3 em Parquet, sem código e sem gerenciar servidores": **Data Firehose**.
@@ -2264,6 +3267,30 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
 - **Federated queries**: conectores (Lambda) consultam RDS, DynamoDB, Redshift, CloudWatch Logs e fontes on-premises na mesma SQL, sem mover dados.
 - **Athena for Apache Spark**: notebooks Spark interativos sem cluster.
 
+#### Athena lento sobre CSV: Parquet e particionamento
+Cenário típico: uma equipe de varejo acumula anos de vendas em CSV no S3, até a escala de petabytes. As consultas ad hoc no Athena, quase sempre filtradas por data e região, ficaram lentas, caras ou falham por timeout.
+
+![CSV bruto convertido pelo Glue em Parquet particionado por ano, mês e região, consultado pelo Athena.](diagramas/athena-parquet-particoes.svg)
+
+1. **Leitura**: um job de ETL do **AWS Glue** lê os CSV brutos, catalogados no Glue Data Catalog.
+2. **Conversão e partição**: o job grava os dados em **Parquet** comprimido (Snappy), particionado pelos filtros mais usados: `ano=/mes=/regiao=`. O `CTAS` do próprio Athena faz o mesmo para conversões pontuais.
+3. **Consulta**: o Athena usa a tabela particionada. O filtro no `WHERE` descarta as partições fora do intervalo (*partition pruning*), e o Parquet lê só as colunas do `SELECT`.
+4. **Resultado**: menos dados escaneados significam consultas mais rápidas e mais baratas, porque o Athena cobra por TB lido.
+
+- **Registrar as partições**: novas partições precisam entrar no catálogo, por um **crawler** do Glue, por `MSCK REPAIR TABLE` ou, sem manutenção, por **partition projection**.
+- **Tamanho dos arquivos**: prefira arquivos de cerca de 128 MB ou mais. Milhares de arquivos pequenos aumentam o custo de listar e abrir objetos.
+- **Cardinalidade da partição**: particione por colunas de filtro com poucos valores (data, região). Particionar por ID de cliente gera milhões de partições minúsculas.
+
+| Estratégia | Dados escaneados | Efeito na consulta |
+|---|---|---|
+| **CSV sem partição** | Todas as linhas e todas as colunas | Lenta, cara e sujeita a timeout em grandes volumes |
+| **Converter para Parquet (colunar e comprimido)** | Só as colunas usadas, já comprimidas | Mais rápida e barata; o arquivo se divide para leitura em paralelo |
+| **Particionar por data e região** | Só as partições do filtro | O Athena pula o que está fora do `WHERE` |
+| **Um único arquivo grande com compressão que não se divide (gzip)** | Tudo, por um único leitor | Sem paralelismo: lento |
+| **Muitos arquivos pequenos** | Pouco por arquivo, mas com custo fixo por objeto | Overhead de listar e abrir objetos |
+
+*Na prova, "petabytes no S3", "consultas do Athena lentas ou falhando" e "filtro por data e região" apontam para converter para formato colunar (Parquet ou ORC) e particionar pelos filtros. Serviços de streaming, como o Managed Service for Apache Flink (antigo Kinesis Data Analytics), não resolvem consultas sobre arquivos já guardados.*
+
 #### Amazon EMR
 - **Amazon EMR**: processamento de big data em larga escala com Spark, Hadoop, Hive, Presto/Trino, HBase e Flink. É excessivo para poucos arquivos pequenos.
 - **Opções de execução**: **EMR on EC2** (controle total), **EMR on EKS** (jobs Spark em um cluster Kubernetes existente) e **EMR Serverless** (sem gerenciar cluster, para jobs Spark/Hive intermitentes).
@@ -2378,6 +3405,27 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
   - Modela **intents** (intenções) e **slots** (parâmetros).
   - Uma **Lambda** executa a ação (*fulfillment*).
   - Integra-se ao **Amazon Connect** (central de atendimento) e a canais de mensagem.
+
+#### Transcrição de chamadas e análise com Athena
+Cenário típico: uma central de atendimento grava todas as chamadas por conformidade, precisa guardá-las por **7 anos** para auditoria e quer pesquisar nas transcrições frases sobre reclamações de cobrança, sem provisionar banco de dados nem servidor.
+
+![Gravações no S3 transcritas pelo Transcribe, guardadas no S3 e consultadas com SQL pelo Athena.](diagramas/transcribe-athena.svg)
+
+1. **Áudio**: as gravações chegam a um bucket S3. Um evento do S3, ou o fluxo do Amazon Connect, inicia um job de transcrição em lote.
+2. **Transcribe**: gera a transcrição e indica **quem falou cada trecho**. Há dois modos: a **diarização** (*speaker partitioning*) separa os interlocutores pela voz, num áudio mono; a **identificação de canal** transcreve cada canal separadamente, quando o sistema grava atendente e cliente em canais diferentes. O **Call Analytics** é a variante para centrais de atendimento: acrescenta sentimento, categorias, resumo e redação de PII.
+3. **S3**: o Transcribe grava a transcrição em JSON no bucket de saída. Um crawler ou uma tabela definida no **Glue Data Catalog** torna os arquivos consultáveis. Para muitas chamadas, uma Lambda ou um job do Glue pode achatar o JSON em Parquet particionado por data, o que reduz o custo do Athena.
+4. **Athena**: o analista consulta as transcrições com SQL (`LIKE`, `regexp_like`) direto no S3, pagando pelos dados escaneados, sem banco nem servidor.
+5. **Retenção**: **Object Lock** em modo compliance impede apagar ou alterar os arquivos antes dos 7 anos. O lifecycle leva o áudio antigo para Glacier Deep Archive. As transcrições que o Athena consulta ficam em Standard, Standard-IA ou Glacier Instant Retrieval, porque objetos em Glacier Flexible Retrieval ou Deep Archive precisam ser restaurados antes da consulta.
+
+| Opção | O que faz | No cenário |
+|---|---|---|
+| **Transcribe + S3 + Athena** | Transcrição gerenciada, armazenamento barato e SQL serverless sobre os arquivos | Atende: sem servidor, escala com o volume de chamadas |
+| **Transcribe + RDS/Aurora** | Guarda as transcrições num banco relacional | Funciona, mas adiciona um banco para operar e pagar o tempo todo |
+| **Comprehend** | Extrai sentimento, entidades e frases-chave de texto | Complemento, não substituto: precisa de texto, então vem depois do Transcribe |
+| **OpenSearch Service** | Busca de texto completo com relevância e baixa latência | Melhor se a busca for frequente e interativa; para análise eventual, o Athena custa menos |
+| **Polly** | Converte texto em fala | Faz o caminho inverso: não transcreve |
+
+*Na prova, "áudio de chamadas com vários interlocutores" aponta para o Transcribe com identificação de interlocutores, e "consultar com SQL arquivos no S3 sem provisionar infraestrutura" aponta para o Athena. Retenção longa para auditoria pede S3 com lifecycle e Object Lock, e não um banco de dados.*
 
 #### Imagem e vídeo
 - **Amazon Rekognition**: análise de imagem e vídeo. Não faz OCR de documentos: detecta texto curto em cenas (placas, legendas), e documentos são com o Textract. Recursos:
@@ -2653,6 +3701,28 @@ Escolha conforme a frequência de acesso, o prazo aceitável para recuperar os d
   - apagar **EBS não anexados, snapshots antigos, Elastic IPs ociosos** e load balancers sem alvos;
   - **retenção de logs**.
 
+#### Ligar e desligar EC2 e RDS fora do horário
+Cenário típico: ambientes de desenvolvimento e teste com instâncias EC2 e RDS ficam ligados 24 horas, mas só são usados em horário comercial. A empresa quer desligá-los à noite e nos fins de semana com o menor custo e a menor manutenção.
+
+![Agenda do EventBridge invocando uma Lambda que liga e desliga instâncias EC2 e RDS selecionadas por tag.](diagramas/agenda-ec2-rds.svg)
+
+1. **Agenda**: duas agendas do **EventBridge** (por exemplo, 8h para ligar e 19h para desligar, de segunda a sexta) invocam a função. Prefira o **EventBridge Scheduler**, que aceita fuso horário, às regras agendadas.
+2. **EC2**: a Lambda encontra as instâncias pela tag e chama `StartInstances` ou `StopInstances`. Parada, a instância não paga computação, mas os **volumes EBS** e os **IPv4 públicos** continuam cobrados.
+3. **RDS**: a mesma função chama `StartDBInstance` ou `StopDBInstance` (no Aurora, o cluster inteiro). O RDS **religa sozinho depois de 7 dias parado**, e a agenda diária torna a desligá-lo. Armazenamento e backups continuam cobrados. Uma instância com read replica, ou que é uma réplica, não pode ser parada.
+
+- **Permissões**: a role da Lambda recebe só as ações de start e stop, de preferência limitadas por condição de tag, para a função não desligar a produção por engano.
+- **Sem código**: o EventBridge Scheduler também chama a API do EC2 ou do RDS diretamente, como *universal target*, sem Lambda. Com muitas contas e agendas, a solução **Instance Scheduler on AWS** já entrega isso pronto, em CloudFormation.
+
+| Opção | Servidor para manter | Alcance | Quando escolher |
+|---|---|---|---|
+| **EventBridge + Lambda** | Nenhum | EC2, RDS e qualquer API, com lógica própria (tags, exceções) | Padrão serverless de baixo custo e pouca manutenção |
+| **EventBridge Scheduler direto na API** | Nenhum | Uma chamada de API por agenda | Regra simples, sem lógica de seleção |
+| **Instance Scheduler on AWS** | Nenhum, mas implanta Lambda, DynamoDB e CloudFormation | Várias contas e Regiões, agendas por tag | Muitas contas e agendas diferentes |
+| **cron em uma instância EC2** | Sim: a própria instância, que precisa ficar ligada | O que o script fizer | Não é a resposta: custa e exige manutenção |
+| **Ação agendada do Auto Scaling** | Nenhum | Só instâncias de um Auto Scaling group | Escalar um ASG para zero; não para o RDS |
+
+*Na prova, "iniciar e parar instâncias fora do horário com o menor esforço operacional" aponta para uma agenda do EventBridge com Lambda, sem servidor para manter. Se a alternativa usar uma instância EC2 com cron, ela adiciona exatamente o servidor que o cenário quer evitar.*
+
 #### Custos de transferência de dados
 - **Entrada** de dados da internet para a AWS: **gratuita**. **Saída** para a internet: cobrada por GB, e a faixa gratuita é pequena.
 - **Dentro da mesma AZ** via IP privado: gratuito. **Entre AZs**: cobrado nos dois sentidos, o que inclui replicação de bancos autogerenciados, tráfego para um NAT em outra AZ e cross-zone no NLB. **Entre Regiões**: cobrado.
@@ -2730,6 +3800,27 @@ Da menor para a maior infraestrutura ativa e custo típico. Em geral, o RTO/RPO 
 - Todas as camadas estão rodando (load balancer, poucas instâncias, banco réplica) e podem ser **testadas continuamente**. No failover, **escale** os Auto Scaling groups para a capacidade de produção, promova o banco e redirecione o tráfego (Route 53 failover/weighted).
 - Verifique as **cotas** da Região de DR para a escala total, porque o scale-up depende delas.
 
+Cenário típico: uma plataforma de streaming roda em uma Região, e os espectadores não podem perceber mais do que uma breve interrupção se a Região falhar (por exemplo, RTO de até 30 minutos e perda mínima de dados). A segunda Região tem os mesmos componentes, ligados em escala reduzida, e não recebe tráfego em operação normal.
+
+![Warm standby: Região primária com tráfego e Região de DR ligada em escala mínima, com Route 53 failover e Aurora replicando.](diagramas/warm-standby.svg)
+
+1. **DNS**: o Route 53 usa uma política de **failover ativo-passivo**, com health check no endpoint da Região primária.
+2. **Região primária**: ALB, Auto Scaling group em capacidade total e Aurora primário atendem todo o tráfego.
+3. **Replicação**: o banco replica continuamente para a Região de DR, de preferência com o [Aurora Global Database](#aurora-global-database), com lag tipicamente abaixo de 1 segundo. Na Região de DR, ALB e instâncias já estão **ligados em capacidade mínima**, prontos para serem testados, mas sem tráfego.
+4. **Failover**: quando o health check falha, o Route 53 manda os usuários para a Região de DR. Ao mesmo tempo, o banco secundário é **promovido** e o Auto Scaling group sobe para a capacidade de produção. Veja [Failover multi-Região com Aurora Global Database e Route 53](#failover-multi-regiao-com-aurora-global-database-e-route-53).
+
+- **"Inativa" não é "desligada"**: no Warm Standby, a Região de DR está **ligada e funcional**, só não recebe tráfego. Se o enunciado disser que a computação fica desligada ou em zero até o failover, a estratégia é **Pilot Light**, com RTO maior.
+- **Custo**: o Warm Standby paga a infraestrutura reduzida rodando o tempo todo. É mais caro que o Pilot Light e mais barato que o Multi-Site.
+
+| Estratégia | RTO típico | RPO típico | Tráfego na Região de DR | Para RTO de 30 min e RPO mínimo |
+|---|---|---|---|---|
+| **Backup & Restore** | Horas | Horas (frequência do backup) | Nenhum | Não atende: a restauração leva mais que 30 minutos |
+| **Pilot Light** | Dezenas de minutos a horas | Segundos a minutos | Nenhum; computação desligada | Arriscado: subir a computação no failover pode passar do limite |
+| **Warm Standby** | Minutos | Segundos (replicação contínua) | Nenhum; ambiente ligado em escala reduzida | Atende, com custo moderado |
+| **Multi-Site Active/Active** | Próximo de zero | Próximo de zero | Tráfego real nas duas Regiões | Atende, mas com custo e complexidade além do requisito |
+
+*Na prova, "segunda Região com os mesmos componentes, pronta, mas sem receber tráfego" e "RTO de minutos" apontam para **Warm Standby**. "Só os dados replicados, computação desligada" aponta para Pilot Light, e "as duas Regiões atendendo usuários" aponta para Multi-Site Active/Active.*
+
 #### Multi-Site Active/Active
 - Ambiente completo rodando simultaneamente em múltiplas Regiões e atendendo tráfego real em todas. Tem o menor RTO/RPO possível e o maior custo. É desnecessário quando o requisito é só failover, sem balanceamento de carga multi-Região.
 - **Roteamento**: Route 53 latency/geolocation/weighted com health checks, ou **Global Accelerator**.
@@ -2755,7 +3846,7 @@ Aurora Global Database, DynamoDB Global Tables e S3 CRR são os blocos de constr
 
 - Detalhes de cada serviço:
   - [Aurora Global Database](#aurora-global-database);
-  - [Global Tables, cache e streams](#global-tables-cache-e-streams);
+  - [Global Tables e streams](#global-tables-e-streams);
   - [Proteção de dados: versionamento, Object Lock e replicação](#protecao-de-dados-versionamento-object-lock-e-replicacao);
   - [Segurança e replicação do EFS](#seguranca-e-replicacao-do-efs);
   - [Backup](#backup).
@@ -2992,9 +4083,13 @@ O SAA-C03 usa pontuação **compensatória**: não é preciso atingir a nota mí
 
 ---
 
-## 13. Autoteste — Flashcards de Revisão Rápida
+## 13. Flashcards de revisão
 
-Cada card abaixo é um callout colapsável: clique para expandir e revelar a resposta só depois de tentar responder mentalmente — o objetivo é forçar recall ativo, não releitura passiva. Bom para uma rodada de revisão espaçada (ex.: 10-15 cards por dia) nos dias antes da prova, cobrindo os padrões da Seção 11 e as tabelas de decisão rápida dos capítulos 1 a 10.
+Cada card abaixo é um callout colapsável: clique para expandir e revelar a resposta só depois de tentar responder mentalmente — o objetivo é forçar recall ativo, não releitura passiva. Bom para uma rodada de revisão espaçada (ex.: 10-15 cards por dia) nos dias antes da prova.
+
+Os cards estão em dois blocos. O primeiro segue as áreas dos capítulos 1 a 10, cobrindo os padrões da Seção 11 e as tabelas de decisão rápida, e termina com as pegadinhas duplas. O segundo segue os quatro domínios oficiais do exame; os **cenários de decisão** ao fim de cada domínio explicam o requisito decisivo e por que as outras opções não o atendem.
+
+> Revisão complementar: [guia oficial do exame SAA-C03](https://docs.aws.amazon.com/pdfs/aws-certification/latest/solutions-architect-associate-03/solutions-architect-associate-03.pdf) e documentação da AWS indicada nos cartões revisados.
 
 ### Computação
 
@@ -3197,14 +4292,6 @@ Cada card abaixo é um callout colapsável: clique para expandir e revelar a res
 
 > [!question]- Uma aplicação global não-HTTP (ex.: um jogo multiplayer via UDP) precisa de IP estático e baixa latência via a rede backbone da AWS; outra aplicação precisa cachear conteúdo estático HTTP na borda para reduzir carga na origem. O mesmo serviço resolve os dois casos?
 > Não. AWS Global Accelerator resolve o primeiro (TCP/UDP, IP anycast, roteamento pelo backbone AWS, sem cache de conteúdo). Amazon CloudFront resolve o segundo (CDN com cache de conteúdo HTTP(S)). Confundir os dois propósitos ao otimizar performance multi-região é um erro recorrente.
-
----
-
-## 14. Cartões Flash Adicionais — Consolidação por Domínio (SAA-C03)
-
-Consolidação de cartões flash adicionais para os quatro domínios do exame AWS Certified Solutions Architect - Associate (SAA-C03). Cada card abaixo é um callout colapsável: clique para expandir e revelar a resposta só depois de tentar responder mentalmente. Os **cenários de decisão** ao fim de cada domínio explicam o requisito decisivo e por que as outras opções não o atendem.
-
-> Revisão complementar: [guia oficial do exame SAA-C03](https://docs.aws.amazon.com/pdfs/aws-certification/latest/solutions-architect-associate-03/solutions-architect-associate-03.pdf) e documentação da AWS indicada nos cartões revisados.
 
 ### Domínio 1 — Projetar arquiteturas seguras
 
@@ -3657,7 +4744,7 @@ Consolidação de cartões flash adicionais para os quatro domínios do exame AW
 
 ---
 
-## 15. Mapa de cobertura do guia oficial e questões de múltipla resposta
+## 14. Mapa de cobertura do guia oficial e questões de múltipla resposta
 
 O [guia oficial SAA-C03](https://docs.aws.amazon.com/pt_br/aws-certification/latest/solutions-architect-associate-03/solutions-architect-associate-03.html) divide a prova em **14 tarefas**. A tabela localiza a revisão de cada tarefa neste material. Cobrir as tarefas publicadas **não garante** conhecer todas as questões: exemplos de serviços e habilidades não são exaustivos, e cenários novos exigem aplicar os mesmos princípios. Para priorizar estudo, use as tarefas oficiais; para escolher um serviço em projeto novo, confira a disponibilidade atual na documentação do produto. A [lista oficial de serviços](https://docs.aws.amazon.com/pt_br/aws-certification/latest/solutions-architect-associate-03/saa-03-in-scope-services.html) também declara que é incompleta e sujeita a alterações; nesta revisão ela ainda cita Elastic Transcoder, cujo suporte terminou em 2025.
 

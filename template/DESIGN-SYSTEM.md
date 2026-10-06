@@ -57,11 +57,11 @@ As duas ficam em [`fontes/`](fontes/) (subconjuntos latin e latin-ext, licença 
 | --- | --- | --- | --- |
 | Base (`body`) | 16px / 1,65 | 9,5pt / 1,48 | — |
 | Selo de nível (`.cover-level`) | 0,78rem mono 700, maiúsculas | 8pt | Contorno de 2px `--ink` |
-| Código da capa (`.cover-code`) | até 6rem, mono 700 | 56pt | `letter-spacing: -.085em`; hífen em `<span class="dash">` |
+| Código da capa (`.cover-code`) | até 6rem, mono 700 | 64pt | `letter-spacing: -.085em`; hífen em `<span class="dash">` |
 | Nome completo (`.cover-exam`) | 0,95rem mono 700, maiúsculas | 10,5pt | `--accent-ink` |
 | Título da capa (`h1`) | até 3rem, 600 | 30pt | `letter-spacing: -.045em` |
 | Subtítulo da capa | 1,14rem | 12pt | `--muted` |
-| Autoria (`.cover-author`) | 1,05rem, nome em 600 | 11pt | Site em mono `--teal`, sem sublinhado no PDF |
+| Autoria (`.cover-author`) | 1,05rem, nome em 600 | 11pt | No rodapé da capa; site em mono `--teal`, sem sublinhado no PDF |
 | Título "Sumário" | 1,9rem | 18pt | Borda inferior de 3px `--ink` |
 | Faixa de capítulo no sumário | 0,76rem mono 700, maiúsculas | 8pt | `letter-spacing: .06em` |
 | Item do sumário | 0,88rem | 8,9pt | Número em mono 0,74rem / 7,8pt |
@@ -80,7 +80,7 @@ Regras de leitura: parágrafos e itens com no máximo **75ch**, `orphans`/`widow
 
 | Recurso | Valores | Onde |
 | --- | --- | --- |
-| Barras grossas | 10px (capa), 9px (destaques da capa), 6px (capítulo), 3px (sumário) | Estrutura de página |
+| Barras grossas | lombada 16mm (capa), 16px (barra de pesos), 9px (destaques da capa), 6px (capítulo), 3px (sumário) | Estrutura de página |
 | Borda de destaque lateral | 4px (faixa do sumário, blockquote, flashcard), 5px (callout) | Componentes com ênfase |
 | Borda fina | 1px `--line` | Cards, tabelas, divisórias de seção |
 | Raios | 3–6px em caixas, 8px em cards, 999px em chips, 50% em marcadores | — |
@@ -93,33 +93,37 @@ Regras de leitura: parágrafos e itens com no máximo **75ch**, `orphans`/`widow
 
 ### Capa (`.cover`)
 
-Ocupa a primeira folha inteira, sem rodapé: no PDF, `.cover` tem a altura exata da área útil da página (`256mm` com as margens 19/21mm), então os destaques ficam presos na base da folha.
+Direção editorial clara, com lombada. No PDF a capa ocupa a folha inteira, até a borda (`@page:first` sem margem, `height:297mm`), e não tem rodapé de página. A lombada à esquerda (16 mm no PDF, 60px na tela, 32px no celular) é a única área escura: o bloco de destaque no topo e o nome da coleção na vertical, na base.
 
 ```
-┌ barra ▬▬▬(laranja 92px)▬▬▬▬▬▬▬▬▬▬▬▬(ink)▬▬▬▬▬▬▬▬▬▬▬▬▬▬ ┐
-  CATEGORIA                         ATUALIZADO EM MÊS DE ANO
-
-  ┌ NÍVEL ASSOCIATE ┐     ← selo opcional (nível da certificação)
-  TÍTULO-CURTO            ← mono gigante
-  NOME COMPLETO           ← mono, --accent-ink (opcional)
-  Título                  ← sans 600
-  Subtítulo em --muted
-  ─────────────────────
-  Erik Nathan  eriknathan.me
-
-  ───────────────────────────────────────────────────────────
-  RÓTULO DOS DESTAQUES
-  ▬▬▬▬▬▬▬▬ ▬▬▬▬▬▬▬ ▬▬▬▬▬▬ ▬▬▬▬▬   ← 3 a 6 destaques
-  30%      26%     24%    20%       (número em mono + legenda + nota opcional)
+┌──┬────────────────────────────────────────────────────────┐
+│▓▓│ CATEGORIA                         ATUALIZADO EM MÊS/ANO │
+│▓▓│                                                        │
+│██│ ┌ NÍVEL ASSOCIATE ┐    ← selo opcional                 │
+│██│ TÍTULO-CURTO           ← mono gigante (64pt no PDF)    │
+│██│ NOME COMPLETO          ← mono, --accent-ink (opcional) │
+│██│ ▬▬▬                    ← fio de destaque               │
+│██│ Título                 ← sans 600                      │
+│██│ Subtítulo em --muted                                   │
+│██│ ══════════════════════════════════════════════════════ │
+│██│ RÓTULO DOS DESTAQUES                                   │
+│G │ ▬▬▬▬▬▬▬|████████|▬▬▬▬▬▬▬▬▬▬|█████|▬▬▬▬  ← barra com pesos│
+│U │ ▬ 20%    █ 24%    ▬ 28%    █ 14%   ▬ 14%  ← legenda      │
+│I │ ────────────────────────────────────────────────────── │
+│A │ Erik Nathan  eriknathan.me                             │
+└──┴────────────────────────────────────────────────────────┘
+ ▓ bloco --accent   █ lombada --ink   GUIAS DE ESTUDO na vertical
 ```
 
 Regras da capa:
 
 - **Nada repete.** O topo direito traz a data de atualização; o nome completo do assunto fica só abaixo do código.
-- **Barra mostra o peso.** Quando os destaques são pesos (domínios de exame), a grade recebe `style="grid-template-columns:30fr 26fr 24fr 20fr"` e cada item `style="--w:30"`; juntas, as barras formam uma faixa de 100%. Destaques sem peso (pilares, módulos) usam colunas iguais.
-- **Nota opcional.** `<span class="highlight-note">` (`.domain-pt` nos geradores) traz a tradução ou um detalhe curto em `--muted`. O nome oficial em inglês leva `lang="en"`.
+- **Pesos numa barra só.** Quando os destaques são pesos (domínios de exame), `.cover-bar` mostra a proporção com um segmento por destaque, e a legenda fica em colunas iguais (`.highlight-grid.weighted`), sem texto espremido nas colunas estreitas. Segmentos e marcadores da legenda alternam `--accent` e `--ink`, na mesma ordem. Destaques sem peso (blocos, pilares) usam colunas iguais, todos com a barra `--accent`.
+- **Nota opcional.** `<span class="highlight-note">` traz a tradução ou um detalhe curto em `--muted`. O nome oficial em inglês leva `lang="en"`.
+- **Autoria no rodapé da capa** (`.cover-foot`), separada por um fio fino, como num livro; o nome da coleção (`.cover-series`) vai para a lombada.
 - **Selo em vez de cor.** O nível da certificação diferencia e-books da mesma família sem quebrar a regra de uma cor de destaque.
-- **Hífen no código.** Em mono, o hífen ocupa uma célula inteira; envolva-o em `<span class="dash">-</span>`.
+- **Hífen no código.** Em mono, o hífen ocupa uma célula inteira; envolva-o em `<span class="dash">-</span>`. Códigos muito longos (ex.: `Well-Architected`) precisam de fonte menor para caber em uma linha.
+- **Sem `vw` no miolo impresso.** Com a capa sem margem, `vw` passa a medir a primeira página (210 mm) na impressão; tamanhos em `vw` precisam de valor fixo no `@media print`.
 
 ### Sumário (`.toc`)
 

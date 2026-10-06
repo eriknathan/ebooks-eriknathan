@@ -88,32 +88,29 @@
     color: var(--accent-ink);
   }
 
-  /* ---------- Capa (mesmo padrão do guia SAA-C03) ---------- */
+  /* ---------- Capa: editorial claro, com lombada (mesmo padrão de template/ebook-template.html) ----------
+     No PDF a capa ocupa a folha inteira (@page :first sem margem). A lombada à esquerda é
+     desenhada por ::before (tinta) e ::after (bloco de destaque); .cover-series fica na vertical. */
   .cover{
     --cover-ink: #1B2D3B;
     --cover-muted: #52616D;
     --cover-teal: #086B70;
+    --cover-line: #CBD5DB;
     --cover-sans: 'IBM Plex Sans', Arial, sans-serif;
     --cover-mono: 'IBM Plex Mono', Consolas, monospace;
+    --spine: 60px;
     position: relative;
     display: grid;
-    grid-template-rows: auto 1fr auto;
-    gap: 30px;
-    min-height: 770px;
-    padding: 40px 0 50px;
-    border-top: 10px solid var(--cover-ink);
+    grid-template-rows: auto 1fr auto auto;
+    gap: 34px;
+    min-height: 1000px;
+    margin: -56px -64px 0;
+    padding: 56px 64px 40px calc(var(--spine) + 76px);
     font-family: var(--cover-sans);
     color: var(--cover-ink);
   }
-  .cover::before{
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: 0;
-    width: 92px;
-    height: 10px;
-    background: var(--accent);
-  }
+  .cover::before{ content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: var(--spine); background: var(--cover-ink); }
+  .cover::after{ content: ''; position: absolute; top: 0; left: 0; width: var(--spine); height: 170px; background: var(--accent); }
   .cover-top,
   .cover-bottom-label{
     font: 700 .75rem/1.4 var(--cover-mono);
@@ -125,12 +122,14 @@
   .cover-main{ align-self: center; max-width: 690px; }
   .cover-code{
     display: block;
-    font: 700 clamp(2.4rem, 8vw, 4.9rem)/.98 var(--cover-mono);
+    font: 700 clamp(2.4rem, 7vw, 4.4rem)/.98 var(--cover-mono);
     letter-spacing: -.085em;
     color: var(--cover-ink);
-    margin: 0 0 28px;
+    margin: 0 0 14px;
     hyphens: none;
   }
+  /* Fio de destaque entre o código e o título */
+  .cover-code + h1::before{ content: ''; display: block; width: 64px; height: 5px; background: var(--accent); margin: 22px 0 30px; }
   .cover h1{
     font-family: var(--cover-sans);
     font-size: clamp(2rem, 4.4vw, 3rem);
@@ -147,32 +146,36 @@
     line-height: 1.6;
     color: var(--cover-muted);
     max-width: 40rem;
-    margin: 0 0 22px;
+    margin: 0;
     hyphens: none;
   }
   .cover-code .dash{ margin: 0 -.05em; }
+  .cover-bottom{ border-top: 2px solid var(--cover-ink); padding-top: 16px; }
+  .cover-bottom-label{ margin: 0 0 16px; }
+  .domain-grid{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 3px; }
+  .domain{ min-width: 0; }
+  .domain::before{ content: ''; display: block; height: 9px; background: var(--accent); margin-bottom: 10px; }
+  .domain strong{ display: block; font: 600 1.65rem/1 var(--cover-mono); color: var(--cover-ink); margin-bottom: 7px; }
+  .domain span{ display: block; font-size: .8rem; line-height: 1.3; color: var(--cover-ink); hyphens: none; }
+  .cover-foot{ display: flex; justify-content: space-between; align-items: baseline; gap: 20px; border-top: 1px solid var(--cover-line); padding-top: 14px; }
   .cover-author{
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     gap: 4px 12px;
-    max-width: 40rem;
     margin: 0;
-    padding-top: 14px;
-    border-top: 1px solid var(--border);
     font-size: 1.05rem;
     line-height: 1.4;
     color: var(--cover-ink);
   }
   .cover-author strong{ font-weight: 600; color: var(--cover-ink); }
   .cover-author a{ font: 500 .85rem var(--cover-mono); color: var(--cover-teal); text-underline-offset: 3px; }
-  .cover-bottom{ border-top: 1px solid var(--cover-ink); padding-top: 16px; }
-  .cover-bottom-label{ margin: 0 0 16px; }
-  .domain-grid{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-  .domain{ min-width: 0; }
-  .domain::before{ content: ''; display: block; height: 9px; background: var(--accent); margin-bottom: 10px; }
-  .domain strong{ display: block; font: 600 1.65rem/1 var(--cover-mono); color: var(--cover-ink); margin-bottom: 7px; }
-  .domain span{ display: block; font-size: .8rem; line-height: 1.3; color: var(--cover-ink); }
+  .cover-series{
+    position: absolute; left: 0; bottom: 44px; width: var(--spine);
+    display: flex; justify-content: center;
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    font: 700 .72rem var(--cover-mono); letter-spacing: .24em; text-transform: uppercase; color: #fff;
+  }
 
   /* ---------- Sumário ---------- */
   .toc h2{
@@ -530,7 +533,9 @@
   @media (max-width: 640px){
     body{ padding: 0; }
     article{ padding: 28px 18px; box-shadow: none; gap: 36px; }
-    .cover{ min-height: 0; padding: 24px 0 34px; gap: 45px; }
+    .cover{ --spine: 32px; min-height: 0; margin: -28px -18px 0; padding: 28px 18px 28px calc(var(--spine) + 18px); gap: 40px; }
+    .cover::after{ height: 96px; }
+    .cover-series{ bottom: 28px; font-size: .62rem; }
     .cover-top{ flex-direction: column; gap: 3px; }
     .cover h1{ font-size: 2rem; }
     .domain-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -549,6 +554,7 @@
     @bottom-left{ content: "AWS Well-Architected Framework"; font: 8pt 'Source Sans 3', Arial, sans-serif; color: #5C6470; }
   }
   @page :first{
+    margin: 0;
     @bottom-left{ content: none; }
     @bottom-right{ content: none; }
   }
@@ -558,15 +564,20 @@
 
     html{ font-size: 10.5pt; }
     body{ background: #fff; padding: 0; line-height: 1.5; }
+    /* Em bloco, e não em flex: com a capa sem margem (@page :first), o Chrome encolhia o documento
+       inteiro para caber nas demais páginas quando o article era flex. */
     article{
       max-width: none;
       padding: 0;
       box-shadow: none;
       gap: 0;
+      display: block;
     }
 
     /* Estrutura de páginas */
-    .cover{ height: 254mm; min-height: 0; break-after: page; padding: 18px 0 0; }
+    .cover{ --spine: 16mm; height: 297mm; min-height: 0; margin: 0; break-after: page; padding: 22mm 20mm 15mm 36mm; }
+    .cover::after{ height: 46mm; }
+    .cover-series{ bottom: 15mm; }
     .cover-author{ font-size: 11pt; }
     .cover-author a{ font-size: 9pt; text-decoration: none; }
     .cover-code{ font-size: 50pt; }
@@ -577,6 +588,8 @@
     .module + .module,
     .module:first-of-type{ break-before: page; }
     .module-head{ break-after: avoid; }
+    /* Na impressão, vw mede a primeira página (agora 210 mm, sem margem); 22,2pt é o que o 4.5vw dava antes. */
+    .module-head h2{ font-size: 22.2pt; }
 
     .subsection{ padding-top: 14px; row-gap: 8px; }
     .subsection > .sec-label,
@@ -635,7 +648,6 @@
       <span class="cover-code">Well<span class="dash">-</span>Architected</span>
       <h1>Guia de revisão</h1>
       <p class="cover-subtitle">Baseado no treinamento AWS Well-Architected — princípios de design, pilares e práticas recomendadas para arquitetar na nuvem.</p>
-      <p class="cover-author"><strong>Erik Nathan</strong><a href="https://eriknathan.me/">eriknathan.me</a></p>
     </div>
     <div class="cover-bottom">
       <p class="cover-bottom-label">Seis pilares do framework</p>
@@ -648,6 +660,10 @@
         <div class="domain"><strong>06</strong><span>Sustentabilidade</span></div>
       </div>
     </div>
+    <footer class="cover-foot">
+      <p class="cover-author"><strong>Erik Nathan</strong><a href="https://eriknathan.me/">eriknathan.me</a></p>
+      <span class="cover-series">Guias de estudo</span>
+    </footer>
   </header>
 
   <nav class="toc" id="sumario" aria-label="Sumário">

@@ -303,7 +303,6 @@ def build_cover(capa: dict) -> str:
     linhas += [
         f'  <h1>{capa["titulo"]}</h1>',
         f'  <p class="cover-subtitle">{capa["subtitulo"]}</p>',
-        f"  {AUTORIA}",
         "</div>",
         '<div class="cover-bottom">',
         f'  <p class="cover-bottom-label">{capa["rotulo_destaques"]}</p>',
@@ -311,17 +310,22 @@ def build_cover(capa: dict) -> str:
     destaques = capa.get("destaques", [])
     if not 1 <= len(destaques) <= 6:
         raise ValueError("A capa deve ter de 1 a 6 destaques")
-    if capa.get("destaques_com_peso"):
-        colunas = " ".join(f'{d["peso"]}fr' for d in destaques)
-        linhas.append(f'  <div class="highlight-grid" style="grid-template-columns:{colunas}">')
-    else:
-        linhas.append(f'  <div class="highlight-grid" style="grid-template-columns:repeat({len(destaques)},minmax(0,1fr))">')
+    com_peso = bool(capa.get("destaques_com_peso"))
+    if com_peso:
+        # Barra proporcional aos pesos; a legenda abaixo fica em colunas iguais, na mesma ordem.
+        segmentos = "".join(f'<span style="flex:{d["peso"]}"></span>' for d in destaques)
+        linhas.append(f'  <div class="cover-bar" aria-hidden="true">{segmentos}</div>')
+    classe = "highlight-grid weighted" if com_peso else "highlight-grid"
+    linhas.append(f'  <div class="{classe}" style="grid-template-columns:repeat({len(destaques)},minmax(0,1fr))">')
     for destaque in destaques:
-        estilo = f' style="--w:{destaque["peso"]}"' if capa.get("destaques_com_peso") else ""
         idioma = f' lang="{destaque["idioma"]}"' if destaque.get("idioma") else ""
         nota = f'<span class="highlight-note">{destaque["nota"]}</span>' if destaque.get("nota") else ""
-        linhas.append(f'    <div class="highlight"{estilo}><strong>{destaque["valor"]}</strong><span{idioma}>{destaque["texto"]}</span>{nota}</div>')
-    linhas += ["  </div>", "</div>"]
+        linhas.append(f'    <div class="highlight"><strong>{destaque["valor"]}</strong><span{idioma}>{destaque["texto"]}</span>{nota}</div>')
+    linhas += [
+        "  </div>",
+        "</div>",
+        f'<footer class="cover-foot">{AUTORIA}<span class="cover-series">Guias de estudo</span></footer>',
+    ]
     return "\n      ".join(linhas)
 
 

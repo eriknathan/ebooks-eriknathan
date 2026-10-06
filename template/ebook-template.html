@@ -61,9 +61,13 @@
   strong{color:var(--ink)}
   .kicker{font:700 .78rem/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink)}
 
-  /* ---------- Capa ---------- */
-  .cover{min-height:770px;display:grid;grid-template-rows:auto 1fr auto;gap:30px;padding:40px 0 50px;border-top:10px solid var(--ink);position:relative}
-  .cover:before{content:'';position:absolute;top:-10px;left:0;width:92px;height:10px;background:var(--accent)}
+  /* ---------- Capa: editorial claro, com lombada ----------
+     No PDF a capa ocupa a folha inteira (@page:first sem margem). A lombada à esquerda
+     é desenhada por :before (tinta) e :after (bloco de destaque); o nome da coleção
+     (.cover-series) fica na vertical dentro dela. */
+  .cover{--spine:60px;min-height:1000px;display:grid;grid-template-rows:auto 1fr auto auto;gap:34px;margin:0 -70px;padding:56px 70px 40px calc(var(--spine) + 80px);position:relative}
+  .cover:before{content:'';position:absolute;top:0;bottom:0;left:0;width:var(--spine);background:var(--ink)}
+  .cover:after{content:'';position:absolute;top:0;left:0;width:var(--spine);height:170px;background:var(--accent)}
   .cover-top,.cover-bottom-label{font:700 .75rem/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
   .cover-top{display:flex;justify-content:space-between;gap:20px}
   .cover-main{align-self:center;max-width:690px}
@@ -71,25 +75,34 @@
   .cover-code{display:block;font:700 clamp(2.6rem,9vw,6rem)/.98 var(--mono);letter-spacing:-.085em;color:var(--ink);margin:0 0 14px;hyphens:none}
   .cover-code .dash{margin:0 -.05em}
   .cover-exam{display:block;font:700 .95rem/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 30px}
+  /* Fio de destaque entre o código e o título */
+  .cover-exam:after,.cover-code+h1:before{content:'';display:block;width:64px;height:5px;background:var(--accent);margin-top:22px}
+  .cover-code+h1:before{margin:0 0 30px}
   .cover-code+h1{margin-top:14px}
   .cover-main h1{font-size:clamp(2rem,4.4vw,3rem);font-weight:600;letter-spacing:-.045em;max-width:13em;margin:0 0 20px}
-  .cover-subtitle{font-size:1.14rem;color:var(--muted);max-width:40rem;margin:0 0 22px;hyphens:none}
-  .cover-author{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:0;padding-top:14px;border-top:1px solid var(--line);max-width:40rem;font-size:1.05rem;line-height:1.4;color:var(--ink)}
-  .cover-author strong{font-weight:600}
-  .cover-author a{font:500 .85rem var(--mono);color:var(--teal)}
-  .cover-bottom{border-top:1px solid var(--ink);padding-top:16px}
+  .cover-subtitle{font-size:1.14rem;color:var(--muted);max-width:40rem;margin:0;hyphens:none}
+  .cover-bottom{border-top:2px solid var(--ink);padding-top:16px}
   .cover-bottom-label{margin:0 0 16px}
-  /* Sem style inline, as colunas se ajustam à largura (na A4 cabem até 4).
-     Com 5 ou 6 destaques, use grid-template-columns:repeat(N,minmax(0,1fr)).
-     Com pesos, a grade recebe colunas proporcionais e cada item recebe --w (0–100).
-     O gerar_ebook.py sempre escreve as colunas no style. */
+  /* Destaques em colunas iguais (o gerar_ebook.py escreve repeat(N,minmax(0,1fr)) no style).
+     Com pesos (.weighted), a barra .cover-bar mostra a proporção; segmentos e marcadores
+     da legenda alternam destaque e tinta, na mesma ordem. */
+  .cover-bar{display:flex;gap:3px;height:16px;margin:0 0 16px}
+  .cover-bar span,.highlight{--seg:var(--accent)}
+  .cover-bar span:nth-child(even),.highlight-grid.weighted .highlight:nth-child(even){--seg:var(--ink)}
+  .cover-bar span{background:var(--seg)}
   .highlight-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px 3px}
   .highlight{min-width:0}
-  .highlight:before{content:'';display:block;height:9px;background:var(--accent);margin-bottom:10px}
-  .highlight strong,.highlight span{padding-right:8px}
+  .highlight:before{content:'';display:block;height:9px;background:var(--seg);margin-bottom:10px}
+  .highlight-grid.weighted .highlight:before{width:26px;height:6px}
+  .highlight strong,.highlight span{padding-right:8px;hyphens:none}
   .highlight strong{display:block;font:600 1.65rem/1 var(--mono);color:var(--ink);margin-bottom:7px}
   .highlight span{display:block;font-size:.8rem;line-height:1.3;color:var(--ink)}
   .highlight .highlight-note{font-size:.74rem;color:var(--muted);margin-top:3px}
+  .cover-foot{display:flex;justify-content:space-between;align-items:baseline;gap:20px;border-top:1px solid var(--line);padding-top:14px}
+  .cover-author{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:0;font-size:1.05rem;line-height:1.4;color:var(--ink)}
+  .cover-author strong{font-weight:600}
+  .cover-author a{font:500 .85rem var(--mono);color:var(--teal)}
+  .cover-series{position:absolute;left:0;bottom:44px;width:var(--spine);display:flex;justify-content:center;writing-mode:vertical-rl;transform:rotate(180deg);font:700 .72rem var(--mono);letter-spacing:.24em;text-transform:uppercase;color:#fff}
 
   /* ---------- Sumário: faixa por capítulo, itens numerados em duas colunas ---------- */
   .toc{padding:40px 0 64px}
@@ -193,11 +206,12 @@
   @media(max-width:700px){
     body{background:var(--paper)}
     .book{margin:0;padding:0 16px 45px;box-shadow:none}
-    .cover{min-height:0;padding:24px 0 34px;gap:45px}
+    .cover{--spine:32px;min-height:0;margin:0 -16px;padding:28px 16px 28px calc(var(--spine) + 18px);gap:40px}
+    .cover:after{height:96px}
+    .cover-series{bottom:28px;font-size:.62rem}
     .cover-top{flex-direction:column;gap:3px}
     .cover-main h1{font-size:2rem}
     .highlight-grid{grid-template-columns:1fr!important}
-    .highlight:before{width:calc(var(--w,100)*1%)}
     .toc-list{column-count:1}
     .chapter{padding-top:34px}
     .section-head h3{font-size:1.2rem}
@@ -211,7 +225,8 @@
     @bottom-left{content:'{{RODAPE}}  |  Erik Nathan (eriknathan.me)';font:8pt 'IBM Plex Mono',monospace;color:#52616d}
     @bottom-right{content:counter(page);font:9pt 'IBM Plex Mono',monospace;color:#1b2d3b}
   }
-  @page:first{@bottom-left{content:none}@bottom-right{content:none}}
+  /* A capa vai até a borda da folha */
+  @page:first{margin:0;@bottom-left{content:none}@bottom-right{content:none}}
   @media print{
     *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     html{font-size:9.5pt}
@@ -220,11 +235,13 @@
     a{color:inherit;text-decoration:none}
     .skip-link{display:none}
 
-    .cover{height:256mm;min-height:0;break-after:page;padding:18px 0 0}
+    .cover{--spine:16mm;height:297mm;min-height:0;margin:0;break-after:page;padding:22mm 20mm 15mm 36mm}
+    .cover:after{height:46mm}
+    .cover-series{bottom:15mm}
     .cover-level{font-size:8pt}
     .cover-exam{font-size:10.5pt}
     .cover-author{font-size:11pt}
-    .cover-code{font-size:56pt}
+    .cover-code{font-size:64pt}
     .cover-main h1{font-size:30pt}
     .cover-subtitle{font-size:12pt}
 
@@ -288,19 +305,22 @@
       <span class="cover-exam">{{NOME_COMPLETO_DO_ASSUNTO}}</span>
       <h1>{{TITULO}}</h1>
       <p class="cover-subtitle">{{SUBTITULO}}</p>
-      <p class="cover-author"><strong>Erik Nathan</strong><a href="https://eriknathan.me/">eriknathan.me</a></p>
     </div>
     <div class="cover-bottom">
       <p class="cover-bottom-label">{{ROTULO_DOS_DESTAQUES}}</p>
-      <!-- Destaques com peso (ex.: domínios do exame): use
-           <div class="highlight-grid" style="grid-template-columns:30fr 26fr 24fr 20fr">
-           e em cada item style="--w:30", para a largura da barra mostrar o peso. -->
-      <div class="highlight-grid">
-        <!-- REPETIR: 3 a 6 destaques (números, pesos, módulos, pilares...).
+      <!-- OPCIONAL, só com pesos (ex.: domínios do exame): barra proporcional, um <span> por
+           destaque, na mesma ordem; a grade abaixo recebe também a classe "weighted".
+      <div class="cover-bar" aria-hidden="true"><span style="flex:30"></span><span style="flex:26"></span></div> -->
+      <div class="highlight-grid" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+        <!-- REPETIR: 3 a 6 destaques (números, pesos, módulos, pilares...); ajuste o N do repeat.
              <span class="highlight-note"> é opcional: tradução ou detalhe curto. -->
         <div class="highlight"><strong>{{01}}</strong><span>{{Descrição do destaque}}</span></div>
       </div>
     </div>
+    <footer class="cover-foot">
+      <p class="cover-author"><strong>Erik Nathan</strong><a href="https://eriknathan.me/">eriknathan.me</a></p>
+      <span class="cover-series">Guias de estudo</span>
+    </footer>
   </header>
 
   <!-- ==================== SUMÁRIO ==================== -->

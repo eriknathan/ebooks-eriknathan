@@ -12,7 +12,7 @@ Transforme o material Markdown em `<conteudo>` num e-book de estudo, em HTML e P
 Todo e-book é uma pasta na raiz com três arquivos editáveis. O HTML e o PDF são gerados pelos scripts de `ferramentas/`, que aplicam o visual de `template/ebook-template.html`. Não crie um novo design nem um script por pasta.
 
 - **`<pasta>/material.md`:** o conteúdo. `##` vira capítulo, `###` seção e `####` tópico. Callouts `> [!question]- Pergunta` (com a resposta nas linhas `>` seguintes) viram flashcards. Parágrafos `Q01.` seguidos de uma lista viram questões de múltipla escolha. Blocos de código, tabelas e citações são convertidos sem ajuste.
-- **`<pasta>/ebook.toml`:** capa, síntese, rodapé, nome do PDF e título da página. Copie o de um e-book parecido (com pesos na capa: `aws-saa-c03/ebook.toml`; com blocos numerados: `Docker/ebook.toml`) e troque os valores. Os campos de texto aceitam HTML inline; `{flashcards}` na síntese vira o total de perguntas.
+- **`<pasta>/ebook.toml`:** capa, síntese, rodapé, nome do PDF e título da página. Copie o de um e-book parecido (com pesos na capa: `aws-saa-c03/ebook.toml`; com blocos numerados: `docker/ebook.toml`) e troque os valores. Os campos de texto aceitam HTML inline; `{flashcards}` na síntese vira o total de perguntas.
 - **`<pasta>/extra.css` (opcional):** só para ajustes de paginação deste e-book, como em `gh-200/extra.css`. Não redefina componentes.
 - **Referência do padrão:** `template/DESIGN-SYSTEM.md` (cores, tipografia, componentes e regras de impressão).
 
@@ -33,7 +33,7 @@ python3 ferramentas/gerar_todos.py --apenas "<pasta>"   # os dois passos, com o 
 ## O que pode e o que não pode mudar
 
 **Pode:**
-- Escolher os campos da capa no `ebook.toml` (selo, nome completo e notas são opcionais) e de 1 a 6 destaques; com `destaques_com_peso = true`, a largura de cada barra segue o `peso`.
+- Escolher os campos da capa no `ebook.toml` (selo, nome completo e notas são opcionais) e de 1 a 6 destaques; com `destaques_com_peso = true`, a capa ganha uma barra dividida na proporção de cada `peso`, com a legenda em colunas iguais.
 - Trocar as cores do bloco `TOKENS DO E-BOOK` **somente** se `<dados>` pedir outra cor de destaque: redefina as variáveis de `:root` no `extra.css`. Mantenha o contraste AA em `--accent-ink`.
 - Definir o texto do `rodape`. A autoria que vem depois dele (`| Erik Nathan (eriknathan.me)`) é fixa e aparece em todas as páginas.
 
@@ -43,7 +43,7 @@ python3 ferramentas/gerar_todos.py --apenas "<pasta>"   # os dois passos, com o 
 
 ## Estrutura gerada (nesta ordem)
 
-1. **Capa** (`.cover`): categoria e data no topo, selo (opcional), `codigo` grande em mono, nome completo, título, subtítulo, autoria fixa e a grade de destaques.
+1. **Capa** (`.cover`), na folha inteira com lombada escura à esquerda: categoria e data no topo, selo (opcional), `codigo` grande em mono, nome completo, fio de destaque, título, subtítulo, os destaques (com a barra de pesos, se houver) e, no rodapé da capa, a autoria fixa.
 2. **Sumário** (`.toc`): uma faixa `Capítulo N — Nome` por capítulo, seções `N.M` e tópicos `N.M.K` em duas colunas; capítulo sem seções vira link direto. No PDF, o número da página entra à direita de cada linha.
 3. **Capítulos** (`section.chapter`): `chapter-head` com o kicker `Capítulo N`, seções com `sec-label` e tópicos com `topic-num`, com os mesmos números do sumário.
 4. **Perguntas** no ponto em que aparecem no original, com `details.flashcard`.

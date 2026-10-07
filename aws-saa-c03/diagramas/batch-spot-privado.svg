@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 295" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <rect class="d-box" x="10" y="50" width="150" height="75" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="85" y="77" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">AWS Batch</text>
+  <text class="d-text" x="85" y="95" text-anchor="middle" font-size="11" fill="#52616d">fila + ambiente Spot</text>
+  <text class="d-text" x="85" y="110" text-anchor="middle" font-size="11" fill="#52616d">retry na interrupção</text>
+
+  <!-- VPC privada -->
+  <rect class="d-zone" x="200" y="15" width="330" height="270" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="214" y="33" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">VPC · subnets privadas, sem NAT</text>
+
+  <rect class="d-box-accent" x="225" y="50" width="160" height="75" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="305" y="77" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">EC2 Spot</text>
+  <text class="d-text" x="305" y="95" text-anchor="middle" font-size="11" fill="#52616d">contêineres dos jobs</text>
+  <text class="d-text" x="305" y="110" text-anchor="middle" font-size="11" fill="#52616d">EBS cifrado com KMS</text>
+
+  <rect class="d-box" x="410" y="50" width="105" height="75" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="462" y="77" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Gateway</text>
+  <text class="d-title" x="462" y="94" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">endpoint</text>
+  <text class="d-text" x="462" y="111" text-anchor="middle" font-size="11" fill="#52616d">S3</text>
+
+  <rect class="d-box" x="225" y="190" width="160" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="305" y="216" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Endpoints de interface</text>
+  <text class="d-label" x="305" y="236" text-anchor="middle" font-size="10" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">ecs · ecs-agent</text>
+  <text class="d-label" x="305" y="250" text-anchor="middle" font-size="10" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">ecr.api · ecr.dkr · logs</text>
+
+  <!-- S3 e KMS -->
+  <rect class="d-box" x="570" y="15" width="180" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="660" y="40" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">S3 · dados genômicos</text>
+  <text class="d-text" x="660" y="58" text-anchor="middle" font-size="11" fill="#52616d">SSE-KMS, só HTTPS</text>
+
+  <rect class="d-box" x="570" y="100" width="180" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="660" y="125" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">S3 · resultados</text>
+  <text class="d-text" x="660" y="143" text-anchor="middle" font-size="11" fill="#52616d">SSE-KMS, só HTTPS</text>
+
+  <rect class="d-box" x="570" y="205" width="180" height="60" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="660" y="230" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">AWS KMS</text>
+  <text class="d-text" x="660" y="248" text-anchor="middle" font-size="11" fill="#52616d">chave do cliente</text>
+
+  <!-- 1: Batch orquestra -->
+  <line class="d-line" x1="160" y1="87" x2="223" y2="87" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="180" cy="70" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="180" y="74" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+
+  <!-- 2: endpoints de interface -->
+  <line class="d-line" x1="305" y1="125" x2="305" y2="188" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="287" cy="157" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="287" y="161" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+  <text class="d-text" x="317" y="153" font-size="11" fill="#52616d">agente, imagem e logs</text>
+  <text class="d-text" x="317" y="168" font-size="11" fill="#52616d">sem sair para a internet</text>
+
+  <!-- 3: S3 pelo gateway endpoint -->
+  <line class="d-line" x1="385" y1="87" x2="408" y2="87" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <polyline class="d-line" points="515,87 545,87 545,45 568,45" fill="none" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <polyline class="d-line" points="545,87 545,130 568,130" fill="none" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="397" cy="70" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="397" y="74" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+
+  <!-- 4: SSE-KMS -->
+  <line class="d-line-muted" x1="660" y1="160" x2="660" y2="203" stroke="#52616d" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="642" cy="182" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="642" y="186" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">4</text>
+  <text class="d-text" x="672" y="186" font-size="11" fill="#52616d">em repouso</text>
+</svg>

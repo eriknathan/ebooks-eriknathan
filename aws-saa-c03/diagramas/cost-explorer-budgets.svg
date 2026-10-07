@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 225" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <rect class="d-box" x="10" y="75" width="150" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="85" y="101" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">EC2 + Auto Scaling</text>
+  <text class="d-text" x="85" y="119" text-anchor="middle" font-size="11" fill="#52616d">picos sazonais</text>
+  <text class="d-label" x="85" y="135" text-anchor="middle" font-size="10" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">projeto=loja</text>
+  <text class="d-text" x="85" y="165" text-anchor="middle" font-size="11" fill="#52616d">ajusta capacidade,</text>
+  <text class="d-text" x="85" y="180" text-anchor="middle" font-size="11" fill="#52616d">não monitora gasto</text>
+
+  <rect class="d-box" x="210" y="75" width="150" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="285" y="101" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Dados de billing</text>
+  <text class="d-text" x="285" y="119" text-anchor="middle" font-size="11" fill="#52616d">custo e uso por tag</text>
+  <text class="d-text" x="285" y="135" text-anchor="middle" font-size="11" fill="#52616d">tag ativada</text>
+
+  <rect class="d-box" x="420" y="15" width="170" height="65" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="505" y="40" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Cost Explorer</text>
+  <text class="d-text" x="505" y="58" text-anchor="middle" font-size="11" fill="#52616d">tendência por serviço</text>
+  <text class="d-text" x="505" y="72" text-anchor="middle" font-size="11" fill="#52616d">e previsão</text>
+
+  <rect class="d-box-accent" x="420" y="140" width="170" height="70" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-title" x="505" y="165" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">AWS Budgets</text>
+  <text class="d-text" x="505" y="183" text-anchor="middle" font-size="11" fill="#52616d">orçamento do projeto</text>
+  <text class="d-text" x="505" y="198" text-anchor="middle" font-size="11" fill="#52616d">alerta real e previsto</text>
+
+  <rect class="d-box" x="630" y="15" width="120" height="65" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="690" y="42" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Finanças</text>
+  <text class="d-text" x="690" y="60" text-anchor="middle" font-size="11" fill="#52616d">revisão mensal</text>
+
+  <rect class="d-box" x="630" y="140" width="120" height="70" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="690" y="167" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">SNS ou e-mail</text>
+  <text class="d-text" x="690" y="185" text-anchor="middle" font-size="11" fill="#52616d">aviso antes</text>
+  <text class="d-text" x="690" y="199" text-anchor="middle" font-size="11" fill="#52616d">de estourar</text>
+
+  <!-- 1: uso gera custo -->
+  <line class="d-line" x1="160" y1="110" x2="208" y2="110" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="184" cy="93" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="184" y="97" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+
+  <!-- 2: Cost Explorer -->
+  <polyline class="d-line" points="360,110 390,110 390,47 418,47" fill="none" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <line class="d-line" x1="590" y1="47" x2="628" y2="47" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="404" cy="30" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="404" y="34" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+
+  <!-- 3: Budgets -->
+  <polyline class="d-line" points="390,110 390,175 418,175" fill="none" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="372" cy="160" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="372" y="164" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+
+  <!-- 4: alerta -->
+  <line class="d-line" x1="590" y1="175" x2="628" y2="175" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="609" cy="158" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="609" y="162" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">4</text>
+  <text class="d-label" x="505" y="125" text-anchor="middle" font-size="10" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">até 3 atualizações/dia</text>
+</svg>

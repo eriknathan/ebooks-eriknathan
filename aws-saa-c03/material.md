@@ -376,6 +376,29 @@ Cenário típico: o serviço de checkout de uma loja on-line roda em EC2 atrás 
   - para garantir a capacidade antecipadamente, use **On-Demand Capacity Reservations** associadas ao cluster placement group. Veja [Reservas de capacidade](#reservas-de-capacidade).
 - Funciona melhor com instâncias com **enhanced networking** e, para HPC/ML, com **EFA**.
 
+#### Nós que conversam o tempo todo: simulação HPC em cluster placement group
+Cenário típico: uma empresa financeira roda uma simulação de risco de Monte Carlo em dezenas de instâncias EC2 que trocam resultados intermediários o tempo todo. Sem estratégia de posicionamento, a latência entre os nós alonga a simulação.
+
+![Launch template iniciando seis nós num cluster placement group de uma única AZ, interligados por rede de baixa latência, com Capacity Reservation criada no grupo e checkpoints gravados no S3.](diagramas/cluster-placement-hpc.svg)
+
+1. **Lançamento**: um launch template com o **mesmo tipo de instância** lança **todos os nós numa única requisição** dentro do cluster placement group. Isso reduz a chance de `InsufficientInstanceCapacity`.
+2. **Comunicação entre nós**: no mesmo segmento de rede de uma AZ, os nós trocam dados com a **menor latência** e o **maior throughput**: até 10 Gbps por fluxo e jumbo frames. Com **EFA**, MPI e NCCL ainda contornam o sistema operacional.
+3. **Capacidade garantida (opcional)**: uma **On-Demand Capacity Reservation criada no próprio placement group** assegura que todos os nós caibam quando a simulação for rodar. Ela não substitui o placement group, só complementa.
+4. **Checkpoints**: como o grupo inteiro fica numa AZ e pode falhar junto, a simulação grava checkpoints no S3 para recomeçar de onde parou.
+
+- **Só vale quando os nós conversam**: se cada cenário de Monte Carlo for independente (*embarrassingly parallel*), a rede entre nós não importa. O melhor custo então vem de Spot, por exemplo com AWS Batch e array jobs, sem cluster placement group.
+- **Desempenho, não disponibilidade**: Cluster é o oposto de Spread e Partition, que afastam as instâncias para que não falhem juntas.
+
+| Recurso do EC2 | Objetivo principal | Reduz latência ou aumenta throughput entre instâncias? | Melhor uso |
+|---|---|---|---|
+| **Cluster placement group** | Aproximar as instâncias numa única AZ | **Sim** | HPC fortemente acoplado, com baixa latência e alto throughput entre nós |
+| **Spread ou Partition placement group** | Afastar as instâncias em racks diferentes | Não | Reduzir falhas simultâneas de hardware |
+| **Dedicated Instances ou Dedicated Hosts** | Hardware físico dedicado à conta | Não | Isolamento, conformidade ou licença por núcleo (Dedicated Hosts nem entram em placement group) |
+| **On-Demand Capacity Reservation** | Reservar capacidade numa AZ | Não por si só | Garantir capacidade; combinável com o cluster placement group |
+| **Elastic Inference** (descontinuado) | Acelerar inferência de ML | Não | Saiu de linha em 2024; para inferência barata, use instâncias Inferentia ou o SageMaker |
+
+*Na prova, "baixa latência e alto throughput de rede" com "comunicação fortemente acoplada entre os nós" aponta para cluster placement group, com EFA quando aparecer MPI. Se a alternativa só tratar de isolamento de hardware, aceleração de ML ou reserva de capacidade, descarte: nenhuma delas aproxima as instâncias.*
+
 #### Partition
 - O grupo é dividido em partições lógicas, e **nenhuma partição compartilha rack** com outra. A falha de um rack afeta apenas uma partição.
 - **Até 7 partições por AZ**. O grupo pode abranger várias AZs da mesma Região e comportar centenas de instâncias, o que o diferencia do Spread.
@@ -593,6 +616,30 @@ Cenário típico: uma varejista roda a aplicação de estoque em contêineres on
 - **EC2 On-Demand**: jobs que não podem ser interrompidos, **GPU**, instâncias grandes ou tipos específicos. `BEST_FIT_PROGRESSIVE` equilibra custo e disponibilidade.
 - **Fargate**: inicialização mais rápida e sem instâncias para gerenciar, para jobs pequenos ou médios. Não suporta GPU nem multi-node parallel.
 - **Disparo**: agendamentos do **EventBridge Scheduler**, eventos do S3 via EventBridge, ou Step Functions chamando `SubmitJob`. Os estados dos jobs geram eventos no EventBridge para notificação.
+
+#### Dados sensíveis com custo baixo: Batch em subnets privadas, Spot e criptografia
+Cenário típico: um laboratório de genômica roda análises de sequenciamento de DNA em lote, de forma intermitente, sobre dados de pacientes protegidos pela HIPAA. Os jobs toleram interrupção, e a empresa quer o menor custo de computação sem expor os dados.
+
+![AWS Batch iniciando instâncias Spot em subnets privadas, que usam endpoints de interface para ECS, ECR e CloudWatch Logs e um gateway endpoint para ler e gravar no S3 com SSE-KMS.](diagramas/batch-spot-privado.svg)
+
+1. **Batch com Spot**: o compute environment gerenciado usa **EC2 Spot** (até 90% mais barato que On-Demand), `SPOT_PRICE_CAPACITY_OPTIMIZED`, vários tipos de instância e `minvCpus = 0`. A **retry strategy** reenvia o job interrompido, e checkpoints no S3 evitam recomeçar do zero.
+2. **Subnets privadas sem NAT**: as instâncias precisam falar com o ECS (agente), puxar a imagem do ECR e enviar logs. Sem rota para a internet, isso exige **endpoints de interface** para `ecs`, `ecs-agent`, `ecs-telemetry`, `ecr.api`, `ecr.dkr` e `logs`. As camadas da imagem do ECR vêm do S3, pelo gateway endpoint.
+3. **S3 pelo gateway endpoint**: os jobs leem os dados genômicos e gravam os resultados sem sair da rede da AWS. A bucket policy nega acesso fora do endpoint (`aws:SourceVpce`) e sem TLS (`aws:SecureTransport = false`).
+4. **Criptografia em repouso**: os buckets usam **SSE-KMS** com chave gerenciada pelo cliente, e os volumes EBS das instâncias são cifrados com KMS (*EBS encryption by default*). A criptografia em trânsito vem do **TLS**, não do KMS.
+
+- **O gateway endpoint não cifra nada**: ele mantém o tráfego dentro da rede da AWS e permite restringir o bucket a ele. Quem cifra em trânsito é o HTTPS.
+- **HIPAA**: Batch, EC2, S3 e KMS são elegíveis, mas a conta precisa aceitar o **BAA** no AWS Artifact. A conformidade continua sendo responsabilidade compartilhada.
+- **O modelo de compra não muda a segurança**: Spot, On-Demand e Reserved rodam no mesmo hardware, na mesma VPC, com a mesma criptografia. A diferença entre eles é custo e risco de interrupção.
+
+| Opção | Custo | Adequação |
+|---|---|---|
+| **Batch em subnets privadas + Spot + SSE-KMS e TLS** | Menor: até 90% de desconto | Jobs intermitentes e tolerantes a interrupção com dados regulados |
+| Mesmo desenho com **On-Demand** | Maior, sem desconto | Igualmente seguro; vale para jobs que não podem ser interrompidos |
+| Mesmo desenho com **Reserved Instances** | Desconto em troca de compromisso de 1 ou 3 anos | Paga o compromisso mesmo quando a fila está vazia, o que desperdiça em demanda intermitente |
+| **Lambda** | Por duração da invocação | Limite de 15 minutos e 10 GB de memória, curto demais para análise genômica |
+| Batch em **subnets públicas** | Igual | Expõe as instâncias e descumpre o isolamento pedido |
+
+*Na prova, "dados genômicos sensíveis" + "otimizar custo" + "AWS Batch" aponta para Batch em subnets privadas, com instâncias Spot e criptografia em trânsito e em repouso. Descarte as alternativas que trocam o Batch pelo Lambda, que usam Reserved ou On-Demand sem motivo para evitar interrupção, ou que deixam de fora o isolamento de rede ou a criptografia.*
 
 #### AWS Batch vs. alternativas
 
@@ -1328,6 +1375,29 @@ Cenário típico: uma organização de saúde guarda prontuários num servidor d
 - **AWS Snowball Edge (legado)**: dispositivo físico para transferência offline quando rede e prazo inviabilizam uma cópia online. Ainda pode aparecer em questões antigas. Desde novembro de 2025, só clientes existentes podem solicitar dispositivos, e o suporte comercial termina em dezembro de 2026. Para novos projetos, compare **AWS DataSync** por rede, **AWS Data Transfer Terminal** (levar a mídia a uma instalação de upload da AWS) e parceiros, considerando tempo total, disponibilidade local e custo. [Aviso Snowball](https://aws.amazon.com/snowball/) · [Data Transfer Terminal](https://aws.amazon.com/data-transfer-terminal/).
 - **AWS Snowcone (descontinuado)**: dispositivo menor citado em simulados antigos, que não pode ser solicitado desde novembro de 2024. [Atualização da família Snow](https://aws.amazon.com/blogs/storage/aws-snow-device-updates/).
 
+#### Cada parceiro só na própria pasta: Transfer Family com session policy
+Cenário típico: uma empresa de logística recebe manifestos de embarque de dezenas de transportadoras por SFTP, num único bucket do S3. Nenhuma transportadora pode ver ou sobrescrever os arquivos de outra, e a empresa precisa saber qual transportadora enviou cada arquivo.
+
+![Duas transportadoras se conectam por SFTP ao Transfer Family, cada uma com seu usuário; a role do IAM com session policy libera só o prefixo do próprio usuário no S3, e os logs vão para o CloudWatch.](diagramas/transfer-family-isolamento.svg)
+
+1. **Um usuário por transportadora**: cada uma se autentica no servidor SFTP do **Transfer Family** com seu próprio usuário e chave SSH. O home é um **diretório lógico** (*chroot*) apontando para o prefixo dela, então ela não vê o nome do bucket nem as pastas acima.
+2. **Role + session policy**: na conexão, o Transfer Family assume a role do IAM do usuário e aplica a **session policy** (*scope-down policy*). A policy usa variáveis como `${transfer:UserName}`, substituídas na hora pelo usuário conectado. Assim, **uma única role e uma única policy** servem para todas as transportadoras.
+3. **Só o próprio prefixo**: `s3:ListBucket` fica condicionado ao prefixo do usuário, e `GetObject`/`PutObject` ficam limitados a `transportadora-a/*`. Uma tentativa de ler ou gravar em `transportadora-b/` é negada.
+4. **Auditoria**: os logs do Transfer Family no **CloudWatch Logs** registram usuário, operação e arquivo de cada sessão. Os eventos de dados do S3 no CloudTrail complementam a trilha.
+
+- **Uma role por parceiro também funciona**, mas, com dezenas de parceiros, a role compartilhada com session policy reduz a quantidade de roles e policies para manter. A AWS recomenda o diretório lógico **junto** com a session policy, porque o diretório lógico organiza a visão e a policy garante o menor privilégio no S3.
+- **Limites**: a session policy tem no máximo 2.048 caracteres e só vale para o **S3**. No **EFS**, o isolamento vem das permissões POSIX (UID/GID de cada usuário).
+- **Rede é complemento, não autorização**: um endpoint **VPC** do Transfer Family com security group ou Elastic IPs fixos permite liberar só os IPs das transportadoras. Isso decide quem chega ao servidor, mas não qual pasta cada uma enxerga.
+
+| Abordagem | O que controla | Isolamento por parceiro | Auditoria |
+|---|---|---|---|
+| **Usuário por parceiro + role com session policy e diretório lógico** | Autorização por prefixo no S3 | Cada parceiro acessa só o próprio prefixo | Por usuário SFTP |
+| **Credencial compartilhada entre parceiros** | Nada além do acesso ao servidor | Nenhum: todos veem o mesmo caminho | Não identifica quem enviou |
+| **Diretório lógico sem restrição na role** | A visão de pastas no cliente SFTP | Parcial: a role ainda permite o bucket inteiro | Por usuário |
+| **VPN, VPC Peering ou allowlist de IPs** | Só a conectividade de rede | Nenhum dentro do bucket | Não chega ao nível do arquivo |
+
+*Na prova, "cada parceiro pode acessar apenas o próprio diretório" com SFTP e Transfer Family aponta para um usuário por parceiro com role do IAM restrita ao prefixo (session policy). Se a alternativa só controlar a rede, como VPN, IPs fixos ou VPC Peering, descarte: nenhuma delas autoriza pastas dentro do S3.*
+
 #### Números do Snowball (legado)
 
 | Métrica | Valor | Observação |
@@ -1344,6 +1414,7 @@ Cenário típico: uma organização de saúde guarda prontuários num servidor d
 - "Volumes iSCSI com os dados primários locais e backup na AWS": **Volume Gateway stored**.
 - "Migrar 50 TB de um NAS para o EFS e depois sincronizar diariamente": **DataSync**.
 - "Parceiros enviam arquivos via SFTP e não podem mudar": **Transfer Family**.
+- "Cada parceiro SFTP só pode acessar a própria pasta no S3": **usuário por parceiro + session policy** com `${transfer:UserName}`, não VPN nem allowlist de IPs.
 
 ### Backup
 
@@ -1651,6 +1722,29 @@ Cenário típico: uma aplicação global roda em EC2 Auto Scaling com Aurora em 
 - **Unidades**: 1 **RCU** = 1 leitura fortemente consistente/s de até 4 KB (ou 2 eventualmente consistentes). 1 **WCU** = 1 escrita/s de até 1 KB. Transações consomem o dobro.
 - **DynamoDB Standard-IA**: classe de tabela com armazenamento cerca de 60% mais barato e leitura/escrita mais caras, para tabelas grandes com acesso pouco frequente. Combinável com capacidade provisionada para cargas estáveis.
 - **TTL**: exclui automaticamente itens expirados via atributo de timestamp (epoch), sem consumir WCU. É a solução nativa e gratuita para expurgo de dados antigos. As exclusões aparecem no Streams, o que permite arquivá-las no S3.
+
+#### Carga estável e dados pouco lidos: capacidade provisionada com Standard-IA
+Cenário típico: uma empresa ingere dados de saúde de dispositivos vestíveis num ritmo diário conhecido, guarda um volume grande que só cresce e lê esses registros só de vez em quando, no relatório mensal ou numa análise pontual. Ela precisa manter o custo dentro de um orçamento mensal fixo.
+
+![Vestíveis enviando leituras para a ingestão, que grava numa tabela DynamoDB com capacidade provisionada e classe Standard-IA; o relatório mensal lê a tabela ocasionalmente.](diagramas/dynamodb-provisionado-ia.svg)
+
+1. **Gravação contínua**: os dispositivos enviam leituras o dia todo, num ritmo que a empresa já conhece.
+2. **Capacidade provisionada**: as WCUs são dimensionadas pela taxa de ingestão, com **auto scaling** para absorver a variação. Com tráfego estável e alta utilização, o provisionado sai mais barato que o sob demanda e deixa a conta previsível.
+3. **Leitura ocasional**: o relatório mensal consome poucas RCUs. Para uma leitura concentrada, aumente a capacidade só durante o relatório, com uma ação agendada do auto scaling.
+4. **Classe Standard-IA**: o **armazenamento** fica cerca de **60% mais barato**, mas **leitura e escrita ficam cerca de 25% mais caras**. Compensa quando o armazenamento passa de **~50% do custo mensal da tabela**, o que acontece aqui porque os dados se acumulam e quase não são lidos.
+
+- **A classe não muda o desempenho**: latência, disponibilidade e durabilidade são iguais nas duas classes, e os índices secundários seguem a classe da tabela. A classe pode ser trocada **duas vezes a cada 30 dias**.
+- **Reserved capacity não vale para Standard-IA**. Se a tabela já usa reserved capacity na Standard, a troca pode não trazer economia.
+- **Dados que nunca mais serão lidos no DynamoDB**: TTL com arquivamento no S3, ou **export para o S3** com consulta no Athena, costuma sair mais barato do que manter tudo na tabela.
+
+| Combinação | Throughput | Armazenamento | Carga estável com dados pouco lidos |
+|---|---|---|---|
+| **Provisionado + Standard-IA** | Provisionado, cerca de 25% mais caro que na Standard | ~60% mais barato | **Melhor quando o armazenamento domina o custo** |
+| Provisionado + Standard | Provisionado, sem acréscimo, aceita reserved capacity | Preço padrão | Melhor quando o throughput domina, por exemplo se os dados expiram logo |
+| Sob demanda + Standard | Por requisição | Preço padrão | Mais caro para tráfego previsível com alta utilização |
+| Sob demanda + Standard-IA | Por requisição, com acréscimo | ~60% mais barato | Economiza armazenamento, mas paga mais por requisição |
+
+*Na prova, "carga estável e previsível" aponta para capacidade provisionada, e "dados guardados para análise posterior, lidos raramente" aponta para a classe Standard-IA. Se a questão disser que a maior parte do custo é throughput, a Standard-IA deixa de compensar.*
 
 #### Global Tables e streams
 - **DynamoDB Global Tables**: réplicas ativas automáticas e bidirecionais entre Regiões (**multi-active**: escrita em qualquer Região). Servem para DR/replicação multi-Região e latência local para usuários globais, não para absorver picos de tráfego local.
@@ -3684,6 +3778,31 @@ Cenário típico: uma central de atendimento grava todas as chamadas por conform
 - **Savings Plans budgets**: budgets de **utilization** medem quanto do compromisso adquirido está sendo usado. Budgets de **coverage** medem qual percentual do uso elegível está coberto. Podem ser avaliados diariamente e notificar quando o percentual cai abaixo do limite. Existem budgets equivalentes para Reserved Instances.
 - **Controles preventivos**: SCPs restringindo Regiões e tipos de instância caros, Service Catalog com produtos aprovados, e limites via Service Quotas.
 
+#### Monitorar custos de forma proativa: Cost Explorer e Budgets juntos
+Cenário típico: um varejista roda um e-commerce sazonal em EC2 com Auto Scaling, que absorve os picos de tráfego. A equipe financeira ainda precisa revisar as tendências de gasto mensal por serviço e ser avisada automaticamente se o gasto de um projeto for ultrapassar o planejado antes do fim do ciclo de faturamento.
+
+![Recursos com tag de projeto geram dados de billing, analisados no Cost Explorer pela equipe financeira e acompanhados por um orçamento do AWS Budgets que alerta por SNS ou e-mail.](diagramas/cost-explorer-budgets.svg)
+
+1. **Tags**: os recursos levam tags como `projeto` e `centro-de-custo`, **ativadas** como tags de alocação no Billing. Sem a ativação, elas não aparecem nos filtros de custo, e a ativação não vale para o passado.
+2. **Cost Explorer (visibilidade)**: a equipe financeira analisa o histórico por serviço, conta, Região e tag e usa a **previsão**, baseada no uso passado e com intervalo de 80%. Uma conta com menos de um ciclo de faturamento completo pode ficar sem previsão.
+3. **AWS Budgets (controle)**: um orçamento de custo, filtrado pela tag do projeto, com alertas sobre o gasto **real** (por exemplo, 80% e 100%) e sobre o gasto **previsto** para o período.
+4. **Alerta**: a notificação vai para um tópico SNS ou para e-mail. O alerta previsto avisa **antes** de o gasto acontecer, enquanto ainda dá tempo de agir.
+
+- **O alerta não é em tempo real**: o Budgets atualiza até três vezes por dia, e há atraso entre o uso e a cobrança. O gasto pode passar do limite antes do aviso chegar, por isso use limites abaixo de 100% e o alerta previsto.
+- **Do aviso à ação**: se o requisito for impedir novos gastos, **Budgets Actions** aplica uma IAM policy ou uma SCP, ou para instâncias EC2 e RDS.
+- **Sem limite definido**: para ser avisado de um gasto fora do padrão sem escolher valores, use o **Cost Anomaly Detection**.
+- **Auto Scaling** ajusta a capacidade e pode reduzir custos indiretamente, mas não mostra tendência nem avisa sobre o orçamento. O **IAM Access Analyzer** é de segurança: aponta acessos externos e permissões sem uso.
+
+| Ferramenta | Função principal | Quando usar | Resolve o monitoramento de custos? |
+|---|---|---|---|
+| **AWS Cost Explorer** | Analisar e visualizar custo e uso históricos, com previsão | Identificar tendências e estimar gastos futuros | Sim: visibilidade |
+| **AWS Budgets** | Definir orçamentos e alertar sobre o gasto real ou previsto | Ser avisado antes de ultrapassar o planejado | Sim: controle |
+| **Tags de alocação de custos** | Categorizar recursos por projeto ou centro de custo | Segmentar os relatórios do Cost Explorer e os orçamentos | Não isoladamente: precisam das ferramentas acima |
+| **AWS Auto Scaling** | Ajustar a capacidade automaticamente | Desempenho e disponibilidade da aplicação | Não |
+| **IAM Access Analyzer** | Analisar acessos e permissões | Segurança e menor privilégio | Não |
+
+*Na prova, "monitorar e gerenciar custos de forma proativa" aponta para o Cost Explorer, que dá a visibilidade, junto com o Budgets, que dá os alertas. Se a alternativa for o Auto Scaling ou o IAM Access Analyzer, descarte: eles resolvem capacidade e segurança, mesmo que afetem o custo indiretamente.*
+
 #### Otimização de custos
 - **AWS Compute Optimizer**: usa machine learning para analisar métricas históricas de utilização (CloudWatch) e recomendar configurações ideais de tipo e tamanho para EC2, EBS, Lambda, ECS no Fargate, RDS e Auto Scaling groups. É a resposta padrão para "identificar recursos superdimensionados (over-provisioned)" e otimizar custo/desempenho sem análise manual. É gratuito e complementar ao Cost Explorer (que mostra gasto, não recomendações detalhadas de rightsizing).
 - **Cost Optimization Hub**: consolida as recomendações de economia (rightsizing, compromissos, recursos ociosos) de todas as contas em um único lugar, com a economia estimada.
@@ -3740,6 +3859,7 @@ Cenário típico: ambientes de desenvolvimento e teste com instâncias EC2 e RDS
 - "Ser avisado automaticamente quando um serviço gastar fora do padrão": **Cost Anomaly Detection**.
 - "Impedir novos gastos ao atingir o orçamento": **Budgets Actions** (aplicar SCP/IAM policy ou parar instâncias).
 - "Custo por projeto/centro de custo": **tags de alocação ativadas** + Cost Explorer.
+- "Monitorar e gerenciar custos de forma proativa": **Cost Explorer** (tendências e previsão) + **Budgets** (alertas real e previsto), não Auto Scaling.
 - "Instâncias superdimensionadas": **Compute Optimizer**.
 - "Conta de NAT alta por tráfego ao S3": **gateway endpoint**.
 - "Ambiente de dev ligado 24/7": **agendar parada** fora do horário (EventBridge Scheduler/Instance Scheduler).

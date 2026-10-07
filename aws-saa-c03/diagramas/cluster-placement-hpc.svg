@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 260" font-family="IBM Plex Sans, Arial, sans-serif">
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path class="d-head" d="M0 0 L10 5 L0 10 z" fill="#1b2d3b"/>
+    </marker>
+  </defs>
+
+  <rect class="d-box" x="10" y="95" width="140" height="80" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="80" y="122" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Launch template</text>
+  <text class="d-text" x="80" y="140" text-anchor="middle" font-size="11" fill="#52616d">mesmo tipo</text>
+  <text class="d-text" x="80" y="155" text-anchor="middle" font-size="11" fill="#52616d">uma requisição só</text>
+
+  <!-- AZ única -->
+  <rect class="d-zone" x="190" y="15" width="380" height="235" rx="6" fill="#f2f6f7" stroke="#cbd5db"/>
+  <text class="d-label" x="204" y="33" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">Uma única AZ</text>
+
+  <!-- Cluster placement group -->
+  <rect class="d-box-accent" x="210" y="45" width="340" height="150" rx="6" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-label" x="222" y="62" font-size="10" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">Cluster placement group</text>
+
+  <rect class="d-box" x="235" y="72" width="80" height="40" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="275" y="97" text-anchor="middle" font-size="13" font-weight="600" fill="#1b2d3b">nó 1</text>
+  <rect class="d-box" x="340" y="72" width="80" height="40" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="380" y="97" text-anchor="middle" font-size="13" font-weight="600" fill="#1b2d3b">nó 2</text>
+  <rect class="d-box" x="445" y="72" width="80" height="40" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="485" y="97" text-anchor="middle" font-size="13" font-weight="600" fill="#1b2d3b">nó 3</text>
+  <rect class="d-box" x="235" y="140" width="80" height="40" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="275" y="165" text-anchor="middle" font-size="13" font-weight="600" fill="#1b2d3b">nó 4</text>
+  <rect class="d-box" x="340" y="140" width="80" height="40" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="380" y="165" text-anchor="middle" font-size="13" font-weight="600" fill="#1b2d3b">nó 5</text>
+  <rect class="d-box" x="445" y="140" width="80" height="40" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="485" y="165" text-anchor="middle" font-size="13" font-weight="600" fill="#1b2d3b">nó 6</text>
+
+  <!-- 2: troca constante entre os nós -->
+  <line class="d-line" x1="315" y1="92" x2="340" y2="92" stroke="#1b2d3b" stroke-width="1.5"/>
+  <line class="d-line" x1="420" y1="92" x2="445" y2="92" stroke="#1b2d3b" stroke-width="1.5"/>
+  <line class="d-line" x1="315" y1="160" x2="340" y2="160" stroke="#1b2d3b" stroke-width="1.5"/>
+  <line class="d-line" x1="420" y1="160" x2="445" y2="160" stroke="#1b2d3b" stroke-width="1.5"/>
+  <line class="d-line" x1="275" y1="112" x2="275" y2="140" stroke="#1b2d3b" stroke-width="1.5"/>
+  <line class="d-line" x1="380" y1="112" x2="380" y2="140" stroke="#1b2d3b" stroke-width="1.5"/>
+  <line class="d-line" x1="485" y1="112" x2="485" y2="140" stroke="#1b2d3b" stroke-width="1.5"/>
+  <circle class="d-step" cx="327" cy="126" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="327" y="130" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">2</text>
+
+  <text class="d-text" x="380" y="215" text-anchor="middle" font-size="11" fill="#52616d">ENA ou EFA, jumbo frames, até 10 Gbps por fluxo</text>
+  <text class="d-text" x="380" y="232" text-anchor="middle" font-size="11" fill="#52616d">risco: uma falha de rack ou da AZ atinge o grupo todo</text>
+
+  <rect class="d-box" x="610" y="30" width="140" height="75" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="680" y="56" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Capacity</text>
+  <text class="d-title" x="680" y="73" text-anchor="middle" font-size="14" font-weight="600" fill="#1b2d3b">Reservation</text>
+  <text class="d-text" x="680" y="91" text-anchor="middle" font-size="11" fill="#52616d">criada no grupo</text>
+
+  <rect class="d-box" x="610" y="165" width="140" height="75" rx="6" fill="#fff" stroke="#1b2d3b" stroke-width="1.5"/>
+  <text class="d-title" x="680" y="193" text-anchor="middle" font-size="15" font-weight="600" fill="#1b2d3b">Amazon S3</text>
+  <text class="d-text" x="680" y="211" text-anchor="middle" font-size="11" fill="#52616d">checkpoints e</text>
+  <text class="d-text" x="680" y="225" text-anchor="middle" font-size="11" fill="#52616d">resultado final</text>
+
+  <!-- 1: lançamento -->
+  <line class="d-line" x1="150" y1="135" x2="208" y2="135" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="172" cy="118" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="172" y="122" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">1</text>
+
+  <!-- 3: capacidade garantida -->
+  <polyline class="d-line-muted" points="610,67 585,67 585,90 552,90" fill="none" stroke="#52616d" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="597" cy="50" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="597" y="54" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">3</text>
+
+  <!-- 4: checkpoints -->
+  <polyline class="d-line" points="550,160 585,160 585,202 608,202" fill="none" stroke="#1b2d3b" stroke-width="1.5" marker-end="url(#seta)"/>
+  <circle class="d-step" cx="600" cy="181" r="9" fill="#fff3de" stroke="#ff9900" stroke-width="1.5"/>
+  <text class="d-num" x="600" y="185" text-anchor="middle" font-size="11" font-weight="700" font-family="IBM Plex Mono, Menlo, monospace" fill="#8a4b00">4</text>
+</svg>
